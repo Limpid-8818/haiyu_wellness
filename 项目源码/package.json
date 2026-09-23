@@ -1,0 +1,13 @@
+{
+  "name": "seaside-wellness-community",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w web",
+    "start": "npm run start -w server",
+    "test": "npm run test -w server"
+  },
+  "workspaces": ["server", "web"],
+  "devDependencies": { "concurrently": "^9.1.0" }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "seaside-wellness-community-server",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "node --watch src/index.js", "start": "node src/index.js", "test": "node --test test/*.test.js" },
+  "dependencies": { "cors": "^2.8.5", "express": "^4.19.2" }
+}
