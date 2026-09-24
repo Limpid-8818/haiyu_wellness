@@ -596,7 +596,8 @@ function DeanTeam({ notify }) {
             >
               <span className="avatar orange-avatar">{initials(staffMember.name)}</span>
               <span className="guest-main"><strong>{staffMember.name}</strong><small>{staffMember.username} · {staffMember.phone}</small></span>
-              <span className="guest-flag">{staffMember.adviceCount} 条建议</span>
+              <span className="guest-flag">查看 {staffMember.guestViews} 次</span>
+              <span className="guest-flag">建议 {staffMember.adviceCount} 条</span>
               <b aria-hidden="true">→</b>
             </button>
           )) : <div className="list-empty"><Empty text="暂无工作人员记录"/></div>}

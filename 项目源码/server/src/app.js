@@ -249,8 +249,8 @@ app.get('/api/dean/staff', auth, deanOnly, (req, res) => {
 app.get('/api/dean/staff/:id/logs', auth, deanOnly, (req, res) => {
   const staff = db.prepare("SELECT id,name,username,phone,status FROM users WHERE id=? AND role='staff'").get(req.params.id);
   if (!staff) throw new AppError(404, 'STAFF_NOT_FOUND', '工作人员不存在');
-  const logs = db.prepare('SELECT id,action,target_type AS targetType,target_id AS targetId,detail,created_at AS createdAt FROM audit_logs WHERE actor_id=? ORDER BY id DESC LIMIT 50').all(req.params.id);
-  const reviews = db.prepare('SELECT id,content,created_at AS createdAt FROM staff_reviews WHERE staff_id=? AND dean_id=? ORDER BY id DESC').all(req.params.id, req.user.id);
+  const logs = db.prepare('SELECT id,action,target_type AS targetType,target_id AS targetId,detail,created_at AS createdAt FROM audit_logs WHERE actor_id=? ORDER BY created_at DESC,id DESC LIMIT 50').all(req.params.id);
+  const reviews = db.prepare('SELECT id,content,created_at AS createdAt FROM staff_reviews WHERE staff_id=? AND dean_id=? ORDER BY created_at DESC,id DESC').all(req.params.id, req.user.id);
   res.json({ staff, logs, reviews });
 });
 app.post('/api/dean/staff/:id/reviews', auth, deanOnly, (req, res) => {

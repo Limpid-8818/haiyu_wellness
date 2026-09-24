@@ -16,6 +16,9 @@ const quests = {
   'Q5.8': new URL('./quests/q5-8.js', import.meta.url),
   'Q5.10': new URL('./quests/q5-10.js', import.meta.url),
   'Q5.12': new URL('./quests/q5-12.js', import.meta.url),
+  'Q6.1': new URL('./quests/q6-1.js', import.meta.url),
+  'Q6.3': new URL('./quests/q6-3.js', import.meta.url),
+  'Q6.5': new URL('./quests/q6-5.js', import.meta.url),
 };
 
 const questId = process.argv[2];

@@ -51,7 +51,7 @@
 | 13 | `GET /api/agent/status` | Bearer | 返回规则协作 Agent 状态。可选 `guestId`；传入时按上述客人授权检查。该路由返回状态，不执行疗程或预约工具。 |
 | 14 | `GET /api/staff/overview` | 工作人员或院长 | 返回可访问客人数量、有效建议数及近期审计记录；工作人员结果按其授权范围筛选，院长使用院长视野。 |
 | 15 | `GET /api/dean/staff` | 仅院长 | 返回工作人员列表及查看/建议计数。 |
-| 16 | `GET /api/dean/staff/:id/logs` | 仅院长 | 返回工作人员资料、最近最多 50 条审计记录和该院长自己的历史意见。 |
+| 16 | `GET /api/dean/staff/:id/logs` | 仅院长 | 返回工作人员资料、按时间倒序排列的最近最多 50 条审计记录和该院长自己的历史意见。 |
 | 17 | `POST /api/dean/staff/:id/reviews` | 仅院长 | JSON `{content}`；非空且最多 5000 字符，成功返回 201 并记录意见。 |
 | 18 | `GET /api/staff/guests` | 工作人员或院长 | 可带 `?q=<姓名或房间>`；工作人员结果限于有效分工，院长可查看全部 active 客人。 |
 | 19 | `GET /api/staff/guests/:id` | 工作人员或院长 | 返回客人概览并写入查看审计；工作人员需有有效分工。 |
