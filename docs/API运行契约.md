@@ -59,9 +59,9 @@
 
 ## 4. 分工、助手会话与数据表
 
-- SQLite schema 包含 `staff_guest_assignments`、`assistant_sessions`、`assistant_messages` 和 `health_intakes` 等表。新演示库在首次 seed 时建立演示分工；旧库首次引入分工表时仅迁移一次。分工行删除后，后续启动不会自动恢复。当前没有创建、编辑或删除分工的 HTTP API。
+- SQLite schema 包含 `staff_guest_assignments`、`assistant_sessions`、`assistant_messages` 和 `health_intakes` 等表。新演示库在首次 seed 时建立演示分工；旧库首次引入分工表时仅迁移一次。`health_intakes.status` 默认为 `pending`，既有采集记录升级后也补为 `pending`；当前没有采集审核 API。分工行删除后，后续启动不会自动恢复。当前没有创建、编辑或删除分工的 HTTP API。
 - 助手会话 ID 由服务端生成，关联用户、助手角色及可选客人上下文，并记录 active/closed/expired 状态和到期时间。继续会话时检查用户、角色、会话状态、到期时间与客人上下文；不匹配会返回 403 或 409。
-- 聊天消息保存在 `assistant_messages`。客人输入命中健康信息关键词时，当前实现还会将文本写入 `health_intakes` 并记录审计，但没有配套的审核管理 API，因此不等同于完成健康采集审核闭环。
+- 聊天消息保存在 `assistant_messages`。客人输入命中健康信息关键词时，当前实现还会将文本写入 `health_intakes`（`status='pending'`）并记录审计，但没有配套的审核管理 API，因此不等同于完成健康采集审核闭环。
 - 发给外部模型的客人上下文有意排除姓名、电话、房间号、出生日期和紧急联系人；是否启用外部模型取决于 `LLM_BASE_URL` 与 `LLM_API_KEY`。
 
 ## 5. 主要结构化错误码

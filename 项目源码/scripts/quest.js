@@ -19,6 +19,15 @@ const quests = {
   'Q6.1': new URL('./quests/q6-1.js', import.meta.url),
   'Q6.3': new URL('./quests/q6-3.js', import.meta.url),
   'Q6.5': new URL('./quests/q6-5.js', import.meta.url),
+  'Q7.2': new URL('./quests/q7-2.js', import.meta.url),
+  'Q7.3': new URL('./quests/q7-3.js', import.meta.url),
+  'Q7.4': new URL('./quests/q7-4.js', import.meta.url),
+  'Q7.5': new URL('./quests/q7-5.js', import.meta.url),
+  'Q7.6': new URL('./quests/q7-6.js', import.meta.url),
+  'Q7.7': new URL('./quests/q7-7.js', import.meta.url),
+  'Q7.9': new URL('./quests/q7-9.js', import.meta.url),
+  'Q7.11': new URL('./quests/q7-11.js', import.meta.url),
+  'Q7.12': new URL('./quests/q7-12.js', import.meta.url)
 };
 
 const questId = process.argv[2];

@@ -111,9 +111,14 @@ function migrate() {
     CREATE INDEX IF NOT EXISTS idx_messages_session_id ON assistant_messages(session_id, id);
     CREATE TABLE IF NOT EXISTS health_intakes (
       id INTEGER PRIMARY KEY AUTOINCREMENT, guest_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      content TEXT NOT NULL, source TEXT NOT NULL DEFAULT 'assistant', created_at TEXT NOT NULL
+      content TEXT NOT NULL, source TEXT NOT NULL DEFAULT 'assistant', created_at TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending'
     );
     `);
+    const intakeColumns = db.prepare('PRAGMA table_info(health_intakes)').all();
+    if (!intakeColumns.some(column => column.name === 'status')) {
+      db.exec("ALTER TABLE health_intakes ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'");
+    }
     // Existing MVP databases already have demo users but no assignment table.
     // Initialize their demo relation once, in the same transaction that creates
     // the table; later deletion leaves the table present and is never undone.

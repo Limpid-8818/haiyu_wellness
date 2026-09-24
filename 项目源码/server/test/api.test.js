@@ -158,6 +158,29 @@ test('legacy demo database upgrade seeds its assignment once and preserves revoc
   }
 });
 
+test('legacy health intake rows gain pending status during database migration', async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'haiyu-health-intake-upgrade-'));
+  const dbPath = path.join(tempDir, 'legacy-intakes.sqlite');
+  let fixture;
+  try {
+    mutateDatabase(dbPath, database => {
+      database.exec(`CREATE TABLE health_intakes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, guest_id TEXT NOT NULL, content TEXT NOT NULL,
+        source TEXT NOT NULL DEFAULT 'assistant', created_at TEXT NOT NULL
+      )`);
+      database.prepare('INSERT INTO health_intakes(guest_id,content,source,created_at) VALUES(?,?,?,?)')
+        .run('guest_001', 'legacy intake marker', 'assistant', '2026-09-20T00:00:00.000Z');
+    });
+
+    fixture = await startApi(dbPath);
+    const intake = mutateDatabase(dbPath, database => database.prepare('SELECT guest_id,content,status FROM health_intakes').get());
+    assert.deepEqual({ ...intake }, { guest_id: 'guest_001', content: 'legacy intake marker', status: 'pending' });
+  } finally {
+    await stopApi(fixture);
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
 test('API enforces role/resource boundaries, assignment lifecycle, profile validation and session ownership', async t => {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), 'haiyu-api-'));
   const dbPath = path.join(tempDir, 'integration.sqlite');
