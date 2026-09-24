@@ -279,6 +279,29 @@ test('API enforces role/resource boundaries, assignment lifecycle, profile valid
       assert.equal(auditCount, 1);
     });
 
+    await t.test('advice publishing requires an assigned guest and is visible to its owner', async () => {
+      const guestPublish = await request(fixture.base, '/staff/guests/guest_001/advice', {
+        method: 'POST', token: guestToken, body: { title: 'Guest cannot publish', content: 'denied' }
+      });
+      assert.equal(guestPublish.status, 403);
+      assert.equal(guestPublish.data.code, 'ROLE_FORBIDDEN');
+
+      const unassignedPublish = await request(fixture.base, '/staff/guests/guest_002/advice', {
+        method: 'POST', token: staffToken, body: { title: 'Unassigned guest', content: 'denied' }
+      });
+      assert.equal(unassignedPublish.status, 403);
+      assert.equal(unassignedPublish.data.code, 'GUEST_NOT_ASSIGNED');
+
+      const published = await request(fixture.base, '/staff/guests/guest_001/advice', {
+        method: 'POST', token: staffToken,
+        body: { title: 'Q8 test advice', content: 'Take a short walk after lunch.', priority: 'normal' }
+      });
+      assert.equal(published.status, 201);
+      const guestAdvice = await request(fixture.base, '/me/advice', { token: guestToken });
+      assert.equal(guestAdvice.status, 200);
+      assert.ok(guestAdvice.data.some(row => row.id === published.data.id && row.title === 'Q8 test advice' && row.authorName === '王医生'));
+    });
+
     await t.test('session IDs are server-generated, owner-bound and guest-context-bound', async () => {
       const publicChat = await request(fixture.base, '/assistant/chat', {
         method: 'POST', body: { role: 'public', text: '你好' }

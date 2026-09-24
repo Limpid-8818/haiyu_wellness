@@ -23,6 +23,15 @@ npm run dev
 - API：http://localhost:3020/api
 - 健康检查：http://localhost:3020/api/health
 
+本地副本需要避开已占用端口时，可显式覆盖 API 端口、Vite 端口和 API 代理目标：
+
+```bash
+cd 项目源码
+PORT=24520 WEB_PORT=25520 API_PROXY_TARGET=http://127.0.0.1:24520 npm run dev
+```
+
+`WEB_PORT` 与 `API_PROXY_TARGET` 示例也列在 `.env.example` 中。该文件不会自动加载，需像上面的命令一样从 shell 显式提供变量。
+
 常用命令：
 
 ```bash
