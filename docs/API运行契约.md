@@ -47,7 +47,7 @@
 | 9 | `PATCH /api/me/profile` | Bearer；仅客人 | 仅接受 `phone`（最多 32 字符）、`emergencyContact` 与 `mobility`（各最多 128 字符）；拒绝未列字段并原子更新。 |
 | 10 | `POST /api/me/password` | Bearer | JSON `{currentPassword,newPassword}`；新密码长度 8–128 字符。 |
 | 11 | `GET /api/me/health` | Bearer | 客人读取本人记录；工作人员须有该客人有效分工；院长可读 active 客人。工作人员/院长使用 `?guestId=<id>` 指定客人。 |
-| 12 | `GET /api/me/advice` | Bearer | 与健康记录使用相同的客人范围规则，返回医嘱/建议。 |
+| 12 | `GET /api/me/advice` | Bearer | 与健康记录使用相同的客人范围规则，仅返回对该客人生效的医嘱/建议及作者信息。 |
 | 13 | `GET /api/agent/status` | Bearer | 返回规则协作 Agent 状态。可选 `guestId`；传入时按上述客人授权检查。该路由返回状态，不执行疗程或预约工具。 |
 | 14 | `GET /api/staff/overview` | 工作人员或院长 | 返回可访问客人数量、有效建议数及近期审计记录；工作人员结果按其授权范围筛选，院长使用院长视野。 |
 | 15 | `GET /api/dean/staff` | 仅院长 | 返回工作人员列表及查看/建议计数。 |

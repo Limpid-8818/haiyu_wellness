@@ -200,6 +200,8 @@ export function guestSummary(userId) {
   if (!user) return null;
   const profile = guestProfile(userId);
   const latestHealth = db.prepare('SELECT * FROM health_records WHERE guest_id=? ORDER BY recorded_at DESC LIMIT 5').all(userId);
-  const advice = db.prepare("SELECT id,title,content,priority,status,created_at,updated_at FROM medical_advice WHERE guest_id=? AND status='active' ORDER BY created_at DESC").all(userId);
+  const advice = db.prepare(`SELECT a.id,a.title,a.content,a.priority,a.status,a.created_at,a.updated_at,u.name AS author_name
+    FROM medical_advice a JOIN users u ON u.id=a.author_id
+    WHERE a.guest_id=? AND a.status='active' ORDER BY a.created_at DESC`).all(userId);
   return { ...publicUser(user), profile, health: latestHealth, advice };
 }

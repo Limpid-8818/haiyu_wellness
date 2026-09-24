@@ -197,7 +197,7 @@ app.get('/api/me/health', auth, (req, res) => {
 app.get('/api/me/advice', auth, (req, res) => {
   const guest = authorizeQueryGuest(req);
   res.json(db.prepare(`SELECT a.id,a.title,a.content,a.priority,a.status,a.created_at AS createdAt,a.updated_at AS updatedAt,u.name AS authorName
-    FROM medical_advice a JOIN users u ON u.id=a.author_id WHERE a.guest_id=? ORDER BY a.created_at DESC`).all(guest.id));
+    FROM medical_advice a JOIN users u ON u.id=a.author_id WHERE a.guest_id=? AND a.status='active' ORDER BY a.created_at DESC`).all(guest.id));
 });
 app.get('/api/agent/status', auth, (req, res) => {
   const guestId = req.user.role === 'guest'
