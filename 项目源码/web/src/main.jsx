@@ -315,7 +315,38 @@ function StaffView({ section, me, notify, onGuestChange }) {
 }
 
 function StaffOverview({ me }) {
-  return <><PageTitle eyebrow="STAFF WORKSPACE" title={`早上好，${me.name}`} desc="这是你的工作概览，今天也请从容地照顾好每一位客人。"/><div className="staff-banner"><div><span className="banner-kicker">今日工作台</span><h2>先看一眼需要关注的人</h2><p>进入“我负责的客人”，你可以查询档案、查看健康情况，并留下新的医嘱或建议。</p></div><div className="staff-symbol">✚</div></div><div className="metric-grid"><Metric label="负责客人" value={me.assignedCount || 0} hint="当前在住" tone="teal"/><Metric label="今日待关注" value="2" hint="需要查看记录" tone="orange"/><Metric label="有效医嘱" value="3" hint="团队共同维护" tone="blue"/></div><AgentPanel role="staff"/><section className="surface"><SectionHead title="工作原则"/><div className="principle-grid"><Principle icon="◈" title="信息最小化" text="只查看完成工作所必需的客人信息。"/><Principle icon="⌁" title="建议可追溯" text="每条医嘱都保留作者、时间和状态。"/><Principle icon="♧" title="先沟通再行动" text="涉及健康风险时，及时联系客人与医护团队。"/></div></section></>;
+  const [overview, setOverview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    request('/staff/overview').then((data) => {
+      if (active) setOverview(data);
+    }).catch((requestError) => {
+      if (active) setError(requestError.message || '工作概览暂时无法加载');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const recent = Array.isArray(overview?.recent) ? overview.recent : [];
+  return <><PageTitle eyebrow="STAFF WORKSPACE" title={`早上好，${me.name}`} desc="这是你的工作概览，今天也请从容地照顾好每一位客人。"/><div className="staff-banner"><div><span className="banner-kicker">今日工作台</span><h2>先看一眼需要关注的人</h2><p>进入“我负责的客人”，你可以查询档案、查看健康情况，并留下新的医嘱或建议。</p></div><div className="staff-symbol">✚</div></div>{error ? <QueryState error text={error} retryText="请刷新页面重试"/> : <><div className="metric-grid"><Metric label="负责客人" value={loading ? '…' : overview?.guests ?? 0} hint="当前授权范围内" tone="teal"/><Metric label="有效医嘱" value={loading ? '…' : overview?.activeAdvice ?? 0} hint="负责客人的有效医嘱" tone="blue"/><Metric label="近期工作记录" value={loading ? '…' : recent.length} hint="最近 8 条记录" tone="orange"/></div><section className="surface"><SectionHead title="近期工作记录"/>{loading ? <QueryState text="正在加载工作记录…"/> : recent.length ? <div className="staff-recent-list">{recent.map((entry) => <article className="staff-recent-row" key={entry.id}><span className="staff-recent-mark" aria-hidden="true">{entry.action === 'advice.create' ? '✚' : '◈'}</span><div><strong>{staffActionLabel(entry.action)}</strong><p>{entry.detail || '已记录一项工作操作'}</p></div><time dateTime={entry.createdAt}>{fmtDateTime(entry.createdAt)}</time></article>)}</div> : <Empty text="还没有近期工作记录"/>}</section></>}<AgentPanel role="staff"/><section className="surface"><SectionHead title="工作原则"/><div className="principle-grid"><Principle icon="◈" title="信息最小化" text="只查看完成工作所必需的客人信息。"/><Principle icon="⌁" title="建议可追溯" text="每条医嘱都保留作者、时间和状态。"/><Principle icon="♧" title="先沟通再行动" text="涉及健康风险时，及时联系客人与医护团队。"/></div></section></>;
+}
+
+function staffActionLabel(action) {
+  return ({
+    'guest.view': '查看客人档案',
+    'advice.create': '发布医嘱与建议',
+    'profile.update': '更新客人资料',
+    'password.change': '修改登录密码',
+    login: '登录系统'
+  })[action] || action || '工作操作';
+}
+
+function fmtDateTime(value) {
+  return value ? new Date(value).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 }
 
 function AgentPanel({ role }) {
@@ -349,7 +380,18 @@ function StaffGuests({ notify, onGuestChange }) {
     setListError('');
     try {
       const data = await request(`/staff/guests?q=${encodeURIComponent(search)}`, { signal: controller.signal });
-      if (!controller.signal.aborted) setGuests(normalizeGuestList(data));
+      if (!controller.signal.aborted) {
+        const nextGuests = normalizeGuestList(data);
+        setGuests(nextGuests);
+        if (selectedId.current && !nextGuests.some(guest => guest.id === selectedId.current)) {
+          selectionController.current?.abort();
+          selectionSequence.current += 1;
+          selectedId.current = '';
+          setSelected(null);
+          setSelectionLoading(false);
+          onGuestChange(null);
+        }
+      }
     } catch (error) {
       if (error?.name === 'AbortError') return;
       setGuests([]);
@@ -358,7 +400,7 @@ function StaffGuests({ notify, onGuestChange }) {
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  }, [notify]);
+  }, [notify, onGuestChange]);
 
   useEffect(() => {
     onGuestChange(null);
@@ -411,7 +453,7 @@ function StaffGuests({ notify, onGuestChange }) {
     }
   }
 
-  return <><PageTitle eyebrow="MY GUESTS" title="我负责的客人" desc="在这里查看客人的基础资料与健康情况，并提供专业建议。" action={<button type="button" className="outline-btn" onClick={() => search()} disabled={loading} aria-busy={loading}>刷新列表　↻</button>}/><form className="search-bar" onSubmit={search}><label className="sr-only" htmlFor="guest-search">搜索客人姓名或房间号</label><span aria-hidden="true">⌕</span><input id="guest-search" placeholder="搜索客人姓名或房间号" value={query} onChange={(event) => setQuery(event.target.value)}/><button type="submit" disabled={loading} aria-busy={loading}>搜索</button></form><div className="guest-layout"><section className="surface guest-list"><div className="list-heading"><strong>客人列表</strong><span>{guests.length} 位在住客人</span></div>{loading ? <QueryState text="正在加载客人列表…"/> : listError ? <QueryState error text={listError} retryText="请稍后重试"/> : guests.length ? guests.map((guest) => <button type="button" className={`guest-row ${selectedId.current === guest.id ? 'selected' : ''}`} key={guest.id} onClick={() => choose(guest)}><span className="avatar">{initials(guest.name)}</span><span className="guest-main"><strong>{guest.name}</strong><small>{guest.roomNo || '未分配房间'} · {guest.phone}</small></span><span className="guest-flag">{guest.chronic?.length ? '需关注' : '状态良好'}</span><b aria-hidden="true">→</b></button>) : <div className="list-empty"><Empty text="暂无符合条件的客人"/></div>}</section><section className="guest-detail">{selectionLoading ? <div className="surface detail-empty"><div className="empty-illustration">⌁</div><h2>正在打开客人档案</h2><p>正在读取当前授权范围内的信息。</p></div> : selected ? <StaffGuestDetail key={selected.id} guest={selected} notify={notify} onRefresh={refreshSelected}/> : <div className="surface detail-empty"><div className="empty-illustration">♧</div><h2>选择一位客人</h2><p>左侧选择客人后，这里会显示完整的工作所需信息。</p></div>}</section></div></>;
+  return <><PageTitle eyebrow="MY GUESTS" title="我负责的客人" desc="在这里查看客人的基础资料与健康情况，并提供专业建议。" action={<button type="button" className="outline-btn" onClick={() => search()} disabled={loading} aria-busy={loading}>刷新列表　↻</button>}/><form className="search-bar" onSubmit={search}><label className="sr-only" htmlFor="guest-search">搜索客人姓名或房间号</label><span aria-hidden="true">⌕</span><input id="guest-search" placeholder="搜索客人姓名或房间号" value={query} onChange={(event) => setQuery(event.target.value)}/><button type="submit" disabled={loading} aria-busy={loading}>搜索</button></form><div className="guest-layout"><section className="surface guest-list"><div className="list-heading"><strong>客人列表</strong><span>{guests.length} 位在住客人</span></div>{loading ? <QueryState text="正在加载客人列表…"/> : listError ? <QueryState error text={listError} retryText="请稍后重试"/> : guests.length ? guests.map((guest) => <button type="button" className={`guest-row ${selectedId.current === guest.id ? 'selected' : ''}`} key={guest.id} onClick={() => choose(guest)}><span className="avatar">{initials(guest.name)}</span><span className="guest-main"><strong>{guest.name}</strong><small>{guest.roomNo || '未分配房间'} · {guest.phone}</small></span><span className="guest-flag">{guest.chronic?.length ? '需关注' : '状态良好'}</span><b aria-hidden="true">→</b></button>) : <div className="list-empty"><Empty text="暂无结果"/></div>}</section><section className="guest-detail">{selectionLoading ? <div className="surface detail-empty"><div className="empty-illustration">⌁</div><h2>正在打开客人档案</h2><p>正在读取当前授权范围内的信息。</p></div> : selected ? <StaffGuestDetail key={selected.id} guest={selected} notify={notify} onRefresh={refreshSelected}/> : <div className="surface detail-empty"><div className="empty-illustration">♧</div><h2>选择一位客人</h2><p>左侧选择客人后，这里会显示完整的工作所需信息。</p></div>}</section></div></>;
 }
 
 function StaffGuestDetail({ guest, notify, onRefresh }) {
@@ -423,9 +465,15 @@ function StaffGuestDetail({ guest, notify, onRefresh }) {
   async function submit(event) {
     event.preventDefault();
     if (submitting) return;
+    const title = form.title.trim();
+    const content = form.content.trim();
+    if (!title || !content) {
+      notify('请填写建议标题和内容');
+      return;
+    }
     setSubmitting(true);
     try {
-      await request(`/staff/guests/${guest.id}/advice`, { method: 'POST', body: JSON.stringify(form) });
+      await request(`/staff/guests/${guest.id}/advice`, { method: 'POST', body: JSON.stringify({ ...form, title, content }) });
       setForm({ title: '', content: '', priority: 'normal' });
       setShowAdvice(false);
       notify('医嘱已发布，客人可以查看');
@@ -437,7 +485,7 @@ function StaffGuestDetail({ guest, notify, onRefresh }) {
     }
   }
 
-  return <div className="detail-stack"><section className="surface profile-hero"><div className="avatar large">{initials(guest.name)}</div><div><div className="eyebrow">GUEST PROFILE</div><h2>{guest.name}</h2><p>{profile.gender || '—'}　{profile.birthDate || profile.birth_date || '—'}　房间 {profile.roomNo || profile.room_no || '—'}</p></div><span className="profile-status">在住</span></section><section className="surface"><SectionHead title="基础信息"/><div className="detail-grid"><Info label="联系电话" value={guest.phone}/><Info label="入住时间" value={`${profile.checkIn || profile.check_in || '—'} 至 ${profile.checkOut || profile.check_out || '—'}`}/><Info label="紧急联系人" value={profile.emergencyContact || profile.emergency_contact || '—'}/><Info label="行动能力" value={profile.mobility || '—'}/></div></section><section className="surface"><SectionHead title="健康情况"/><div className="health-alert"><span>⌁</span><div><strong>慢病史</strong><p>{profile.chronic?.length ? profile.chronic.join('、') : '暂无慢病记录'}</p></div></div><div className="health-alert"><span>◇</span><div><strong>过敏源</strong><p>{profile.allergies?.length ? profile.allergies.join('、') : '暂无过敏记录'}</p></div></div><div className="latest-records"><strong>近期记录</strong>{guest.health?.length ? guest.health.slice(0, 3).map((health) => <div key={health.id}><span>{health.type}</span><b>{health.value} {health.unit}</b><small>{fmtDate(health.recordedAt)}</small></div>) : <Empty text="暂无近期健康记录"/>}</div></section><section className="surface"><SectionHead title="医嘱与建议" action={<button type="button" className="primary-btn small-btn" onClick={() => setShowAdvice(!showAdvice)} aria-expanded={showAdvice}>＋ 新增建议</button>}/>{showAdvice && <form className="advice-form" onSubmit={submit} aria-busy={submitting}><Field label="标题" value={form.title} onChange={(value) => setForm({ ...form, title: value })} placeholder="例如：本周运动安排" required/><label htmlFor={`priority-${guest.id}`}>重要程度<select id={`priority-${guest.id}`} value={form.priority} onChange={(event) => setForm({ ...form, priority: event.target.value })}><option value="normal">一般建议</option><option value="important">重要提醒</option><option value="urgent">紧急提醒</option></select></label><label htmlFor={`advice-content-${guest.id}`}>建议内容<textarea id={`advice-content-${guest.id}`} rows="4" value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} placeholder="请输入清晰、可执行的建议" required/></label><div className="form-actions"><button type="button" className="outline-btn" onClick={() => setShowAdvice(false)} disabled={submitting}>取消</button><button type="submit" className="primary-btn" disabled={submitting} aria-busy={submitting}>{submitting ? '发布中…' : '发布建议　→'}</button></div></form>}{guest.advice?.map((advice) => <div className="staff-advice-row" key={advice.id}><div className={`advice-priority ${advice.priority}`}>{advice.priority === 'urgent' ? '紧急' : advice.priority === 'important' ? '重要' : '建议'}</div><div><strong>{advice.title}</strong><p>{advice.content}</p><small>{advice.authorName || '工作人员'} · {fmtDate(advice.createdAt)}</small></div></div>)}{!guest.advice?.length && <Empty text="还没有发布过医嘱"/>}</section></div>;
+  return <div className="detail-stack"><section className="surface profile-hero"><div className="avatar large">{initials(guest.name)}</div><div><div className="eyebrow">GUEST PROFILE</div><h2>{guest.name}</h2><p>{profile.gender || '—'}　{profile.birthDate || profile.birth_date || '—'}　房间 {profile.roomNo || profile.room_no || '—'}</p></div><span className="profile-status">在住</span></section><section className="surface"><SectionHead title="基础信息"/><div className="detail-grid"><Info label="联系电话" value={guest.phone}/><Info label="入住时间" value={`${profile.checkIn || profile.check_in || '—'} 至 ${profile.checkOut || profile.check_out || '—'}`}/><Info label="紧急联系人" value={profile.emergencyContact || profile.emergency_contact || '—'}/><Info label="行动能力" value={profile.mobility || '—'}/></div></section><section className="surface"><SectionHead title="健康情况"/><div className="health-alert"><span>⌁</span><div><strong>慢病史</strong><p>{profile.chronic?.length ? profile.chronic.join('、') : '暂无慢病记录'}</p></div></div><div className="health-alert"><span>◇</span><div><strong>过敏源</strong><p>{profile.allergies?.length ? profile.allergies.join('、') : '暂无过敏记录'}</p></div></div><div className="latest-records"><strong>近期记录</strong>{guest.health?.length ? guest.health.slice(0, 3).map((health) => <div key={health.id}><span>{health.type}</span><b>{health.value} {health.unit}</b><small>{fmtDate(health.recordedAt)}</small></div>) : <Empty text="暂无近期健康记录"/>}</div></section><section className="surface"><SectionHead title="医嘱与建议" action={<button type="button" className="primary-btn small-btn" onClick={() => setShowAdvice(!showAdvice)} aria-expanded={showAdvice}>＋ 新增建议</button>}/>{showAdvice && <form className="advice-form" onSubmit={submit} noValidate aria-busy={submitting}><Field label="标题" value={form.title} onChange={(value) => setForm({ ...form, title: value })} placeholder="例如：本周运动安排" required/><label htmlFor={`priority-${guest.id}`}>重要程度<select id={`priority-${guest.id}`} value={form.priority} onChange={(event) => setForm({ ...form, priority: event.target.value })}><option value="normal">一般建议</option><option value="important">重要提醒</option><option value="urgent">紧急提醒</option></select></label><label htmlFor={`advice-content-${guest.id}`}>建议内容<textarea id={`advice-content-${guest.id}`} rows="4" value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} placeholder="请输入清晰、可执行的建议" required/></label><div className="form-actions"><button type="button" className="outline-btn" onClick={() => setShowAdvice(false)} disabled={submitting}>取消</button><button type="submit" className="primary-btn" disabled={submitting} aria-busy={submitting}>{submitting ? '发布中…' : '发布建议　→'}</button></div></form>}{guest.advice?.map((advice) => <div className="staff-advice-row" key={advice.id}><div className={`advice-priority ${advice.priority}`}>{advice.priority === 'urgent' ? '紧急' : advice.priority === 'important' ? '重要' : '建议'}</div><div><strong>{advice.title}</strong><p>{advice.content}</p><small>{advice.authorName || '工作人员'} · {fmtDate(advice.createdAt)}</small></div></div>)}{!guest.advice?.length && <Empty text="还没有发布过医嘱"/>}</section></div>;
 }
 
 function StaffAccount({ me, notify }) {
