@@ -30,7 +30,7 @@ cd 项目源码
 PORT=24520 WEB_PORT=25520 API_PROXY_TARGET=http://127.0.0.1:24520 npm run dev
 ```
 
-`WEB_PORT` 与 `API_PROXY_TARGET` 示例也列在 `.env.example` 中。该文件不会自动加载，需像上面的命令一样从 shell 显式提供变量。
+`WEB_PORT` 与 `API_PROXY_TARGET` 示例也列在 `.env.example` 中。复制为 `项目源码/.env` 后，Vite 开发服务器会读取这两项；命令行显式设置的值优先。
 
 常用命令：
 
@@ -52,22 +52,18 @@ DB_PATH="$(mktemp -d)/haiyu-community-test.sqlite" npm test
 
 ## 环境变量
 
-示例见 [`项目源码/.env.example`](项目源码/.env.example)。源码不会自动读取 `.env` 文件；必须由 shell、进程管理器或 CI 显式导出环境变量。按本 README 从 `项目源码/` 运行根工作区的 `npm start` 或 `npm run dev` 时，API 由 `server` workspace 启动，进程工作目录为 `项目源码/server/`，所以 `.env.example` 中的相对值 `DB_PATH=./data/community-v2.sqlite` 指向 `项目源码/server/data/community-v2.sqlite`。相对 `DB_PATH` 始终按 API 进程工作目录解析；从其他目录直接运行 Node 时需相应调整。
+本地配置位于 `项目源码/.env`，示例见 [`项目源码/.env.example`](项目源码/.env.example)。从 `项目源码/` 执行 `npm start` 或 `npm run dev` 时，API 启动脚本会读取该文件；Vite 仅读取其中的 `WEB_PORT` 和 `API_PROXY_TARGET`，不会把 `LLM_API_KEY` 送到浏览器。shell、进程管理器或 CI 显式设置的同名变量优先。直接执行 `node server/src/index.js` 不会加载 `.env`。API 进程工作目录为 `项目源码/server/`，所以示例中的相对值 `DB_PATH=./data/community-v2.sqlite` 指向 `项目源码/server/data/community-v2.sqlite`；从其他目录直接运行 Node 时需相应调整。
 
 ```bash
 cd 项目源码
 export PORT=3020
 export DB_PATH="$PWD/server/data/community-v2.sqlite" # 等价于 server workspace 中的 .env.example 相对值
 export AUTH_SECRET='replace-with-a-random-32-byte-secret'
-export LLM_BASE_URL=''
-export LLM_API_KEY=''
-export LLM_MODEL='gpt-4o-mini'
-export LLM_TIMEOUT_MS=20000
 export ASSISTANT_SESSION_TTL_MS=28800000
 npm start
 ```
 
-`AUTH_SECRET` 必须替换为随机强密钥，不能使用源码默认值或演示值。只有同时设置 `LLM_BASE_URL` 和 `LLM_API_KEY` 才会尝试调用 OpenAI-compatible `/chat/completions`；留空时使用安全引导模式。不要把真实密钥提交到仓库。
+`AUTH_SECRET` 必须替换为随机强密钥，不能使用源码默认值或演示值。当前 `.env` 预置 `LLM_BASE_URL=https://api.deepseek.com`、`LLM_MODEL=deepseek-flash`，只需在本地填写 `LLM_API_KEY` 并重启 API；更换兼容服务时修改这三个 `LLM_*` 值。只有同时设置 `LLM_BASE_URL` 和 `LLM_API_KEY` 才会尝试调用 OpenAI-compatible `/chat/completions`；key 留空时使用安全引导模式。`.env` 已被 Git 忽略，不要把真实密钥提交到仓库。
 
 `LLM_TIMEOUT_MS` 控制模型请求超时，默认 20,000 毫秒；正数有效，超过 120,000 毫秒时按 120,000 计算，缺失、非正数或无效值使用默认值。`ASSISTANT_SESSION_TTL_MS` 控制新助手会话有效期，默认 28,800,000 毫秒（8 小时），最大按 604,800,000 毫秒（7 天）计算；缺失、非正数或无效值使用默认值。修改环境变量后需重启 API。
 

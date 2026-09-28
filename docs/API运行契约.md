@@ -6,7 +6,7 @@
 
 ## 1. 启动与环境变量
 
-在 `项目源码/` 执行根工作区命令：`npm start` 只启动 API，`npm run dev` 启动 API 和 Vite。API 脚本属于 `server` workspace，运行时工作目录为 `项目源码/server/`；因此相对 `DB_PATH` 按该目录解析。例如 `DB_PATH=./data/community-v2.sqlite` 对应 `项目源码/server/data/community-v2.sqlite`。`.env.example` 不会自动加载，变量须由 shell、进程管理器或 CI 显式提供。直接从其他目录运行 Node 时，相对路径会按那个进程工作目录解析。
+在 `项目源码/` 执行根工作区命令：`npm start` 只启动 API，`npm run dev` 启动 API 和 Vite。API 脚本属于 `server` workspace，会读取 `项目源码/.env`；shell、进程管理器或 CI 显式提供的变量优先。Vite 仅读取该文件中的 `WEB_PORT` 与 `API_PROXY_TARGET`。`.env.example` 是示例文件，不会自动加载。API 运行时工作目录为 `项目源码/server/`；因此相对 `DB_PATH` 按该目录解析。例如 `DB_PATH=./data/community-v2.sqlite` 对应 `项目源码/server/data/community-v2.sqlite`。直接从其他目录运行 Node 时，相对路径会按那个进程工作目录解析，且不会自动读取 `.env`。
 
 | 变量 | 默认值 | 行为 |
 | --- | --- | --- |
