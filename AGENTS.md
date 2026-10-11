@@ -1,3 +1,11 @@
+# 当前交付状态：进阶版本已整合本地main，待源最终独验（2026-10-11）
+
+唯一整合任务01a12ac0-76d8-7230-bd2e-01e888aa1699 / local、GPT-6.1 Sol / xhigh已按授权完成本地main双父合并`dd07421c86a94764a2ef85890b1f2e14a1445502`。main原8修改/48新增与dfa3完整交付分别保存在本地恢复分支，详见[第39轮报告](wangshanchong/第39轮报告.md)和[提交内摘要](docs/evidence/主分支整合摘要_20261011.json)。
+
+main npm test唯一一次58/58、build唯一一次0、差异检查0。source225/七份已验文档及旧证据原件保留；main三处仅空白规范化。所有新受管资源须以最终回源包的准确退出/句柄/清理证据为准。完整证据及ignored本地别名/mysql2已装包链接依赖dfa3，未复制依赖或用户数据库。原raw31/exit2、103UNVERIFIED/6受限和NOT_FINAL_ACCEPTED保持。本任务一次回源后停；源仅最终独验，不自动派发新功能。未push/PR。
+
+---
+
 # 当前有效状态：进阶文档独验PASS，授权GPT-6.1 Sol/xhigh整合main（2026-10-11）
 
 用户已明确要求完成后提交/合并main，并授权比较main已有改动后自行判断处理，执行模型GPT-6.1 Sol / xhigh；此授权优先下文旧暂停/禁止Git记录。源只计划验收，不做Git写入；下一独立App同目录fork任务是唯一整合执行者，旧Luna已停止，不恢复、不新checkout/worktree/依赖复制。

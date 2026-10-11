@@ -11,8 +11,8 @@
   },
   "mainOriginalCommit": "839076b617df8cdea0ed50d528b51d3d9b3b0ecb",
   "incomingSourceCommit": "b95e642962c9e69c73f8e71105c1969d3b1235f6",
-  "mergeCommit": null,
-  "status": "QUALITY_PASSED_MERGE_PREPARED_PENDING_SOURCE_REVIEW",
+  "mergeCommit": "dd07421c86a94764a2ef85890b1f2e14a1445502",
+  "status": "PASS_MAIN_INTEGRATION_SELF_REPORT_PENDING_SOURCE_REVIEW",
   "overlapDecisions": [
     {
       "path": "AGENTS.md",
@@ -181,16 +181,17 @@
     "installedOrCopied": false
   },
   "resourceProof": {
-    "completeEarlierInstances": 12,
-    "resources": 42,
+    "completeEarlierInstances": 14,
+    "resources": 52,
     "newLifecycleGaps": 0,
     "physicalResiduals": 0,
     "oldRaw31Exit2Preserved": true,
-    "sourceIndependentAcceptancePending": true
+    "sourceIndependentAcceptancePending": true,
+    "finalGitAndInspectorReceiptDirectory": "项目源码/output/resource-audit/main-integration/01a12ac0-76d8-7230-bd2e-01e888aa1699"
   },
   "documentLinks": {
-    "files": 142,
-    "localLinks": 1111,
+    "files": 143,
+    "localLinks": 1114,
     "missing": 0
   },
   "limits": {
@@ -206,5 +207,9 @@
   "newProviderCalls": 0,
   "newColdInstalls": 0,
   "newBrowserOrMysqlServices": 0,
-  "dependencyCopies": 0
+  "dependencyCopies": 0,
+  "mergeParents": [
+    "839076b617df8cdea0ed50d528b51d3d9b3b0ecb",
+    "b95e642962c9e69c73f8e71105c1969d3b1235f6"
+  ]
 }
