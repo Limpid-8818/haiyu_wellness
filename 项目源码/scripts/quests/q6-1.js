@@ -20,21 +20,22 @@ export async function run() {
     assert.ok(sample);
     assert.equal(sample.guestViews, 1);
     assert.equal(sample.adviceCount, 1);
-    assert.ok(allowed.data.every(row => row.role === undefined), 'response should expose the safe staff projection, not a raw role field');
+    assert.ok(allowed.data.every(row => row.role === 'staff' && !Object.hasOwn(row, 'password_hash')),
+      'response exposes the current safe public staff role and omits credential fields');
 
     const guestDenied = await request(baseUrl, '/dean/staff', { token: guestToken });
     assert.equal(guestDenied.status, 403);
-    assert.equal(guestDenied.data.code, 'ROLE_FORBIDDEN');
+    assert.equal(guestDenied.data.code, 'CAPABILITY_FORBIDDEN');
     const staffDenied = await request(baseUrl, '/dean/staff', { token: staffToken });
     assert.equal(staffDenied.status, 403);
-    assert.equal(staffDenied.data.code, 'ROLE_FORBIDDEN');
+    assert.equal(staffDenied.data.code, 'CAPABILITY_FORBIDDEN');
 
     return { output: [
       'dean GET /dean/staff HTTP 200; staffRows=2',
       'staff_001 guestViews=2 adviceCount=1',
       'staff_q6_1 guestViews=1 adviceCount=1',
-      'guest GET /dean/staff HTTP 403 ROLE_FORBIDDEN',
-      'staff GET /dean/staff HTTP 403 ROLE_FORBIDDEN'
+      'guest GET /dean/staff HTTP 403 CAPABILITY_FORBIDDEN',
+      'staff GET /dean/staff HTTP 403 CAPABILITY_FORBIDDEN'
     ] };
   }, 'haiyu-quest-q6-1-');
 }

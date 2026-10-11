@@ -1,0 +1,64 @@
+.meal-toolbar{display:flex;align-items:flex-end;gap:18px;padding:18px 20px;margin-bottom:16px;flex-wrap:wrap}
+.meal-toolbar label,.meal-swap-form label{display:grid;gap:6px;color:#50726f;font-size:12px;font-weight:650}
+.meal-toolbar input,.meal-toolbar select,.meal-swap-form select,.meal-swap-form textarea{min-width:200px;border:1px solid #dbe9e4;border-radius:9px;background:#fff;color:#31585b;padding:10px 12px;font:inherit}
+.meal-toolbar>span{margin:0 0 10px auto;color:#8ba19c;font-size:11px}
+.meal-day-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.meal-card{min-width:0;padding:18px}
+.meal-card>header,.dietitian-order>header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid #edf3f0}
+.meal-card>header h2,.dietitian-order>header h2{margin:4px 0 0;color:#31585b;font-size:20px}
+.meal-card .eyebrow,.dietitian-order .eyebrow{font-size:9px}
+.meal-state{display:inline-flex;align-items:center;white-space:nowrap;border-radius:99px;padding:6px 9px;background:#edf6f2;color:#538b7c;font-size:10px}
+.meal-state.incomplete,.meal-state.reserved{background:#fff5e5;color:#ad7e3c}
+.meal-state.preparing{background:#eaf1ff;color:#5472a5}
+.meal-state.delivered{background:#e8f6ee;color:#438265}
+.meal-items{display:grid;gap:10px;margin:14px 0}
+.meal-item{min-width:0;padding:13px;border:1px solid #edf2ef;border-radius:11px;background:#fcfefd}
+.meal-item-heading{display:flex;justify-content:space-between;gap:8px;color:#64827c;font-size:10px}
+.meal-item-heading span{color:#82a399}
+.meal-item h3{margin:8px 0;color:#335d5c;font-size:14px;line-height:1.5}
+.meal-item p{margin:4px 0;color:#819792;font-size:10px;line-height:1.6;overflow-wrap:anywhere}
+.meal-item p b{color:#66817b}
+.meal-item .meal-missing{padding:10px;border-radius:8px;background:#fff8ec;color:#997643}
+.meal-swap-trigger{margin-top:9px;padding:7px 10px;font-size:10px}
+.meal-swap-form{display:grid;gap:10px;margin-top:12px;padding:11px;border-radius:10px;background:#f2f8f6}
+.meal-swap-form select,.meal-swap-form textarea{box-sizing:border-box;width:100%;min-width:0;font-size:11px}
+.meal-swap-form textarea{min-height:70px;resize:vertical}
+.meal-swap-form>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.meal-swap-form .primary-btn{padding:9px 12px;font-size:10px}
+.meal-swap-form small{color:#a07841;font-size:10px;line-height:1.6}
+.meal-order-btn{width:100%;padding:11px;font-size:11px}
+.meal-order-status{display:grid;gap:5px;padding:12px;border-radius:9px;background:#f5f9f7;color:#698780;font-size:10px;overflow-wrap:anywhere}
+.meal-order-status strong{color:#497e6e;font-size:13px}
+.meal-order-status.preparing strong{color:#5472a5}
+.meal-order-status.delivered strong{color:#438265}
+.meal-order-status small{color:#95a8a3}
+.meal-notices{display:grid;gap:8px;margin:0 0 12px}
+.meal-notices p{margin:0;padding:11px 14px;border:1px solid #f0dfbe;border-radius:10px;background:#fff9ed;color:#8b7049;font-size:11px;line-height:1.7}
+.meal-notices strong{margin-right:8px;color:#b08343}
+.meal-source-note{margin:0 0 13px;color:#93a7a2;font-size:10px;line-height:1.6}
+.meal-avoidance{margin-top:14px;padding:18px 20px;color:#728b85;font-size:11px;line-height:1.8}
+.meal-avoidance h2{margin:0 0 8px;color:#486c68;font-size:13px}
+.meal-avoidance ul{margin:0;padding-left:18px}
+.meal-avoidance p{margin:0}
+.meal-empty{display:grid;justify-items:center;text-align:center;padding:42px 22px}
+.meal-empty-icon{display:grid;place-items:center;width:54px;height:54px;border-radius:18px;background:#e9f5f1;color:#62a495;font-size:24px}
+.meal-empty h2{margin:15px 0 6px;color:#31585b;font-size:17px}
+.meal-empty p{max-width:540px;margin:0 0 18px;color:#819792;font-size:11px;line-height:1.8}
+.dietitian-orders{display:grid;gap:14px}
+.dietitian-order{padding:20px}
+.dietitian-order>header h2 small{display:inline-block;margin-left:8px;color:#819792;font-size:11px;font-weight:500}
+.dietitian-order>header p{margin:6px 0 0;color:#94a8a2;font-size:10px;overflow-wrap:anywhere}
+.dietitian-dishes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}
+.dietitian-dishes>div{display:grid;gap:5px;min-width:0;padding:11px;border-radius:9px;background:#f6faf8}
+.dietitian-dishes span{color:#73948b;font-size:10px}
+.dietitian-dishes strong{color:#416863;font-size:12px}
+.dietitian-dishes small{color:#879d96;font-size:10px;line-height:1.6;overflow-wrap:anywhere}
+.dietitian-restrictions{padding:12px;border:1px solid #edf2ef;border-radius:9px;color:#768f89;font-size:10px;line-height:1.7}
+.dietitian-restrictions>strong{color:#54756e}
+.dietitian-restrictions ul{margin:5px 0;padding-left:18px}
+.dietitian-restrictions p{margin:5px 0}
+.dietitian-restrictions [role=status]{color:#9b7542}
+.dietitian-order>footer{display:flex;justify-content:flex-end;padding-top:13px}
+.dietitian-order>footer .primary-btn{padding:10px 14px;font-size:11px}
+@media(max-width:1200px){.meal-day-grid{grid-template-columns:minmax(0,1fr);max-width:780px}.meal-card{padding:20px}.meal-items{grid-template-columns:repeat(3,minmax(0,1fr))}.meal-item{display:flex;flex-direction:column}.meal-swap-trigger{align-self:flex-start;margin-top:auto}}
+@media(max-width:720px){.meal-toolbar{align-items:stretch}.meal-toolbar label{width:100%}.meal-toolbar input,.meal-toolbar select{box-sizing:border-box;width:100%}.meal-toolbar>span{margin:0}.meal-items,.dietitian-dishes{grid-template-columns:minmax(0,1fr)}.dietitian-order{padding:15px}.meal-card{padding:15px}}

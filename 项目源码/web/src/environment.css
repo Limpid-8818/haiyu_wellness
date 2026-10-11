@@ -1,0 +1,83 @@
+.environment-panel {
+  display: grid;
+  gap: 1rem;
+  margin: 1.25rem 0;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid rgba(30, 93, 100, .13);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #fff 4%, #f3faf8 100%);
+  color: #153b47;
+}
+.environment-heading,
+.environment-heading-actions,
+.environment-location,
+.environment-source-row,
+.environment-events,
+.environment-events > div,
+.environment-availability {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+.environment-heading h2 { margin: .2rem 0; font-size: clamp(1.15rem, 2vw, 1.5rem); }
+.environment-heading p,
+.environment-muted,
+.environment-disclaimer { margin: 0; color: #58717a; font-size: .88rem; }
+.environment-heading-actions { flex-wrap: wrap; }
+.environment-status,
+.environment-location span,
+.environment-source-row,
+.environment-events > div,
+.environment-availability {
+  border-radius: .75rem;
+  background: rgba(226, 240, 236, .76);
+}
+.environment-status { padding: .45rem .7rem; color: #24525a; font-size: .82rem; font-weight: 700; }
+.environment-status.unavailable,
+.environment-status.stale { background: #fff0e8; color: #8a442c; }
+.environment-status.demo { background: #fff5dd; color: #70551b; }
+.environment-location { justify-content: flex-start; flex-wrap: wrap; }
+.environment-location > strong { margin-right: .3rem; }
+.environment-location span { padding: .38rem .55rem; color: #42616a; font-size: .8rem; }
+.environment-state { padding: .85rem 1rem; border-radius: .85rem; background: #eff5f3; }
+.environment-state p { margin: .35rem 0 0; }
+.environment-state-warning { border: 1px solid #ead7a4; background: #fff9e9; }
+.environment-state-error { border: 1px solid #efc5b9; background: #fff5f1; }
+.environment-state small { display: block; margin-top: .4rem; overflow-wrap: anywhere; }
+.environment-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.environment-metrics > div { display: grid; gap: .35rem; min-height: 6.2rem; padding: .9rem; border: 1px solid rgba(30, 93, 100, .1); border-radius: .9rem; background: rgba(255,255,255,.86); }
+.environment-metrics span { color: #58717a; font-size: .84rem; }
+.environment-metrics strong { font-size: 1.25rem; }
+.environment-metrics small { color: #6b8188; font-size: .72rem; }
+.environment-source-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: flex-start; padding: .75rem; font-size: .8rem; }
+.environment-source-row span { min-width: 0; overflow-wrap: anywhere; }
+.environment-source-row a { color: #126c70; font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.environment-events { align-items: stretch; flex-wrap: wrap; }
+.environment-events > div { align-items: flex-start; flex: 1 1 15rem; flex-direction: column; padding: .8rem; }
+.environment-events > div > span { color: #42616a; font-size: .88rem; }
+.environment-tide-details { border-top: 1px solid rgba(30, 93, 100, .12); padding-top: .8rem; }
+.environment-tide-details summary { width: fit-content; color: #126c70; cursor: pointer; font-weight: 700; }
+.environment-chart-wrap { margin-top: .75rem; overflow-x: auto; }
+.environment-tide-chart { display: block; width: 100%; min-width: 22rem; height: auto; }
+.environment-chart-axis { stroke: #9ab4b2; stroke-width: 1.5; }
+.environment-chart-line { fill: none; stroke: #14868a; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.environment-event-dot { stroke: white; stroke-width: 2; }
+.environment-event-dot.high { fill: #bd6a38; }
+.environment-event-dot.low { fill: #547dad; }
+.environment-chart-mark { fill: #294f59; font-size: 11px; font-weight: 700; }
+.environment-chart-tick { fill: #637d84; font-size: 11px; }
+.environment-chart-values { color: #42616a; font-size: .8rem; }
+.environment-chart-values span { color: #6b8188; }
+.environment-availability { align-items: flex-start; flex-direction: column; padding: .85rem; }
+.environment-availability span { line-height: 1.55; }
+.environment-availability small { color: #58717a; }
+.environment-disclaimer { line-height: 1.55; }
+@media (max-width: 680px) {
+  .environment-heading { align-items: flex-start; flex-direction: column; }
+  .environment-heading-actions { width: 100%; justify-content: space-between; }
+  .environment-metrics { grid-template-columns: 1fr; }
+  .environment-metrics > div { min-height: 0; }
+  .environment-source-row { grid-template-columns: 1fr; }
+  .environment-events > div { flex-basis: 100%; }
+}

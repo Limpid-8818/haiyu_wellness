@@ -1,0 +1,202 @@
+.login-switch {
+  display: block;
+  margin: 16px auto 0;
+  border: 0;
+  padding: 4px 8px;
+  background: transparent;
+  color: #0b6670;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.login-switch:hover { text-decoration: underline; }
+.inline-error { margin-top: -8px; }
+
+.stage11-placeholder {
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+  padding: 28px;
+}
+
+.stage11-placeholder > span {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 16px;
+  background: #e7f4f2;
+  color: #0b6670;
+  font-size: 28px;
+}
+
+.stage11-placeholder h2 { margin: 0 0 8px; }
+.stage11-placeholder p { max-width: 720px; margin: 0 0 18px; color: #587079; line-height: 1.7; }
+.org-form-card, .stay-selected-summary { margin-bottom: 20px; padding: 24px; }
+.org-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; align-items: end; }
+.org-form-grid > label, .admission-filters label, .admission-filters form > label {
+  display: grid;
+  gap: 7px;
+  color: #31505a;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.org-form-grid input, .org-form-grid select, .admission-filters input, .admission-filters select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #c8d7d8;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #fff;
+  color: #173942;
+  font: inherit;
+}
+
+.org-form-grid input:focus, .org-form-grid select:focus, .admission-filters input:focus, .admission-filters select:focus {
+  outline: 3px solid #a8d9d5;
+  border-color: #0b6670;
+}
+
+.org-form-submit { display: flex; align-items: end; min-height: 44px; }
+.org-table-wrap { overflow-x: auto; }
+.org-table { width: 100%; border-collapse: collapse; min-width: 650px; text-align: left; }
+.org-table th, .org-table td { padding: 14px 16px; border-bottom: 1px solid #e3eceb; vertical-align: middle; }
+.org-table thead th { color: #557079; font-size: 12px; font-weight: 750; letter-spacing: .04em; white-space: nowrap; }
+.org-table tbody td, .org-table tbody th { color: #25444d; font-size: 14px; }
+.org-table tbody td:first-child strong, .org-table tbody td:first-child small { display: block; }
+.org-table tbody td:first-child small, .org-table td > small { margin-top: 4px; color: #71868b; font-size: 12px; }
+.org-role-pill, .org-state, .capability-fixed {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #edf4f3;
+  color: #31525a;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.org-state.active, .org-state.in_house, .capability-fixed.allowed { background: #e2f4ec; color: #1d684f; }
+.org-state.disabled, .org-state.checked_out, .capability-fixed.denied { background: #f3eeee; color: #775858; }
+.org-state.pending { background: #fff2d9; color: #805914; }
+.org-table .selected-row { background: #f2faf8; }
+.org-row-link { border: 0; padding: 0; background: transparent; color: #0b6670; font: inherit; font-weight: 750; cursor: pointer; }
+.org-row-link:hover { text-decoration: underline; }
+.org-job-select { min-height: 36px; border: 1px solid #c8d7d8; border-radius: 8px; padding: 6px 9px; background: #fff; color: #25444d; font: inherit; font-size: 13px; }
+.danger-btn {
+  min-height: 36px;
+  border: 1px solid #e2bcbc;
+  border-radius: 9px;
+  padding: 7px 12px;
+  background: #fff8f7;
+  color: #8d3832;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.danger-btn:hover { background: #fcebe9; }
+.capability-toggle { display: inline-flex; align-items: center; gap: 9px; color: #31505a; font-size: 13px; font-weight: 650; cursor: pointer; }
+.capability-toggle input { width: 20px; height: 20px; accent-color: #0b6670; }
+.capability-note { display: grid; gap: 5px; margin: 18px 16px 4px; border-left: 3px solid #d1a752; padding: 4px 0 4px 12px; color: #5b7178; font-size: 13px; line-height: 1.6; }
+.capability-note strong { color: #344f56; }
+.admission-list-tools { padding: 0 16px 14px; }
+.admission-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; }
+.admission-filters select { min-width: 150px; }
+.admission-filters form { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+.admission-filters form > label { min-width: 190px; }
+.admission-filters form .outline-btn { min-height: 42px; }
+.stay-selected-summary { display: flex; justify-content: space-between; gap: 14px; color: #31505a; }
+.stay-selected-summary span { color: #61777e; font-size: 13px; }
+.admission-status-line { display: flex; justify-content: space-between; margin: 20px 0 10px; border-radius: 10px; padding: 12px 14px; background: #edf7f4; color: #31505a; }
+.admission-status-line strong { color: #145c59; }
+.assignment-history { display: grid; gap: 0; padding: 0 18px 12px; }
+.assignment-row { display: flex; align-items: center; gap: 14px; min-height: 74px; border-bottom: 1px solid #e3eceb; padding: 12px 2px; }
+.assignment-person { display: grid; min-width: 145px; gap: 4px; }
+.assignment-person small, .assignment-interval small { color: #71868b; font-size: 12px; }
+.assignment-interval { display: grid; flex: 1; gap: 4px; color: #3f5b62; font-size: 13px; }
+
+.health-self-report { margin-top: 20px; padding: 22px; }
+.health-self-report-head, .clinician-review-head, .clinician-review-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.health-self-report-head h2 { margin: 4px 0 5px; color: #183e48; font-size: 21px; }
+.health-self-report-head p, .clinician-review-head p { margin: 0; color: #657b81; font-size: 13px; line-height: 1.65; }
+.health-completeness { margin: 20px 0; border: 1px solid #d9e9e5; border-radius: 12px; padding: 14px 16px; background: #f7fbf9; }
+.health-completeness-copy { display: flex; justify-content: space-between; gap: 12px; color: #31525a; }
+.health-completeness-copy span, .health-missing-list { color: #687e83; font-size: 13px; }
+.health-progress { height: 9px; margin-top: 11px; overflow: hidden; border-radius: 20px; background: #e3eeeb; }
+.health-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #167b78, #7fc5a1); transition: width .2s ease; }
+.health-missing-list { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.health-missing-list button { border: 0; padding: 0; background: transparent; color: #0b6670; font: inherit; font-weight: 750; text-decoration: underline; cursor: pointer; }
+.health-pending-banner { display: grid; gap: 4px; margin: 14px 0; border: 1px solid #edd79e; border-radius: 10px; padding: 12px 14px; background: #fff9e9; color: #6d571d; font-size: 13px; line-height: 1.6; }
+.health-pending-banner strong { font-size: 14px; }
+.health-form-error { margin: 12px 0; border-radius: 9px; padding: 11px 13px; background: #fff0ee; color: #903d37; font-size: 13px; }
+.health-profile-form { display: grid; gap: 0; }
+.health-self-report-field { display: grid; gap: 9px; border-bottom: 1px solid #e6eeec; padding: 17px 2px; scroll-margin-top: 28px; }
+.health-field-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #234850; font-size: 15px; font-weight: 750; }
+.health-field-heading span, .health-field-error { color: #a13f38; font-size: 12px; font-weight: 650; }
+.health-self-report-field select, .health-self-report-field input, .health-self-report-field textarea,
+.clinician-review-actions textarea { width: 100%; min-height: 42px; border: 1px solid #cbdcda; border-radius: 9px; padding: 10px 12px; background: #fff; color: #24454d; font: inherit; font-size: 14px; }
+.health-self-report-field textarea, .clinician-review-actions textarea { resize: vertical; line-height: 1.6; }
+.health-field-input-label, .health-medication-row label, .clinician-review-actions label { display: grid; gap: 6px; color: #526d73; font-size: 12px; font-weight: 700; }
+.health-self-report-field.has-error select, .health-self-report-field.has-error input, .health-self-report-field.has-error textarea { border-color: #d9857f; background: #fffafa; }
+.health-medication-editor { display: grid; gap: 12px; }
+.health-medication-editor > p { margin: 0; color: #6e8287; font-size: 12px; }
+.health-medication-row { display: grid; grid-template-columns: 1.5fr 1fr auto; align-items: end; gap: 10px; border-radius: 10px; padding: 12px; background: #f6faf8; }
+.health-profile-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 0 6px; }
+.health-profile-actions > span { color: #6a7f84; font-size: 12px; }
+.health-verified-panel, .health-history-panel { margin-top: 22px; border-top: 1px solid #e3ecea; padding-top: 18px; }
+.health-verified-grid, .clinician-candidate-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.health-verified-grid > div, .clinician-candidate-grid > div { display: grid; gap: 5px; border-radius: 9px; padding: 11px 12px; background: #f5f9f7; }
+.health-verified-grid span, .clinician-candidate-grid span { color: #6d8287; font-size: 12px; }
+.health-verified-grid strong, .clinician-candidate-grid strong { color: #31525a; font-size: 13px; line-height: 1.6; font-weight: 650; overflow-wrap: anywhere; }
+.health-intake-history { display: grid; gap: 9px; }
+.health-history-item { border: 1px solid #e0e9e7; border-radius: 10px; background: #fff; }
+.health-history-item > summary { display: flex; align-items: center; gap: 10px; padding: 12px 13px; color: #35545b; cursor: pointer; list-style: none; }
+.health-history-item > summary::-webkit-details-marker { display: none; }
+.health-history-item > summary strong { flex: 1; font-size: 13px; }
+.health-history-item > summary time { color: #71868b; font-size: 11px; }
+.health-intake-status { display: inline-flex; align-items: center; border-radius: 30px; padding: 4px 8px; background: #fff2d9; color: #805914; font-size: 11px; font-weight: 750; white-space: nowrap; }
+.health-intake-status.confirmed { background: #e2f4ec; color: #1d684f; }
+.health-intake-status.rejected { background: #f5e9e8; color: #8d4943; }
+.health-history-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 0 13px 11px; color: #71868b; font-size: 11px; }
+.health-history-diff { margin: 0 13px 12px; border: 1px solid #e7efed; border-radius: 8px; overflow: hidden; }
+.health-history-diff-head, .health-history-diff-row { display: grid; grid-template-columns: minmax(85px, .7fr) 1fr 1fr; gap: 10px; padding: 8px 10px; color: #405e65; font-size: 12px; line-height: 1.55; }
+.health-history-diff-head { background: #f1f7f5; color: #71868b; font-size: 11px; font-weight: 700; }
+.health-history-diff-row + .health-history-diff-row { border-top: 1px solid #edf2f1; }
+.health-history-diff-row strong { color: #31525a; }
+.health-intake-raw, .health-review-note { margin: 0 13px 12px; color: #536d73; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.health-review-note { border-left: 3px solid #d4a347; padding: 5px 0 5px 9px; color: #765c25; }
+.clinician-health-review { display: grid; gap: 14px; }
+.clinician-review-head > div { flex: 1; }
+.clinician-review-current { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; border-radius: 9px; padding: 12px; background: #f4f8f7; color: #536e73; font-size: 12px; }
+.clinician-review-current strong { color: #31525a; }
+.clinician-review-queue { display: grid; gap: 12px; }
+.clinician-review-item { display: grid; gap: 12px; border: 1px solid #dfe9e7; border-radius: 11px; padding: 14px; background: #fff; }
+.clinician-review-item-head > div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.clinician-review-item-head strong { color: #31525a; font-size: 13px; }
+.clinician-review-item-head time { color: #71868b; font-size: 11px; white-space: nowrap; }
+.clinician-review-submitter, .clinician-legacy-intake small { color: #71868b; font-size: 11px; }
+.clinician-compare > summary { color: #0b6670; font-size: 12px; font-weight: 700; cursor: pointer; }
+.clinician-review-actions { display: grid; grid-template-columns: auto minmax(200px, 1fr) auto; align-items: end; gap: 12px; border-top: 1px solid #e8efed; padding-top: 12px; }
+.clinician-legacy-intake { display: grid; gap: 6px; border-left: 3px solid #d6a74b; padding: 5px 10px; }
+.clinician-legacy-intake strong { color: #475f65; font-size: 12px; }
+.clinician-legacy-intake p { margin: 0; color: #334f56; font-size: 13px; line-height: 1.6; }
+.clinician-empty-queue { border: 1px dashed #d6e2df; border-radius: 10px; padding: 16px; }
+.read-only-review-note { margin: 0; color: #62797e; font-size: 13px; line-height: 1.7; }
+.staff-verified-grid { margin: 8px 0 14px; }
+
+@media (max-width: 700px) {
+  .health-self-report { padding: 16px; }
+  .health-self-report-head, .clinician-review-head { align-items: flex-start; }
+  .health-medication-row { grid-template-columns: 1fr; }
+  .health-profile-actions { align-items: flex-start; flex-direction: column; }
+  .health-verified-grid, .clinician-candidate-grid { grid-template-columns: 1fr; }
+  .health-history-item > summary { align-items: flex-start; flex-wrap: wrap; }
+  .health-history-item > summary time { width: 100%; margin-left: 2px; }
+  .health-history-diff-head, .health-history-diff-row { grid-template-columns: 80px 1fr 1fr; gap: 6px; padding: 7px; font-size: 11px; }
+  .clinician-review-actions { grid-template-columns: 1fr; }
+}

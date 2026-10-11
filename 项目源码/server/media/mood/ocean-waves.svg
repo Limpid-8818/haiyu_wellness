@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title">
+  <title id="title">海浪声环境音封面</title>
+  <defs><linearGradient id="sea" x2="0" y2="1"><stop stop-color="#b8d9d1"/><stop offset=".46" stop-color="#6da9a2"/><stop offset="1" stop-color="#285e67"/></linearGradient></defs>
+  <rect width="640" height="400" rx="28" fill="url(#sea)"/>
+  <circle cx="492" cy="105" r="39" fill="#f2d99d" opacity=".9"/>
+  <path d="M0 234c55-34 105-34 157 0s105 35 158 0 105-34 158 0 105 35 167 0" fill="none" stroke="#eef6e7" stroke-width="11" stroke-linecap="round" opacity=".8"/>
+  <path d="M0 277c55-28 105-27 157 1s105 28 158 0 105-28 158 0 105 29 167 0" fill="none" stroke="#c8e3d7" stroke-width="7" stroke-linecap="round" opacity=".76"/>
+  <path d="M0 324c64-22 121-22 183 0s125 22 187 0 122-22 270 0" fill="none" stroke="#a4d0c5" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+  <text x="42" y="68" fill="#f9fbef" font-family="sans-serif" font-size="22" font-weight="600">海屿 · 海浪声</text>
+</svg>

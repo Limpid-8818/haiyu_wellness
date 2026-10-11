@@ -1,0 +1,305 @@
+/* Shared desktop-web scale for public, login, and signed-in pages. */
+:root {
+  --page-gutter: clamp(28px, 3.4vw, 96px);
+}
+
+.public-header nav {
+  font-size: 15px;
+}
+
+.login-shell {
+  grid-template-columns: minmax(300px, 42%) minmax(0, 1fr);
+}
+
+.login-aside {
+  padding-inline: clamp(34px, 6vw, 110px);
+}
+
+.login-panel {
+  padding: 34px clamp(32px, 5vw, 96px);
+}
+
+.login-form-wrap {
+  max-width: 460px;
+}
+
+.login-form-wrap h1 {
+  font-size: clamp(34px, 2.7vw, 40px);
+}
+
+.form-lead,
+.login-form-wrap form label,
+.demo-hint {
+  font-size: 14px;
+}
+
+.login-form-wrap input {
+  font-size: 15px;
+}
+
+.app-sidebar {
+  width: clamp(232px, 17vw, 270px);
+  padding: 30px 18px 22px;
+}
+
+.side-nav button {
+  min-height: 48px;
+  font-size: 15px;
+}
+
+.workspace-label,
+.breadcrumb,
+.user-menu strong,
+.user-menu small,
+.privacy-note strong,
+.privacy-note small,
+.logout-btn {
+  font-size: 12px;
+}
+
+.app-header {
+  height: 78px;
+  padding-inline: var(--page-gutter);
+}
+
+.workspace {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(32px, 3vw, 56px) var(--page-gutter) 80px;
+  container-type: inline-size;
+}
+
+.page-title h1 {
+  font-size: clamp(32px, 2.4vw, 40px);
+}
+
+.page-title p,
+.welcome-banner p,
+.staff-banner p,
+.account-avatar p,
+.empty-large p {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.welcome-banner h2,
+.staff-banner h2 {
+  font-size: 25px;
+}
+
+.metric-grid,
+.health-summary,
+.principle-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.two-col,
+.advice-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+}
+
+.form-grid,
+.detail-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.guest-layout {
+  grid-template-columns: clamp(300px, 26vw, 440px) minmax(0, 1fr);
+}
+
+.dean-layout {
+  grid-template-columns: clamp(300px, 26vw, 440px) minmax(0, 1fr);
+}
+
+.surface-head h2,
+.agent-panel h2 {
+  font-size: 18px;
+}
+
+.metric-card span,
+.metric-card small,
+.health-glance strong,
+.advice-preview > strong,
+.advice-card > p,
+.list-heading strong,
+.guest-main strong,
+.info-item strong,
+.health-alert strong,
+.staff-advice-row strong,
+.staff-log-list strong,
+.staff-recent-row strong,
+.account-line,
+.readonly-field label,
+.login-form-wrap form label,
+.form-surface label,
+.advice-form label,
+.password-form label {
+  font-size: 14px;
+}
+
+.health-summary span,
+.health-summary small {
+  font-size: 12px;
+}
+
+.health-glance p,
+.advice-preview > p,
+.advice-preview > small,
+.guest-main small,
+.profile-hero p,
+.info-item span,
+.health-alert p,
+.staff-advice-row p,
+.staff-log-list p,
+.staff-recent-row p,
+.staff-recent-row time,
+.review-history p,
+.review-history small,
+.account-line span,
+.principle p,
+.agent-panel-head p,
+.agent-events p,
+.agent-gate {
+  font-size: 12px;
+}
+
+.table-surface {
+  overflow-x: auto;
+}
+
+.data-table {
+  min-width: 680px;
+}
+
+.table-row,
+.table-row strong {
+  font-size: 13px;
+}
+
+.table-head,
+.table-row small {
+  font-size: 12px;
+}
+
+.assistant-window {
+  width: min(430px, calc(100vw - 52px));
+}
+
+.assistant-message,
+.assistant-input input {
+  font-size: 14px;
+}
+
+.assistant-title small,
+.assistant-mode,
+.assistant-window > footer,
+.quick-replies button {
+  font-size: 12px;
+}
+
+.banner-kicker,
+.agent-mode,
+.agent-mode button,
+.flow-node small,
+.agent-events strong,
+.assistant-fab small {
+  font-size: 12px;
+}
+
+.flow-node strong {
+  font-size: 13px;
+}
+
+@container (max-width: 900px) {
+  .guest-layout,
+  .dean-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-flow {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.24fr) minmax(0, 1fr);
+  }
+
+  .flow-line {
+    display: none;
+  }
+
+  .flow-agents {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 850px) {
+  .app-shell {
+    display: block;
+  }
+
+  .app-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 18px var(--page-gutter);
+    border-right: 0;
+    border-bottom: 1px solid #e3eeea;
+  }
+
+  .workspace-label {
+    margin: 14px 0 8px;
+  }
+
+  .side-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .side-bottom {
+    display: none;
+  }
+
+  .public-header {
+    height: auto;
+    min-height: 78px;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding-block: 16px;
+  }
+
+  .public-header nav {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 780px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .login-aside {
+    min-height: 160px;
+    padding: 25px var(--page-gutter);
+  }
+
+  .login-quote {
+    display: none;
+  }
+
+  .login-aside-foot {
+    margin-top: auto;
+  }
+
+  .login-panel {
+    min-height: calc(100vh - 160px);
+    padding: 30px var(--page-gutter);
+  }
+
+  .agent-flow,
+  .agent-events {
+    grid-template-columns: 1fr;
+  }
+
+  .review-form {
+    flex-wrap: wrap;
+  }
+}

@@ -5,14 +5,16 @@ import { login, request, withModelStub } from './q7-helpers.js';
 export async function run() {
   return withModelStub(async () => ({
     status: 200,
-    body: { id: 'q7-stub-completion', choices: [{ index: 0, message: { role: 'assistant', content: 'Q7.11-STUB-REPLY' } }] }
+    body: { id: 'q7-stub-completion', model: 'q7-local-stub-model',
+      choices: [{ index: 0, message: { role: 'assistant', content: 'Q7.11-STUB-REPLY' } }],
+      usage: { prompt_tokens: 24, completion_tokens: 4, total_tokens: 28 } }
   }), async stub => withTemporaryApi(async ({ baseUrl }) => {
     const token = await login(baseUrl, 'guest_demo', 'guest2026', 'guest');
     const result = await request(baseUrl, '/assistant/chat', {
       method: 'POST', token, body: { text: 'Q7.11 指定消息参数' }
     });
     assert.equal(result.status, 200);
-    assert.equal(result.data.live, true);
+    assert.equal(result.data.live, true, `configured local stub should complete the assistant model path; mode=${result.data.mode}; executionMode=${result.data.executionMode}; status=${result.data.status}; errorCode=${result.data.errorCode || 'none'}; stubRequests=${stub.received.length}`);
     assert.equal(result.data.mode, '真实模型服务');
     assert.equal(result.data.reply, 'Q7.11-STUB-REPLY');
     assert.equal(stub.received.length, 1);
@@ -23,7 +25,7 @@ export async function run() {
     assert.ok(stub.received[0].body.messages.some(message => message.role === 'user' && message.content === 'Q7.11 指定消息参数'));
     return { output: [
       'local model stub POST /v1/chat/completions received HTTP-compatible JSON',
-      `authorization=${stub.received[0].headers.authorization}`,
+      'authorization header matched the isolated fixture credential',
       `model=${stub.received[0].body.model}; user message received=true`,
       `assistant reply parsed=${result.data.reply}; live=true`
     ] };

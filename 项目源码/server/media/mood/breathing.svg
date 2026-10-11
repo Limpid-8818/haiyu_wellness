@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title">
+  <title id="title">呼吸放松课程封面</title>
+  <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#d8eee7"/><stop offset="1" stop-color="#eff6df"/></linearGradient></defs>
+  <rect width="640" height="400" rx="28" fill="url(#sky)"/>
+  <circle cx="475" cy="112" r="54" fill="#f7d898" opacity=".86"/>
+  <path d="M0 270c90-48 159-55 254-20 80 30 156 28 234-10 54-26 103-32 152-19v179H0z" fill="#8fc6b3"/>
+  <path d="M0 316c93-29 175-28 268 0 105 32 217 23 372-32v116H0z" fill="#4f9f91" opacity=".76"/>
+  <path d="M146 179c34-35 76-35 110 0m29 0c34-35 76-35 110 0" fill="none" stroke="#fdfcf3" stroke-width="8" stroke-linecap="round" opacity=".88"/>
+  <text x="42" y="68" fill="#315d58" font-family="sans-serif" font-size="22" font-weight="600">海屿 · 慢慢呼吸</text>
+</svg>
