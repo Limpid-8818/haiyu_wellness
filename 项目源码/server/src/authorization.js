@@ -14,51 +14,51 @@ function requireGuestId(guestId) {
   return guestId;
 }
 
-export function isAssignmentEffective(staffId, guestId, at = now()) {
+export async function isAssignmentEffective(staffId, guestId, at = now()) {
   const stamp = at instanceof Date ? at.toISOString() : String(at);
-  const row = db.prepare(`
+  const row = await db.prepare(`
     SELECT id FROM staff_guest_assignments
     WHERE staff_id=? AND guest_id=? AND status='active'
-      AND julianday(start_at) <= julianday(?)
-      AND (end_at IS NULL OR julianday(end_at) > julianday(?))
+      AND start_at <= ?
+      AND (end_at IS NULL OR end_at > ?)
     ORDER BY start_at DESC, id DESC LIMIT 1
   `).get(staffId, guestId, stamp, stamp);
   return Boolean(row);
 }
 
-export function accessibleGuestIds(user, at = now()) {
+export async function accessibleGuestIds(user, at = now()) {
   if (!user) return [];
   if (user.role === 'dean') {
-    return db.prepare(`SELECT id FROM users WHERE ${ACTIVE_GUEST_SQL} ORDER BY id`).all().map(row => row.id);
+    return (await db.prepare(`SELECT id FROM users WHERE ${ACTIVE_GUEST_SQL} ORDER BY id`).all()).map(row => row.id);
   }
   if (user.role === 'guest') {
-    const row = db.prepare(`SELECT id FROM users WHERE id=? AND ${ACTIVE_GUEST_SQL}`).get(user.id);
+    const row = await db.prepare(`SELECT id FROM users WHERE id=? AND ${ACTIVE_GUEST_SQL}`).get(user.id);
     return row ? [row.id] : [];
   }
   if (user.role !== 'staff') return [];
   const stamp = at instanceof Date ? at.toISOString() : String(at);
-  return db.prepare(`
+  return (await db.prepare(`
     SELECT DISTINCT u.id
     FROM users u JOIN staff_guest_assignments a ON a.guest_id=u.id
     WHERE ${ACTIVE_GUEST_USER_SQL} AND a.staff_id=? AND a.status='active'
-      AND julianday(a.start_at) <= julianday(?)
-      AND (a.end_at IS NULL OR julianday(a.end_at) > julianday(?))
+      AND a.start_at <= ?
+      AND (a.end_at IS NULL OR a.end_at > ?)
     ORDER BY u.id
-  `).all(user.id, stamp, stamp).map(row => row.id);
+  `).all(user.id, stamp, stamp)).map(row => row.id);
 }
 
-export function countAccessibleGuests(user) {
-  return accessibleGuestIds(user).length;
+export async function countAccessibleGuests(user) {
+  return (await accessibleGuestIds(user)).length;
 }
 
-export function findGuest(guestId) {
+export async function findGuest(guestId) {
   const id = requireGuestId(guestId);
-  return db.prepare("SELECT id,username,password_hash,role,name,phone,avatar,status,created_at FROM users WHERE id=? AND role='guest'").get(id) || null;
+  return (await db.prepare("SELECT id,username,password_hash,role,name,phone,avatar,status,created_at FROM users WHERE id=? AND role='guest'").get(id)) || null;
 }
 
-export function authorizeGuestAccess(user, guestId) {
+export async function authorizeGuestAccess(user, guestId) {
   const id = requireGuestId(guestId);
-  const guest = findGuest(id);
+  const guest = await findGuest(id);
   if (!guest) throw new AppError(404, 'GUEST_NOT_FOUND', '客人不存在');
   if (guest.status !== 'active') throw new AppError(403, 'GUEST_INACTIVE', '客人账号已停用');
 
@@ -69,7 +69,7 @@ export function authorizeGuestAccess(user, guestId) {
     return guest;
   }
   if (user.role === 'staff') {
-    if (!isAssignmentEffective(user.id, guest.id)) {
+    if (!(await isAssignmentEffective(user.id, guest.id))) {
       throw new AppError(403, 'GUEST_NOT_ASSIGNED', '该客人当前不在你的负责范围内');
     }
     return guest;
@@ -77,8 +77,8 @@ export function authorizeGuestAccess(user, guestId) {
   throw new AppError(403, 'GUEST_FORBIDDEN', '当前身份无权访问客人档案');
 }
 
-export function guestScope(user) {
-  const ids = accessibleGuestIds(user);
+export async function guestScope(user) {
+  const ids = await accessibleGuestIds(user);
   if (!ids.length) return { clause: '1=0', params: [] };
   return {
     clause: `u.id IN (${ids.map(() => '?').join(',')})`,

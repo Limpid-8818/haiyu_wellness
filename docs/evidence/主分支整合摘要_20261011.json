@@ -1,0 +1,210 @@
+{
+  "taskId": "01a12ac0-76d8-7230-bd2e-01e888aa1699",
+  "sourceRoot": "/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness",
+  "mainRoot": "/Users/wangshanchong/Codes/haiyu_wellness",
+  "base": "b5268c0373620057cf720cd8b4ae5948dd2bdec1",
+  "recoveryObjects": {
+    "source-tree": "27a4f2c59b45f49ba3e04f401440fb009c8861a1",
+    "source-commit": "b95e642962c9e69c73f8e71105c1969d3b1235f6",
+    "main-tree": "f2b7a73e5b824b2796e8bddda6e0cbc7c002db04",
+    "main-commit": "005efb1ca6b9a14cf64ffe4c34c7ade66178798b"
+  },
+  "mainOriginalCommit": "839076b617df8cdea0ed50d528b51d3d9b3b0ecb",
+  "incomingSourceCommit": "b95e642962c9e69c73f8e71105c1969d3b1235f6",
+  "mergeCommit": null,
+  "status": "QUALITY_PASSED_MERGE_PREPARED_PENDING_SOURCE_REVIEW",
+  "overlapDecisions": [
+    {
+      "path": "AGENTS.md",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "312c2c7b573f775477f00b5cc0d80d6713e46b5cfcc79d676b62e2c261eeb83a",
+      "reason": "采用源完整历史与后续验收记录；原main较短快照在恢复提交完整保留。"
+    },
+    {
+      "path": "QuestMap.md",
+      "conflict": false,
+      "decision": "accepted-source",
+      "sha256": "c6a0271c749cd8e68edbe0ad5ec7aea3242eeab79ef92831976c890120dfc019",
+      "reason": "采用源已验版本；保留main网页布局范围与已有调整，同时纳入后续功能/当前验收信息。"
+    },
+    {
+      "path": "QuestMap_进阶阶段.md",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "e0a4f4424360586d4ae1b959642595bae6046266dbe8e430a434ce7fb0148180",
+      "reason": "采用源已验版本；保留main网页布局范围与已有调整，同时纳入后续功能/当前验收信息。"
+    },
+    {
+      "path": "docs/API当前基线.md",
+      "conflict": false,
+      "decision": "accepted-source",
+      "sha256": "f38a884f211c6bdd5d8782b44f39567da7171071ad18152d6c346687a90c7ee8",
+      "reason": "采用源已验版本；保留main网页布局范围与已有调整，同时纳入后续功能/当前验收信息。"
+    },
+    {
+      "path": "docs/本地验收资源管理.md",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "96b209c76cc158ec32a5488d2b100c9fadf305813175e9e5c4fe9eb9c47cb299",
+      "reason": "采用源完整历史与后续验收记录；原main较短快照在恢复提交完整保留。"
+    },
+    {
+      "path": "docs/阶段25验收复核_20261009.md",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "76a5eccfd1c700eaa765232db20d40ecbc2342dc55d2ab3cefb53231f2f5363b",
+      "reason": "采用源完整历史与后续验收记录；原main较短快照在恢复提交完整保留。"
+    },
+    {
+      "path": "docs/阶段26执行与验收计划.md",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "58314be608df37e0b6a403ae859e5719ffe06742c64a358908a73b18321a17ec",
+      "reason": "采用源完整历史与后续验收记录；原main较短快照在恢复提交完整保留。"
+    },
+    {
+      "path": "docs/阶段27执行与验收计划.md",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "3af1a383034597d0c231ca21fd0c8ec976b3c456083b5453645b4b4533b27340",
+      "reason": "采用源完整历史与后续验收记录；原main较短快照在恢复提交完整保留。"
+    },
+    {
+      "path": "项目源码/web/src/agent.css",
+      "conflict": false,
+      "decision": "accepted-source",
+      "sha256": "98ee751c8ff8020869a7cf7ed045711d3a16eb1132d7fd9c41dfd05232fe3e23",
+      "reason": "采用源已验版本；保留main网页布局范围与已有调整，同时纳入后续功能/当前验收信息。"
+    },
+    {
+      "path": "项目源码/web/src/assistant.css",
+      "conflict": false,
+      "decision": "accepted-source",
+      "sha256": "80e72c95a01824d7a40cf233afa9f4439afb6d932e3796cda5efb98bd59bdfad",
+      "reason": "采用源已验版本；保留main网页布局范围与已有调整，同时纳入后续功能/当前验收信息。"
+    },
+    {
+      "path": "项目源码/web/src/main.jsx",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "08d8b0fb7a6ef2e6c033753b1567d57a8a6795fb978b4f2e91d557b73d0258a9",
+      "reason": "采用源已验版本；保留main网页布局范围与已有调整，同时纳入后续功能/当前验收信息。"
+    },
+    {
+      "path": "项目源码/web/src/overrides.css",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "c8b7e39edfc79425ab238ca624ad3c9c0764924eabfccff0db6a1c693b261bf8",
+      "reason": "采用源已验版本；保留main网页布局范围与已有调整，同时纳入后续功能/当前验收信息。"
+    },
+    {
+      "path": "项目源码/web/src/styles.css",
+      "conflict": true,
+      "decision": "accepted-source",
+      "sha256": "3da85e9e907e5f032bbe2d7102c55785ac5507b1de99de9304310217a7915137",
+      "reason": "采用源已验版本；保留main网页布局范围与已有调整，同时纳入后续功能/当前验收信息。"
+    }
+  ],
+  "runtimePreservation": {
+    "sourceHead": "b5268c0373620057cf720cd8b4ae5948dd2bdec1",
+    "sourceEligible331Exact": 331,
+    "sourceEligibleChanges": [],
+    "oldLocalEvidence4833ExactOrManifestPrefix": 4833,
+    "oldLocalEvidenceChanges": [],
+    "mainRuntimeExact": 222,
+    "mainWhitespaceOnly": [
+      "项目源码/server/src/daily-brief.js",
+      "项目源码/server/src/stage26-operations.js",
+      "项目源码/server/src/wellness-notifications.js"
+    ],
+    "mainOtherRuntimeChanges": [],
+    "acceptedSevenDocsExact": true,
+    "sourceAll109And115PlansUnchanged": true,
+    "oldRaw31Exit2NotRewritten": true
+  },
+  "tests": {
+    "command": "npm test",
+    "count": 58,
+    "pass": 58,
+    "fail": 0,
+    "exitCode": 0,
+    "runs": 1
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "runs": 1,
+    "modules": 49
+  },
+  "qualityCwd": "/Users/wangshanchong/Codes/haiyu_wellness/项目源码",
+  "diffCheckAfterNecessaryFormatting": 0,
+  "historicalReportsUnchanged": true,
+  "markdownHardBreakAttribute": "wangshanchong/*.md whitespace=-blank-at-eol",
+  "localEvidenceAliases": [
+    {
+      "main": "/Users/wangshanchong/Codes/haiyu_wellness/项目源码/output/resource-audit",
+      "source": "/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/项目源码/output/resource-audit",
+      "git": "ignored-local-evidence-alias"
+    },
+    {
+      "main": "/Users/wangshanchong/Codes/haiyu_wellness/项目源码/output/playwright",
+      "source": "/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/项目源码/output/playwright",
+      "git": "ignored-local-evidence-alias"
+    },
+    {
+      "main": "/Users/wangshanchong/Codes/haiyu_wellness/output/resource-audit",
+      "source": "/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/output/resource-audit",
+      "git": "ignored-local-evidence-alias"
+    },
+    {
+      "main": "/Users/wangshanchong/Codes/haiyu_wellness/项目源码/server/output",
+      "source": "/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/项目源码/server/output",
+      "git": "ignored-local-evidence-alias"
+    },
+    {
+      "main": "/Users/wangshanchong/Codes/haiyu_wellness/.playwright-cli",
+      "source": "/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/.playwright-cli",
+      "git": "ignored-local-evidence-alias"
+    },
+    {
+      "main": "/Users/wangshanchong/Codes/haiyu_wellness/项目源码/.playwright-cli",
+      "source": "/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/项目源码/.playwright-cli",
+      "git": "ignored-local-evidence-alias"
+    }
+  ],
+  "dependencyReuse": {
+    "kind": "existing-installed-package-symlink",
+    "main": "/Users/wangshanchong/Codes/haiyu_wellness/项目源码/node_modules/mysql2",
+    "source": "/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/项目源码/node_modules/mysql2",
+    "version": "3.24.4",
+    "installedOrCopied": false
+  },
+  "resourceProof": {
+    "completeEarlierInstances": 12,
+    "resources": 42,
+    "newLifecycleGaps": 0,
+    "physicalResiduals": 0,
+    "oldRaw31Exit2Preserved": true,
+    "sourceIndependentAcceptancePending": true
+  },
+  "documentLinks": {
+    "files": 142,
+    "localLinks": 1111,
+    "missing": 0
+  },
+  "limits": {
+    "logBytes": 8388608,
+    "directoryBytes": 536870912,
+    "leaseMs": 900000,
+    "ordinaryCommandMs": 60000
+  },
+  "all109FullyAccepted": false,
+  "functional103Unverified6BoundedPreserved": true,
+  "stage27Aggregate": "NOT_FINAL_ACCEPTED",
+  "pushed": false,
+  "newProviderCalls": 0,
+  "newColdInstalls": 0,
+  "newBrowserOrMysqlServices": 0,
+  "dependencyCopies": 0
+}

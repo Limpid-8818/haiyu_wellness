@@ -40,3 +40,8 @@ Desktop.ini
 
 # The npm workspace lives in 项目源码, not this directory
 /package-lock.json
+
+# Local acceptance evidence and browser captures are retained in dfa3
+output/
+.playwright-cli
+项目源码/server/output

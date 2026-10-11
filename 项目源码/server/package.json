@@ -2,6 +2,14 @@
   "name": "seaside-wellness-community-server",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "node --env-file-if-exists=../.env --watch src/index.js", "start": "node --env-file-if-exists=../.env src/index.js", "test": "node --test test/*.test.js" },
-  "dependencies": { "cors": "^2.8.5", "express": "^4.19.2" }
+  "scripts": {
+    "dev": "node --env-file-if-exists=../.env --watch src/index.js",
+    "start": "node --env-file-if-exists=../.env src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.24.4"
+  }
 }

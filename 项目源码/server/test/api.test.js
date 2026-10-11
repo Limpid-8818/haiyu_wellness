@@ -1,15 +1,64 @@
-import test from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
+import net from 'node:net';
+import { randomUUID } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { hashPassword, verifyPassword } from '../src/password.js';
+import { ResourceSession } from '../../scripts/resources/resource-runtime.js';
 
 const serverDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const projectDir = path.resolve(serverDir, '..');
+const resourceSession = process.env.HAIYU_RESOURCE_MANAGED === '1'
+  ? await ResourceSession.create({ taskId: process.env.CODEX_TASK_ID, projectRoot: projectDir, tempParent: '/tmp' })
+  : null;
+
+after(async () => {
+  if (resourceSession) await resourceSession.close('api-test-complete');
+});
+
+async function temporaryTestDirectory(prefix) {
+  if (!resourceSession) return await mkdtemp(path.join(os.tmpdir(), prefix));
+  const safePrefix = prefix.replace(/[^a-z0-9-]/gi, '-').slice(0, 40);
+  return await resourceSession.allocateDir(`server-test-${safePrefix}-${randomUUID()}`);
+}
+
+async function removeTemporaryTestDirectory(directory) {
+  if (!resourceSession) await rm(directory, { recursive: true, force: true });
+}
+
+async function availableLoopbackPort() {
+  return await new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      const port = typeof address === 'object' && address ? address.port : null;
+      server.close(error => error ? reject(error) : port ? resolve(port) : reject(new Error('could not allocate a test loopback port')));
+    });
+  });
+}
+
+async function waitForManagedService(id, readyPattern, label) {
+  const timeoutAt = Date.now() + 8_000;
+  while (Date.now() < timeoutAt) {
+    const state = await resourceSession.status();
+    const resource = state.resources?.find(item => item.id === id);
+    const log = await resourceSession.rpc({ op: 'log-tail', id, maxBytes: 4096 });
+    if (readyPattern.test(log.tail || '')) return;
+    if (!resource || !['starting', 'running'].includes(resource.status)) {
+      throw new Error(`${label} exited before readiness: ${log.tail || resource?.status || 'resource missing'}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  const log = await resourceSession.rpc({ op: 'log-tail', id, maxBytes: 4096 });
+  throw new Error(`${label} startup timed out: ${log.tail || 'no output'}`);
+}
 
 test('password hashes are salted and verifiable without opening the demo database', () => {
   const stored = hashPassword('correct-password');
@@ -21,11 +70,35 @@ test('password hashes are salted and verifiable without opening the demo databas
 });
 
 async function startApi(dbPath, extraEnv = {}) {
+  if (resourceSession) {
+    const port = await availableLoopbackPort();
+    const allowedKeys = ['LLM_BASE_URL', 'LLM_API_KEY', 'LLM_TIMEOUT_MS', 'ASSISTANT_SESSION_TTL_MS'];
+    const allowed = Object.fromEntries(allowedKeys.filter(key => Object.hasOwn(extraEnv, key))
+      .map(key => [key, String(extraEnv[key])]));
+    if (allowed.LLM_BASE_URL && !/^http:\/\/127\.0\.0\.1(?::\d+)?\//.test(allowed.LLM_BASE_URL)) {
+      throw new Error('managed API regression only allows a loopback LLM stub');
+    }
+    const resource = await resourceSession.startProcess({
+      label: 'server-api-integration-fixture', kind: 'api', role: 'api', command: process.execPath,
+      args: ['src/index.js'], cwd: serverDir, port,
+      env: {
+        PATH: process.env.PATH || '', NODE_NO_WARNINGS: '1', DB_DRIVER: 'sqlite', DEMO_SEED: '1',
+        DB_PATH: dbPath, PORT: String(port), AUTH_SECRET: 'integration-test-secret',
+        LLM_BASE_URL: '', LLM_API_KEY: '', LLM_MODEL: '', LLM_TIMEOUT_MS: '20000',
+        ASSISTANT_SESSION_TTL_MS: '28800000', ...allowed
+      }
+    });
+    if (resource.status !== 'running') throw new Error(`API failed to start: ${JSON.stringify(resource)}`);
+    await waitForManagedService(resource.id, /API running at http:\/\/localhost:\d+\/api/, 'API fixture');
+    return { resourceId: resource.id, base: `http://127.0.0.1:${port}/api` };
+  }
   const child = spawn(process.execPath, ['src/index.js'], {
     cwd: serverDir,
     env: {
       ...process.env,
       NODE_NO_WARNINGS: '1',
+      DB_DRIVER: 'sqlite',
+      DEMO_SEED: '1',
       DB_PATH: dbPath,
       PORT: '0',
       AUTH_SECRET: 'integration-test-secret',
@@ -58,6 +131,19 @@ async function startApi(dbPath, extraEnv = {}) {
 }
 
 async function stopApi(fixture) {
+  if (fixture?.resourceId && resourceSession) {
+    const state = await resourceSession.status();
+    const current = state.resources?.find(item => item.id === fixture.resourceId);
+    if (current && ['starting', 'running'].includes(current.status)) {
+      const stopped = await resourceSession.stop(fixture.resourceId, 'api-test-fixture-complete');
+      if (!stopped.ok) throw new Error(stopped.error || `could not stop API resource ${fixture.resourceId}`);
+    }
+    const result = await resourceSession.waitProcess(fixture.resourceId, 10_000);
+    if (result.timedOut || result.unavailable || ['starting', 'running'].includes(result.status)) {
+      throw new Error(`API fixture failed to exit: ${JSON.stringify(result)}`);
+    }
+    return;
+  }
   if (!fixture?.child || fixture.child.exitCode !== null) return;
   await new Promise(resolve => {
     const timer = setTimeout(() => {
@@ -104,6 +190,19 @@ function mutateDatabase(dbPath, callback) {
   try { return callback(database); } finally { database.close(); }
 }
 
+async function withIsolatedApi(prefix, run) {
+  const tempDir = await temporaryTestDirectory(prefix);
+  const dbPath = path.join(tempDir, 'integration.sqlite');
+  let fixture;
+  try {
+    fixture = await startApi(dbPath);
+    return await run({ fixture, dbPath });
+  } finally {
+    await stopApi(fixture);
+    await removeTemporaryTestDirectory(tempDir);
+  }
+}
+
 function createLegacyDemoDatabase(dbPath) {
   const database = new DatabaseSync(dbPath);
   try {
@@ -127,8 +226,110 @@ function addGuest(database, { id, username, name, status = 'active', room = '' }
     VALUES(?,?,?,?,?,?,?,?,?,?)`).run(id, '女', '', room, '', '', '', '[]', '[]', '');
 }
 
-test('legacy demo database upgrade seeds its assignment once and preserves revocation', async () => {
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'haiyu-legacy-upgrade-'));
+test('public news list and detail are readable without a token and report unknown IDs', async () => {
+  await withIsolatedApi('haiyu-news-', async ({ fixture }) => {
+    const list = await request(fixture.base, '/news');
+    assert.equal(list.status, 200);
+    assert.ok(list.data.length >= 1);
+    assert.ok(list.data.every(item => item.title && item.publishedAt && item.body));
+    for (let index = 1; index < list.data.length; index += 1) {
+      const previous = list.data[index - 1];
+      const current = list.data[index];
+      assert.ok(previous.pinned >= current.pinned, 'pinned news should come first');
+      if (previous.pinned === current.pinned) {
+        assert.ok(previous.publishedAt >= current.publishedAt, 'newer news should come first within a pin group');
+      }
+    }
+
+    const detail = await request(fixture.base, `/news/${list.data[0].id}`);
+    assert.equal(detail.status, 200);
+    assert.equal(detail.data.id, list.data[0].id);
+    assert.equal(detail.data.title, list.data[0].title);
+    const missing = await request(fixture.base, '/news/999999');
+    assert.equal(missing.status, 404);
+    assert.equal(missing.data.code, 'NEWS_NOT_FOUND');
+  });
+});
+
+test('password changes validate the old password and affect only the signed-in account', async () => {
+  await withIsolatedApi('haiyu-password-', async ({ fixture }) => {
+    const guestToken = await login(fixture.base, 'guest');
+    await login(fixture.base, 'staff');
+    const noToken = await request(fixture.base, '/me/password', {
+      method: 'POST', body: { currentPassword: 'guest2026', newPassword: 'guest-new-2026' }
+    });
+    assert.equal(noToken.status, 401);
+    assert.equal(noToken.data.code, 'AUTH_REQUIRED');
+
+    const wrongCurrent = await request(fixture.base, '/me/password', {
+      method: 'POST', token: guestToken,
+      body: { currentPassword: 'wrong-password', newPassword: 'guest-new-2026' }
+    });
+    assert.equal(wrongCurrent.status, 400);
+    assert.equal(wrongCurrent.data.code, 'PASSWORD_CURRENT_INVALID');
+
+    const invalidNew = await request(fixture.base, '/me/password', {
+      method: 'POST', token: guestToken,
+      body: { currentPassword: 'guest2026', newPassword: 'short' }
+    });
+    assert.equal(invalidNew.status, 400);
+    assert.equal(invalidNew.data.code, 'PASSWORD_NEW_INVALID');
+
+    const changed = await request(fixture.base, '/me/password', {
+      method: 'POST', token: guestToken,
+      body: { currentPassword: 'guest2026', newPassword: 'guest-new-2026' }
+    });
+    assert.equal(changed.status, 200);
+    assert.equal(changed.data.ok, true);
+    const oldLogin = await request(fixture.base, '/auth/login', {
+      method: 'POST', body: { username: 'guest_demo', password: 'guest2026', role: 'guest' }
+    });
+    assert.equal(oldLogin.status, 401);
+    assert.equal(oldLogin.data.code, 'AUTH_INVALID_CREDENTIALS');
+    const newLogin = await request(fixture.base, '/auth/login', {
+      method: 'POST', body: { username: 'guest_demo', password: 'guest-new-2026', role: 'guest' }
+    });
+    assert.equal(newLogin.status, 200);
+    const staffLogin = await request(fixture.base, '/auth/login', {
+      method: 'POST', body: { username: 'staff_demo', password: 'staff2026', role: 'staff' }
+    });
+    assert.equal(staffLogin.status, 200);
+  });
+});
+
+test('dean reviews require dean role and valid content, then appear in that staff history', async () => {
+  await withIsolatedApi('haiyu-dean-review-', async ({ fixture }) => {
+    const deanToken = await login(fixture.base, 'dean');
+    const staffToken = await login(fixture.base, 'staff');
+    const denied = await request(fixture.base, '/dean/staff/staff_001/reviews', {
+      method: 'POST', token: staffToken, body: { content: '工作人员不能提交院长意见' }
+    });
+    assert.equal(denied.status, 403);
+    assert.equal(denied.data.code, 'ROLE_FORBIDDEN');
+
+    const empty = await request(fixture.base, '/dean/staff/staff_001/reviews', {
+      method: 'POST', token: deanToken, body: { content: '   ' }
+    });
+    assert.equal(empty.status, 400);
+    assert.equal(empty.data.code, 'REVIEW_INVALID');
+    const missingStaff = await request(fixture.base, '/dean/staff/no-such-staff/reviews', {
+      method: 'POST', token: deanToken, body: { content: '不能写给不存在的工作人员' }
+    });
+    assert.equal(missingStaff.status, 404);
+    assert.equal(missingStaff.data.code, 'STAFF_NOT_FOUND');
+
+    const created = await request(fixture.base, '/dean/staff/staff_001/reviews', {
+      method: 'POST', token: deanToken, body: { content: '服务记录清楚，继续保持交接完整。' }
+    });
+    assert.equal(created.status, 201);
+    assert.equal(created.data.ok, true);
+    const history = await request(fixture.base, '/dean/staff/staff_001/logs', { token: deanToken });
+    assert.ok(history.data.reviews.some(review => review.id === created.data.id && review.content === '服务记录清楚，继续保持交接完整。'));
+  });
+});
+
+test('legacy schema upgrade is repeatable and never recreates a revoked or missing assignment', async () => {
+  const tempDir = await temporaryTestDirectory('haiyu-legacy-upgrade-');
   const dbPath = path.join(tempDir, 'legacy.sqlite');
   let fixture;
   try {
@@ -139,11 +340,11 @@ test('legacy demo database upgrade seeds its assignment once and preserves revoc
     fixture = await startApi(dbPath);
     const staffToken = await login(fixture.base, 'staff');
     const guest = await request(fixture.base, '/staff/guests/guest_001', { token: staffToken });
-    assert.equal(guest.status, 200);
+    assert.equal(guest.status, 403);
+    assert.equal(guest.data.code, 'GUEST_NOT_ASSIGNED');
+    mutateDatabase(dbPath, database => database.prepare("UPDATE users SET phone='13911112222' WHERE id='guest_001'").run());
     let count = mutateDatabase(dbPath, database => database.prepare("SELECT COUNT(*) AS count FROM staff_guest_assignments WHERE staff_id='staff_001' AND guest_id='guest_001'").get().count);
-    assert.equal(count, 1);
-
-    mutateDatabase(dbPath, database => database.prepare("DELETE FROM staff_guest_assignments WHERE staff_id='staff_001' AND guest_id='guest_001'").run());
+    assert.equal(count, 0);
     await stopApi(fixture);
     fixture = await startApi(dbPath);
     const restartedStaff = await login(fixture.base, 'staff');
@@ -152,14 +353,15 @@ test('legacy demo database upgrade seeds its assignment once and preserves revoc
     assert.equal(revokedGuest.data.code, 'GUEST_NOT_ASSIGNED');
     count = mutateDatabase(dbPath, database => database.prepare("SELECT COUNT(*) AS count FROM staff_guest_assignments WHERE staff_id='staff_001' AND guest_id='guest_001'").get().count);
     assert.equal(count, 0);
+    assert.equal(mutateDatabase(dbPath, database => database.prepare("SELECT phone FROM users WHERE id='guest_001'").get().phone), '13911112222');
   } finally {
     await stopApi(fixture);
-    await rm(tempDir, { recursive: true, force: true });
+    await removeTemporaryTestDirectory(tempDir);
   }
 });
 
 test('legacy health intake rows gain pending status during database migration', async () => {
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'haiyu-health-intake-upgrade-'));
+  const tempDir = await temporaryTestDirectory('haiyu-health-intake-upgrade-');
   const dbPath = path.join(tempDir, 'legacy-intakes.sqlite');
   let fixture;
   try {
@@ -177,12 +379,12 @@ test('legacy health intake rows gain pending status during database migration', 
     assert.deepEqual({ ...intake }, { guest_id: 'guest_001', content: 'legacy intake marker', status: 'pending' });
   } finally {
     await stopApi(fixture);
-    await rm(tempDir, { recursive: true, force: true });
+    await removeTemporaryTestDirectory(tempDir);
   }
 });
 
 test('API enforces role/resource boundaries, assignment lifecycle, profile validation and session ownership', async t => {
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'haiyu-api-'));
+  const tempDir = await temporaryTestDirectory('haiyu-api-');
   const dbPath = path.join(tempDir, 'integration.sqlite');
   let fixture;
   try {
@@ -456,12 +658,23 @@ test('API enforces role/resource boundaries, assignment lifecycle, profile valid
     });
   } finally {
     await stopApi(fixture);
-    await rm(tempDir, { recursive: true, force: true });
+    await removeTemporaryTestDirectory(tempDir);
   }
 });
 
-test('model timeout falls back safely using only a local stub', async () => {
-  const stub = createServer((req, res) => {
+async function startModelStub() {
+  if (resourceSession) {
+    const port = await availableLoopbackPort();
+    const source = `const http=require('node:http');const server=http.createServer((req,res)=>{req.resume();setTimeout(()=>{if(!res.writableEnded){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({choices:[{message:{content:'late response'}}]}));}},250);});server.listen(Number(process.env.PORT),'127.0.0.1',()=>console.log('LOCAL_STUB_READY'));process.once('SIGTERM',()=>server.close(()=>process.exit(0)));`;
+    const resource = await resourceSession.startProcess({
+      label: 'api-test-local-model-stub', kind: 'stub', role: 'client', command: process.execPath,
+      args: ['-e', source], cwd: projectDir, port, env: { PATH: process.env.PATH || '', PORT: String(port) }
+    });
+    if (resource.status !== 'running') throw new Error(`model stub failed to start: ${JSON.stringify(resource)}`);
+    await waitForManagedService(resource.id, /LOCAL_STUB_READY/, 'local model stub');
+    return { port, resourceId: resource.id };
+  }
+  const server = createServer((req, res) => {
     req.resume();
     setTimeout(() => {
       if (!res.writableEnded) {
@@ -470,16 +683,34 @@ test('model timeout falls back safely using only a local stub', async () => {
       }
     }, 250);
   });
-  await new Promise(resolve => stub.listen(0, '127.0.0.1', resolve));
-  const stubPort = stub.address().port;
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'haiyu-timeout-'));
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  return { port: server.address().port, server };
+}
+
+async function stopModelStub(stub) {
+  if (stub?.resourceId && resourceSession) {
+    const stopped = await resourceSession.stop(stub.resourceId, 'api-test-model-stub-complete');
+    if (!stopped.ok) throw new Error(stopped.error || 'could not stop local model stub');
+    const result = await resourceSession.waitProcess(stub.resourceId, 10_000);
+    if (result.timedOut || result.unavailable || ['starting', 'running'].includes(result.status)) {
+      throw new Error(`local model stub failed to exit: ${JSON.stringify(result)}`);
+    }
+    return;
+  }
+  if (stub?.server) await new Promise(resolve => stub.server.close(resolve));
+}
+
+test('model timeout falls back safely using only a local stub', async () => {
+  const stub = await startModelStub();
+  const tempDir = await temporaryTestDirectory('haiyu-timeout-');
   const dbPath = path.join(tempDir, 'timeout.sqlite');
   let fixture;
   try {
     fixture = await startApi(dbPath, {
-      LLM_BASE_URL: `http://127.0.0.1:${stubPort}/v1`,
+      LLM_BASE_URL: `http://127.0.0.1:${stub.port}/v1`,
       LLM_API_KEY: 'local-stub-key',
-      LLM_TIMEOUT_MS: '50'
+      LLM_TIMEOUT_MS: '50',
+      ASSISTANT_SESSION_TTL_MS: '120000'
     });
     const guestToken = await login(fixture.base, 'guest');
     const status = await request(fixture.base, '/assistant/status');
@@ -494,9 +725,12 @@ test('model timeout falls back safely using only a local stub', async () => {
     assert.equal(result.data.live, false);
     assert.equal(result.data.mode, '安全引导模式');
     assert.ok(elapsed < 220, `timeout took ${elapsed}ms`);
+    const expiresAt = mutateDatabase(dbPath, database => database.prepare('SELECT expires_at FROM assistant_sessions WHERE id=?').get(result.data.sessionId).expires_at);
+    const ttlMs = new Date(expiresAt).getTime() - started;
+    assert.ok(ttlMs >= 120_000 && ttlMs <= 130_000, `session TTL should use configured value, got ${ttlMs}ms`);
   } finally {
     await stopApi(fixture);
-    await new Promise(resolve => stub.close(resolve));
-    await rm(tempDir, { recursive: true, force: true });
+    await stopModelStub(stub);
+    await removeTemporaryTestDirectory(tempDir);
   }
 });

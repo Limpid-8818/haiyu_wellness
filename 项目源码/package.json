@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22",
+    "node": ">=22.13.0",
     "npm": ">=10"
   },
   "scripts": {
@@ -11,7 +11,11 @@
     "build": "npm run build -w web",
     "start": "npm run start -w server",
     "test": "npm run test -w server",
-    "quest": "node scripts/quest.js"
+    "quest": "node scripts/quest.js",
+    "test:resources": "node scripts/resources/resource-runner.js --kind test --name resource-lifecycle-suite --timeout-ms 900000 --cwd . -- node scripts/resources/test-resources.js",
+    "test:resources:mysql": "node scripts/resources/test-resources-mysql.js",
+    "resources:audit": "node scripts/resources/audit-resource-registries.js",
+    "resources:run": "node scripts/resources/resource-runner.js"
   },
   "workspaces": ["server", "web"],
   "devDependencies": { "concurrently": "^9.1.0" }

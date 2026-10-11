@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title">
+  <title id="title">身体扫描课程封面</title>
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#e4e6f4"/><stop offset="1" stop-color="#f7eee3"/></linearGradient></defs>
+  <rect width="640" height="400" rx="28" fill="url(#bg)"/>
+  <circle cx="320" cy="187" r="100" fill="#fffaf1" opacity=".82"/>
+  <path d="M320 98c-25 0-43 20-43 45 0 17 8 29 19 37-15 10-25 28-25 49v55c0 15 24 15 24 0v-44h10v91c0 18 28 18 28 0v-91h10v44c0 15 24 15 24 0v-55c0-21-10-39-25-49 11-8 19-20 19-37 0-25-18-45-42-45z" fill="#88aaa4"/>
+  <path d="M274 156c28 15 65 15 93 0" fill="none" stroke="#d39171" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="239" cy="138" r="6" fill="#d9b36c"/><circle cx="405" cy="210" r="7" fill="#d9b36c"/><circle cx="245" cy="275" r="5" fill="#d9b36c"/>
+  <text x="42" y="68" fill="#4c526e" font-family="sans-serif" font-size="22" font-weight="600">海屿 · 身体扫描</text>
+</svg>

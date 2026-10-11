@@ -18,7 +18,7 @@ export async function run() {
     assert.equal(own.data[0].type, '血压');
     assert.equal(own.data[0].value, '138/86');
     assert.equal(own.data[0].unit, 'mmHg');
-    assert.equal(own.data[0].recordedAt, '2026-09-14T07:30:00Z');
+    assert.equal(own.data[0].recordedAt, '2026-09-14T07:30:00.000Z');
     assert.equal(own.data.some(row => row.value === 'other-guest-secret'), false);
 
     const crossGuest = await request(baseUrl, '/me/health?guestId=guest_002', { token });
