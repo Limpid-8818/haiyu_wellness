@@ -1,3 +1,190 @@
+# 当前有效状态：人类要求先交付main整合、提交、启动手册及push，再恢复选项2验收（2026-10-12）
+
+最新人类明确选2，允许每次两个独立App验收任务；随后把交付顺序改为“在分发子任务之前，先进行合并并完成提交、编写前后端启动手册和push”，并说明比较急。此最新授权优先旧Git0/仅验收及等本批通过后再整合安排。两个选项2验收均尚未派发、业务/资源0，准备的三份计划已标未派发/暂不执行；原3B静态BLOCKED及四领域持久方案缺口不改。
+
+仅App01a12f52-fa6a-7122-b228-e34b8a793676 / local改为“海屿项目交付：main整合、启动手册与推送”，GPT-6.1 Sol/xhigh，复用9db2且实际整理/Git/启动验证在main。B候选01a12f58-7249-7da0-ad1b-10815431e86b从未派发，已归档。原3A/3B不恢复；不派验收/第4轮。报告46归本整合任务，报告47不创建。详见[优先交付安排](docs/优先主分支整合提交启动手册与推送安排_20261012.md)。
+
+授权整合执行者比较全部main/9db2/dfa3已提交与未提交内容、先保全可恢复状态，再合理整理其余有效成果并暂存/提交/合并main，完成面向他人的前后端启动手册与必要启动配置/依赖清单/锁文件可移植整理，做适当受管启动及质量验证，普通push origin/main；不重复询问已授权Git动作。当前origin=https://github.com/Peppa12138/haiyu_wellness.git；main/9db2=e3b2b204…，dfa3=b5268c…，先前进阶源码已经合入main，不制造重复空合并或覆盖新版。禁止force push/reset/clean、密钥/真实用户库/依赖/巨量日志证据入Git、发布部署、扩展业务或修四领域产品缺口。Source仍只协调和独验，不亲自实现产品。
+
+普通OS硬60秒/8MiB/512MiB/15min/最多外层+owner两Session一个服务浏览器组、准确退出→句柄→自身temp清理及全前缀资源门保持。所有旧源码/用户数据/失败/PNG、报告44整件35174B和报告45整件12506B及其旧前缀、dfa3链接与用户Chrome/VSCode/11clone保留；本头仅前置，原161052B/SHA5daac5e8…完整尾部保持。上轮Source最终17067B/SHAa63ab9ca…及原raw31/exit2/限定guardian例外保持，109未全验状态不改。
+
+整合任务完成/阻塞主动App向真实Source01a12e8c-5fa8-74d1-9b74-a8738cef1f33 / local一次回传后停止；此一次回传明确获授权。Source派发后至多一次必要就绪确认即结束，不持续轮询或后台推进，收到后独立核本地/远端SHA、启动手册/实际启动证据及全部资源。整合源验通过后再按选项2重排最多两个验收任务，不冒称尚未执行的两项通过。
+
+---
+
+# 当前有效状态：第3B轮静态依赖阻塞经Source独立确认，资源保全PASS，待人类选择（2026-10-12）
+
+唯一3B App01a12f0e-5a13-7921-9aa9-289c043ad7c2 / local、GPT-6.1 Sol/xhigh已一次回传BLOCKED_STATIC_DEPENDENCY并停止；Source01a12e8c-5fa8-74d1-9b74-a8738cef1f33单次快照确认idle/末turn completed。Source亲自以实际caller、main/项目源码cwd及OS硬60秒运行交付static-check与audit final，均退出0；17源码断言成立，原生四领域持久疗程方案关联缺失。普通助手四领域图与网页wellness_draft固定营养/运动两领域分别存在，网页空body/独立图、来源持久化及全部替代入口已核；医护医嘱草稿仅传文本字段，也不能补此关联。不拼独立run、不抄source_run_id或将聊天runId当方案ID。业务门仍BLOCKED，真实模型usage/网页HTTP SQL DOM PNG及审批NOT_RUN，Source业务attempt未消费。
+
+回包20425B/SHA8adb650e…及报告/工具/证据14引用一致。Source静态JSON11686B/SHAea906bd7…、资源JSON22629B/SHA7d5caa55…在execution-multiagent/实际3B taskID；完整收据及最终独验JSON在coordination-core3/实际SourceID。全1155登记/1984组/29757身份引用/31任务ID/22前缀准确存活、路径、socket/temp/deleted-open、相关监听和结构错误0；继承7实例91准确启动退出/7guardian/64唯一身份清理通过。225/246/75/197/238及1148旧登记/1158引用保全，用户Chrome/VSCode/11clone与dfa3保持。历史端口被无关用户VS Code持有的worker误判FAIL及修正原件保留，未碰用户进程、新例外0，旧raw31/exit2/限定guardian例外不改。
+
+见[第3B轮独立复核](docs/合并后核心四领域方案静态阻塞独立复核_20261012.md)。报告45仅追加Source独验段、原9066B/SHA44c0b829…完整前缀保持；报告44整件35174B/SHA926435fd…及全部旧前缀不变。本AGENTS仅新头前置，原158458B/SHA59c6b3dc…完整尾部及更早尾部保持。main/9db2=e3b2b204…，dfa3=b5268c…；产品/Git写/安装复制/新worktree/验收工具实现/业务资源0，普通资源规范不放宽，109未全验状态保持。
+
+当前完成安全收尾和记录后停止派发，不恢复3A/3B、不派第4轮。后续仅待人类明确二选一：保留原门，另行授权独立产品任务补网页同guest/session/four-domain run的持久方案与候选来源/ID/版本链；或明确改合同为四领域协作与两领域持久草案分开验，并保留原四领域持久方案缺失/未验。未授权产品修复或降门，不能自动推进。
+
+---
+
+# 当前有效状态：第3A轮Source业务资源双门PASS，仅第3B轮静态链路门起步（2026-10-12）
+
+Source01a12e8c-5fa8-74d1-9b74-a8738cef1f33 / local已亲自以tools-v05/source-core3a-institution-independent-repair04-20261012-01运行合同/预检/受管业务/seal，四命令0；新guest_064f1619三case/111检查通过，入住/关系staff_001/intake1 revision1 base0正式version恰0→1同对象响应GET SQL双角色刷新及403/只读/快照/六未答一致，尾部agent_runs/wellness_drafts均0、页面错误外网0，7PNG哈希/1440×900一致且源查看3份。最终CORE_PASS_WITH_ACCEPTED_HISTORY_EXCEPTION JSON为28959B/SHA35f349e6…，位于原execution-institution/01a12e93…/tools-v05/本Source attempt；见[机构前置独验](docs/合并后核心机构前置独立验收_20261012.md)。
+
+双方含v03/v04失败累计7实例91准确启动退出/7guardian/64唯一身份，当前准确存活/句柄/temp/socket0；root-flat+manifest1155文件1984组29757身份引用、30taskID/21前缀当前全清，双方端口无监听，旧1148+3登记/225运行时246冻结75原件197保护引用21版本及用户Chrome/VSCode/11clone保持，新缺口豁免0。旧FAIL/raw31/exit2/accepted历史guardian例外不改。worker封包报告前缀失败1后精确恢复、仅封包0；Source最终只读摘要字段误判1后新版本只读0，全部失败保留、无业务重试。报告44源只追加后35174B/SHA926435fd…，原32831B及更旧前缀保持。
+
+原3A App01a12e93-3814-7183-8ea1-997f6da91bda已idle/completed，不恢复。仅新3B独立App01a12f0e-5a13-7921-9aa9-289c043ad7c2 / local，名称“海屿核心验收第3B轮：真实多智能体综合方案”，GPT-6.1 Sol/xhigh，由原任务同目录fork/sync complete，复用9db2，不新工作树或复制依赖。第45轮报告已核未占用，只留新执行者新建。范围见[第3B轮计划](docs/合并后核心第3B轮真实多智能体方案执行计划_20261012.md)。
+
+本轮首先静态核原生关联合同：普通助手四领域图与wellness_draft固定营养/运动两领域、网页草案空body存在差异，尚未证明同run/session四领域与可回读持久方案ID。不能拿聊天runId当方案ID或将无关联图凑PASS；无现成链路则BLOCKED_STATIC_DEPENDENCY，Session/DB/API/Vite/browser/provider0，一次回本Source停，不修产品或降门。原生合同确有证据才静态校准新caller环境/SQL/UI/有限9模型调用预算及OS60受管分步，再唯一preflight/业务尝试，重试0；实际模型只用现有授权配置、不得输出Key/.env，不test hooks/模拟trace。
+
+新evidenceRoot execution-multiagent/实际3B taskID/tools-v01；worker attempt worker-core3b-multiagent-20261012-01，Source attempt source-core3b-multiagent-independent-20261012-01，先实际本Source无服务合同且目录不消费。main/9db2仍e3b2b204…、dfa3/b5268c…及依赖证据链接保留。OS硬60秒/8MiB/512MiB/15min/最多外层+owner两Session一个API Vite browser组、准确退出→句柄→自身temp清理/root-flat+manifest全范围门不放宽；图总90秒不授权单命令90秒。元数据≤1MiB/摘要≤2KiB，历史只引用不展开。
+
+本AGENTS只在旧154672B/SHA2b732334…完整尾部前追加本头，更旧尾部保持；报告44及3A最终/7登记/全部旧工具失败PNG冻结。产品/资源实现/Git写/安装复制/新checkout/worktree/内部agent/真实用户库/MySQL/scheduler/full test build0；非必要环境外网关闭。新3B获一次App回本Source权限，完成/阻塞后立即停；Source派发后至多一次必要就绪即结束，不持续轮询/后台推进，候选后亲自新caller库端口实跑及双方资源双门才继续，第4轮及后续未派、109未全验状态保持。
+
+---
+
+# 当前有效状态：第3A轮业务具体子条款已留证，SQL尾部阻塞仅原任务补验（2026-10-12）
+
+唯一原App01a12e93-3814-7183-8ea1-997f6da91bda / local、GPT-6.1 Sol/xhigh tools-v04一次回传后idle/completed。身份环境13/参数20/诚实封包4/静态62及最终preflight均0；唯一受管业务outer/child/browser1、未超时，seal诚实BLOCKED_INCOMPLETE/exit1。已实际运行机构业务，不能记全部NOT_RUN。guest_653da561入住、关系2/staff_001、intake1/revision1/base0核实正式version0→1的HTTP/GET/SQL/两角色刷新及403/只读/来源时间/快照/六未答具体证据通过，109执行断言无FAIL、8PNG一致。尾部误查assistant_runs（实际agent_runs）导致两最终mark/模型方案SQL计数未取得，VERIFY被catch覆写NOT_RUN_INCOMPLETE，旧原件保持，不补计数0或整包PASS。
+
+Source01a12e8c-5fa8-74d1-9b74-a8738cef1f33独立核69190B/SHAf05108d7…包、47整文件引用/3报告前缀、225/246/75/140保护引用/17版本保持；重核18组实际业务观察0不符，亲看3关键PNG。新增2实例33启动/2guardian/23唯一身份，连v03累计3实例34准确启动退出/3guardian/26唯一身份，句柄→自身temp/socket清理通过。全root-flat+manifest1151文件/1980组/29692身份引用/30任务ID/21唯一前缀当前全清，56040/56041无监听，旧1148登记及v03外层SHA/用户Chrome/VSCode/11clone保持，新缺口豁免0。Source业务与新资源0，Source attempt未创建。
+
+Source首只读核验导入顺序错误exit1保留，随后修正实际0；最终source-review-core3a-repair03-before-repair04-20261012.json为159670B/SHAfa9b2d1f…，REVIEW_PASS_WITH_TOOL_TAIL_BLOCKER / BLOCKED_INCOMPLETE / RESOURCE_PASS / PRESERVATION_PASS，不替代Source实际复跑。执行者部分无服务检查未另配置OS alarm但自然结束的偏差保留，之后全部普通终端OS硬60秒。旧FAIL/raw31/exit2及accepted历史例外不改。
+
+仅原任务tools-v05：从main真实schema校准全部只读SQL及尾部agent_runs/wellness_drafts计数，保留原无模型方案写入门与两个最终mark；保留实际完成case结果并单列尾部总门失败，不覆写旧v04或掩盖完整性失败。同范围无服务辅助工具校准保持，业务与资源门不放宽。新worker attempt worker-core3a-institution-repair04-20261012-01；Source attempt source-core3a-institution-independent-repair04-20261012-01。先无服务Source合同/环境/SQL/状态合同且不消费目录，再唯一worker最终preflight；静态全通过才原三case唯一新业务一次、重试0；失败收尾一次回源停。
+
+报告44当前24426B/SHAd9fd6ac8…完整前缀及16614/10836/6415B保持，tools-v01–v04/全部失败/PNG/登记原件保持。本AGENTS只在旧151187B/SHAffbfa038…完整尾部前追加新头，更旧147905/145463/143067B尾部不变，baseline区分授权协调追加。详见[SQL尾部修正与完整补验](docs/核心第3A轮SQL尾部修正与完整补验_20261012.md)。main/9db2/dfa3与依赖证据链接保持；OS60秒/8MiB/512MiB/15min/最多两Session一个服务浏览器组/准确退出→句柄→temp清理保持。产品/资源实现/Git/安装复制/新App工作树/内部agent/provider/环境/scheduler/MySQL/全测build0。本原任务一次App回本Source后停，Source派发后不轮询；候选完整后Source新库会话端口独立实跑及双方全资源双门通过才派3B，109功能未全验状态保持。
+
+---
+
+# 当前有效状态：第3A轮启动身份工具阻塞，原任务tools-v04唯一补验（2026-10-12）
+
+唯一原App01a12e93-3814-7183-8ea1-997f6da91bda / local、GPT-6.1 Sol/xhigh已tools-v03一次回传后idle/completed。12语法/59源码合同/20参数合同及最终preflight均0，唯一受管启动因launcher未传CODEX_TASK_ID被caller守卫拒绝，outer/child1，seal缺execution.json退出1；首次安全审计路径解码失败1及随后安全收尾0保留。服务owner/SQLite/API/Vite/browser/业务ID/HTTP/SQL/DOM/PNG0，三case NOT_RUN，不称机构业务通过。
+
+Source01a12e8c-5fa8-74d1-9b74-a8738cef1f33独立核41663B/SHAdeed400c…回传包、37去重整文件/2报告前缀、报告44的16614B/SHAfa6e1ab9…、225/246/75/90保护引用/14版本保持。新增仅1外层实例2e6d5e23…、1启动准确退出/1guardian退出/含owner3唯一身份不存在，句柄关闭、自身temp/socket清理；旧1148登记SHA保留。全root-flat+manifest1149文件/1978分组/29655身份引用、30任务ID/21唯一前缀，当前准确身份/路径/socket/temp/deleted-open/结构错误0，用户Chrome/VSCode/11clone不变，新历史缺口及例外0。旧FAIL/raw31/exit2及accepted历史例外保留。
+
+Source首次汇总把报告保留前缀误作整文件哈希冲突，实际只读退出1及已通过资源原件保留；随后分开验证整文件/前缀，修正复核0。最终source-review-core3a-repair02-before-repair03-corrected-20261012.json为5032B/SHAfd58a01c…，REVIEW_PASS_TOOL_BLOCKED / NOT_RUN / RESOURCE_PASS / PRESERVATION_PASS，位于coordination-core3/实际Source独占目录。Source业务attempt仍未创建，新Session/业务0。
+
+按人类接手续办授权只原任务tools-v04：在验收launcher显式绑定实际caller环境并保留CLI/准确登记身份校验，先实际无服务子进程验证worker与本Source环境传递及拒绝缺失/不匹配；诚实封包服务owner创建前缺execution的实际BLOCKED，不伪造执行/退出/业务。沿用同范围完整辅助工具静态校准，原三case/全部断言/59源码检查及业务资源门不放宽，不改产品或资源实现。
+
+新worker attempt worker-core3a-institution-repair03-20261012-01；Source attempt source-core3a-institution-independent-repair03-20261012-01。先无服务本Source合同0且目录不消费，再唯一worker最终preflight，静态全部通过才原三case唯一业务一次/重试0；失败收尾一次回源停。tools-v01/v02/v03及全部失败、报告44的16614B/10836B/6415B前缀保留。本AGENTS只新头追加，原147905B/SHAa5cb9bc3…及更旧145463B/143067B完整尾部保持，新baseline区分授权协调追加。详见[本次启动身份与封包修正](docs/核心第3A轮启动身份与失败封包修正_20261012.md)。
+
+main/9db2/dfa3及依赖证据链接、OS60秒/8MiB/512MiB/15min、最多外层+owner两Session及一个服务浏览器组、准确退出→句柄→temp清理保持。模型/环境/scheduler/MySQL/全测构建/Git写/产品/安装复制/新App/worktree/内部agent0。原任务一次App回本Source后停止；Source派发后不轮询，回传亲自用新库/会话/端口独验业务及双方全部资源双门后才派3B；当前未派3B，109功能未全验状态保持。
+
+---
+
+# 当前有效状态：第3A轮两点静态修正PASS，原任务校准完整验收辅助工具（2026-10-12）
+
+原唯一App01a12e93-3814-7183-8ea1-997f6da91bda / local、gpt-6.1-sol/xhigh已tools-v02一次回传后idle/completed。原两点STATIC_PASS：Source合同0/20、worker preflight0/static0/34、12语法；新增源码派生登录选择器阻塞，业务仍0、三case NOT_RUN，新Session/guardian/DB/API/Vite/browser0。Source01a12e8c-5fa8-74d1-9b74-a8738cef1f33独立核31736B/SHA2cec92b6…包、报告44的10836B/SHA51e0f6ea…及22引用、225/246/75/65保全和1148注册表保持，原6415B报告前缀保留。
+
+Source核三角色hero按钮实际名称均含箭头、旧helper exact完整名不符；side-nav图标aria-hidden，导航exact合同仍可用。源当前独验根平面+manifest30任务ID/21唯一前缀、1977分组29652身份引用准确存活/路径/socket/temp/deleted-open0，新双方登记0，用户Chrome/VSCode/11clone保持。源JSON source-review-core3a-repair01-before-repair02-20261012.json为3024B/SHA74a19ea8…/实际0，Source attempt未用。旧FAIL/raw31/exit2/例外保留。
+
+按人类已采用接手授权仅原任务tools-v03：完整审阅并校准原三case所需登录/表单/刷新等待/响应与SQL读取/收尾辅助工具，允许无服务编辑阶段一并修正同范围静态不兼容，不再按上一仅两点限制回源；业务断言、三个case及资源门不放宽，产品与资源实现不改。新worker attempt worker-core3a-institution-repair02-20261012-01；Source独验attempt source-core3a-institution-independent-repair02-20261012-01。先本Source合同/无服务工具校准完成，再worker最终preflight一次、静态通过才唯一业务一次、重试0；真实失败收尾回源停。
+
+报告只追加保10836B前缀和原6415B；tools-v01/v02/原失败保持。本AGENTS仅新头追加，旧145463B/SHA307b320d…及143067B尾部保持，新保全区分已授权协调追加。详见[本次辅助工具校准](docs/核心第3A轮登录与验收辅助工具校准_20261012.md)。main/9db2/dfa3/依赖链接、普通OS60秒/8MiB/512MiB/15min/最多两Session一个服务浏览器组/准确退出→句柄→temp清理保持；模型/环境/scheduler/MySQL/全测构建/Git写/产品/安装复制/新App/worktree0。本原任务一次回本Source后停，源派发后不轮询，回传亲自独验业务及双方全部资源双门后才派3B。
+
+---
+
+# 当前有效状态：第3A轮静态工具BLOCKED，仅原任务新版本补验（2026-10-12）
+
+唯一原App01a12e93-3814-7183-8ea1-997f6da91bda / local、gpt-6.1-sol/xhigh已一次回传BLOCKED_STATIC_TOOL后idle/completed。Source实际01a12e8c-5fa8-74d1-9b74-a8738cef1f33 / local独立核包28606B/SHA58cd2585…、报告44的6415B/SHA04087292…及23必要引用保持；原preflight1/static1两失败来自动态health-status/value的field.key被具体字面includes误判，源码字段目录/渲染分支已确认。业务尝试0、三case NOT_RUN、新Session/guardian/DB/API/Vite/browser0，不能称机构业务PASS。
+
+源实际无服务复核1148文件/1977登记分组/29652身份引用、根平面与manifest30 taskID/21唯一前缀，当前准确身份/路径/socket/temp/deleted-open0，225运行时/246冻结/75旧原件/38本轮引用及旧注册表SHA保持，用户Chrome/VSCode/11clone不变。源独验JSON在coordination-core3/实际Source目录source-review-core3a-static-before-repair01-20261012.json，4707B/SHA98cc63fd…，实际0；旧FAIL/raw31/exit2/例外不改。
+
+源按人类接手授权只恢复原任务tools-v02工具修正：动态字段合同和root-flat全范围纳入preflight/seal，必要新caller/attempt/保全衔接，原业务断言及资源门不放宽。新worker attempt worker-core3a-institution-repair01-20261012-01；新Source独验attempt source-core3a-institution-independent-repair01-20261012-01。先无服务实际Source合同、新worker静态通过再唯一一次原三case业务，重试0；原tools-v01/失败/报告6415B前缀保留。本AGENTS只在原143067B/SHAc3f9726a…完整尾部前追加本头，明确协调追加不当非法源码修改。范围及保全详见[本次补验安排](docs/核心第3A轮静态工具修正与原任务补验安排_20261012.md)。
+
+普通OS60秒/8MiB/512MiB/15min、最多外层+owner两Session及一个API/Vite/browser组、准确退出→句柄→临时清理不变。主main/e3b2b204…、9db2同提交、dfa3旧交付/依赖链接保持。provider/环境/scheduler/MySQL/全测构建/Git写/产品实现/安装复制/新task/worktree0。原任务一次回本新Source后停止；源派发后至多一次就绪即结束，不轮询/后台推进；回传后源本人新caller/新库/会话/端口业务复跑及双方全资源双门通过才进3B。以下旧状态按时点保留。
+
+---
+
+# 当前有效状态：新协调agent接手，仅机构前置第3A轮（2026-10-12）
+
+用户已将完整接手提示词交给本新协调Source，授权后续GPT-6.1 Sol/xhigh独立App任务串行验收。本Source实际`01a12e8c-5fa8-74d1-9b74-a8738cef1f33 / local`已由App核实；旧Source仅历史身份。原Source通过后停止派发的要求已完成，仍约束原任务；本新Source按当前人类授权接续，不恢复旧Source。
+
+接手指纹门通过：第2轮最终9894B/SHA9caba0ad…及10直接/16去重必要引用、246冻结/75旧原件/12版本/8PNG均一致。6实例95准确启动/退出、6guardian退出核实；全manifest1257行原14前缀加新Source、1148文件/1511登记分组的当前准确身份/前缀/temp/socket/deleted-open0，六本轮端口无监听，用户Chrome/VSCode和原11clone保持。历史例外/旧FAIL/raw31/exit2保留，新业务尚未验。接手JSON位于`项目源码/output/resource-audit/post-merge-acceptance-20261011/coordination-core3/01a12e8c-5fa8-74d1-9b74-a8738cef1f33/handoff-and-current-resource-precheck.json`。
+
+源码证明方案生成先要求有效入住日期（wellness-planner.js的WELLNESS_STAY_INVALID及网页按钮禁用）；按提示词例外先独验机构前置。唯一新App实际`01a12e93-3814-7183-8ea1-997f6da91bda / local`，名称“海屿核心验收第3A轮：机构入住与健康核实”，同目录fork上轮01a12d94，同步complete，复用9db2，无新worktree/依赖复制。明确GPT-6.1 Sol/xhigh；只网页机构入住、医护负责关系、一次健康自述核实三case，报告44预留未创建；完整范围/命令/资源/停止条件见[本轮执行计划](docs/后续核心验收接手与机构前置执行计划_20261012.md)，实际派发以同协调目录App收据为准。
+
+main/e3b2b204…、9db2同提交detached及dfa3/b5268c…旧完整成果/ignored链接均保持；运行main项目源码，9db2旧文档不是最新交付。旧repair-02业务入口/旧Source/已用attempt不能复用，新工具须支持本Source真实caller及独占新目录；先实际无服务Source参数合同，再执行者唯一受管业务尝试、重试0。8MiB/512MiB/15min/普通OS60秒、外层+owner最多两Session/一个API/Vite/browser组和准确退出→句柄→临时清理双门不变；provider/环境/scheduler/MySQL/Git写/产品实现/安装0。
+
+执行者明确获一次App回传本新Source权限，完成/阻塞回源后立即停，不自进3B。Source派发后至多一次必要就绪即结束、不持续轮询或后台推进；回传后亲自用新库/会话/端口/caller独立复跑及核双方全部资源，两门通过才安排真实多智能体第3B轮。109功能未全验状态保持。以下旧状态按历史保留。
+
+---
+
+# 历史交接状态：核心第2轮源独验PASS，原Source停止派发（2026-10-12）
+
+Source已实际以真实caller和独占source-profile-independent-20261012-01运行repair-02参数合同/预检/受管业务/seal，四命令均0；新隔离fixture guest_004126ae，3case/54检查通过，8PNG哈希一致且源查看3份。资料网页写入、GET/SQLite/刷新DOM同ID，健康自述pending/正式version0，1024×768与1440×900五导航和四组几何通过；指定未入住409仅受控提示通过，实际点餐及机构入住/医护核实待后续。
+
+源独立核全部本轮6实例95启动准确退出/6guardian退出/含owner65唯一身份，全manifest14任务前缀、目录/socket/端口/deleted-open当前0；246冻结/75旧原件/12版本保持。Source历史guardian缺口仍1项且与已接受基线一致，新缺口/例外0，旧FAIL/raw31/exit2保留。最终CORE_PASS_WITH_ACCEPTED_HISTORY_EXCEPTION证据为repair-02/source-profile-independent-20261012-01/source-final-independent-core2-review-20261012.json，9894B/SHA256 9caba0ad796c6f311f32b8fc799cf1ff82a58da08c8a2c1b2ddda4111ad886ce。报告43只追加后32789B/SHA256 fabb14f3abb95cb60f93d1f66bf2f119874ebd31a5cd6186a3af223c4bf48560，原28961B交付前缀保持。
+
+执行App 01a12d94-aaef-7a20-8985-973acf9dd9f3 / local已idle、末turn completed；源一次回传后核对。本源按最新人类指令完成收尾后停止，不派发第3轮或其他后续任务。main/e3b2b2047650d8de569fd6f1c554d0678a22c5bc、9db2同提交detached HEAD和dfa3依赖/证据链接均保留；产品/Git写/安装复制/新工作树0。下一报告通常44且未创建。详见[本轮独立验收](docs/合并后核心健康资料与桌面网页独立验收_20261012.md)。
+
+供用户交给新协调agent的[完整接手提示词](docs/后续核心验收协调Agent接手提示词_20261012.md)为11774B/SHA256 ae5a892f0cd44ae1f4c3794d71eae879f9ce593e39db6592fe78fe70059d1d04。新agent收到用户该提示词后才接续；仍串行独立App任务、gpt-6.1-sol/xhigh，使用其自身实际源ID；本源旧Source与旧repair-02已用attempt不能冒充新身份。核心第1/2轮已验，剩余真实多智能体、机构审核、每日服务、反馈调整、环境与收尾按提示词依赖安排；109功能未全验状态不改。下文待独验/自动衔接文字按历史保留。
+
+---
+
+# 最新人类衔接要求：本次独验通过后停止派发，交接另一协调agent（2026-10-12）
+
+用户最新明确：本次回传验收通过后，源不再派发后续任务，提供用于后续任务派发及验收的完整提示词，由用户交给另一agent执行。此要求优先下文旧自动衔接安排。当前只完成第2轮的源独立业务复跑、全部资源收尾和验收记录；不创建或恢复第3轮任务。
+
+原执行App任务01a12d94-aaef-7a20-8985-973acf9dd9f3 / local、gpt-6.1-sol/xhigh已一次回传repair-02 READY_FOR_SOURCE_RERUN并停止。本次只修工具参数/目录接口并作静态检查，新增业务/ResourceSession/DB/API/Vite/browser/guardian均0；入口repair-02/entry.mjs支持实际Source ID和独占source-profile-independent-20261012-01，根evidenceRoot仍为原execution-profile/实际taskID目录。ready-handoff.json为15269B/SHA256 83686b0f49fe8ad7d6d0e1f3f04b57ee2c71bc7b123eddd5e023902858d15dc1；报告43追加后28961B/SHA256 a29703a418053af0363740fa7250b5d6925ff75476f43c299378cd3d955a43bc。旧worker54/54与资源PASS仅候选，Source独立业务及资源双门当前待执行；不得提前宣称本轮通过。
+
+通过后交接提示词须说明实际main/9db2/dfa3状态、已验和未验范围、证据位置、串行独立App任务及GPT-6.1 Sol/xhigh、真实Source caller与一次回传、所有资源退出清理及限定历史例外；新协调agent必须使用自身实际threadId/hostId。若本次未通过，保留失败和完成资源收尾，只报告本轮缺项，不开启后续阶段。Git/产品修改/依赖复制/新工作树授权不变。
+
+---
+
+# 当前有效状态：第2轮worker54项PASS，Source复跑参数接口待修（2026-10-12）
+
+repair-01/worker-profile-repair-01已一次回传三case54/54 CORE_PASS、RESOURCE_PASS，1024/1440双视口五导航及指定未入住409的API/SQL/UI证据齐全，报告43为21766B/SHA ef88bf52…；新2实例30启动/2guardian准确退出，旧2实例与原FAIL保留，未改产品或Git。源审阅发现entry.mjs:10仍硬编码只允许worker-profile-repair-01尝试名；已实际以Source caller和独占新名运行无服务contract-check，退出1，未创建测试资源。因此Source业务独立门尚未通过，不派第3轮。
+
+仅原01a12d94-aaef-7a20-8985-973acf9dd9f3 / local、gpt-6.1-sol/xhigh已获工具参数修正：在repair-02保留新版本，允许Source实际caller/独占source-profile-independent-20261012-01及预检、受管业务、seal衔接，不改业务断言/资源门，不覆盖任何旧原件。此轮执行者只能静态语法/参数检查、报告43追加和一次READY_FOR_SOURCE_RERUN回源，不启动DB/API/Vite/browser/guardian，不再跑worker业务或新阶段；源回传后独立复跑并核全部资源。无服务失败探针和派发收据same-task-source-contract-only-repair-dispatch-20261012.json保留于本轮独占目录。源派发后不查询就绪、不运行业务，等待回传。
+
+
+原第2轮回传worker-profile-01：资料保存和健康自述两case有PASS证据；桌面nav因脚本所有GET=200门在膳食409停止，原CORE_FAIL/runner与seal退出1保留，完整包BLOCKED_INCOMPLETE_DESKTOP_EVIDENCE。待入住且入住日期空的合成fixture，main meals.js:220的409 code MEAL_DATE_OUTSIDE_STAY为受控前置条件，实际错误JSON/稳定UI、我的导航及1440几何尚缺，不推断产品缺失或网页通过。源独立核246冻结/八版本/报告43原12529B一致，两个实例32准确启动退出/guardian退出，准确身份与全前缀/temp/deleted-open0，资源证据PASS；源未跑业务。
+
+仅原任务01a12d94-aaef-7a20-8985-973acf9dd9f3 / local、gpt-6.1-sol/xhigh已获repair-01工具新版本和一次worker-profile-repair-01补验，先静态验证指定409与实际DOM，唯一业务尝试、重试0。仅明确409 code+同guest待入住/空日期+可见对应入住提示才作为受控页面通过；其他错误不放宽，不改角色/SQL绕过入住。补齐三case完整可复验入口及1024/1440实际视口证据，合理内容max-width可接受，不做精细像素门。原八脚本/失败/PNG/报告43前缀保留，报告仅追加；摘要/资源/退出门不变，不新task/worktree、不进第3轮。源独立JSON与same-task-desktop-repair-dispatch-20261012.json在本轮execution-profile/实际taskID目录。派发后源不再查就绪或运行业务，待一次回传后独立复验。
+
+
+唯一执行App任务01a12d94-aaef-7a20-8985-973acf9dd9f3 / local，名称“海屿核心验收第2轮：健康资料与桌面网页”，已按最新用户要求发送gpt-6.1-sol/xhigh指令。由已停止第1轮01a12bb4同目录fork，同步完成；一次就绪确认active、cwd为/Users/wangshanchong/.codex/worktrees/9db2/haiyu_wellness，未新worktree/复制依赖或恢复原任务。第43轮报告，实际main源码，三项核心范围与资源门见本次计划。派发收据core-round2-App-dispatch-receipt-20261012.json和57778B/SHA a1050898…工作状态handoff位于main项目源码/output/resource-audit/post-merge-acceptance-20261011。只执行第2轮，完成/阻塞一次回源即停；源已用完一次必要就绪，不继续轮询或运行业务，等待回传后独立复验。后续用户最新模型规则统一GPT-6.1 Sol / xhigh，仍串行一次一个。下文准备/旧模型选择按历史保留。
+
+
+用户最新明确“继续派发下一轮”，并最终指定后续GPT-6.1 Sol / xhigh；此前Luna选择保留为历史，实际本次与后续按最新gpt-6.1-sol/xhigh。第1轮已源独立业务/资源双门通过，派发前再核240保护文件及前缀/temp/deleted-open0，报告43预留。只准备一个新App独立第2轮任务，从已停止01a12bb4-8493-7150-b82c-d62cae3cf0b3同目录fork复用9db2工作树，不新checkout/依赖复制；实际main源码。范围是联系资料保存回读、健康自述保存待医护核实、5主导航及1024/1440桌面视口排列；机构入住写入按真实只读角色合同留第4轮。见[第2轮计划](docs/合并后核心验收第2轮执行计划_20261012.md)。独占新工具/第43轮报告，静态契约核验后最多一次受控业务尝试，原资源8MiB/512MiB/15min/60秒和准确退出门不变。元数据只摘要引用旧历史，不能全量展开导致RangeError。Source不实现产品；不Git/模型API/MySQL/安装/用户库操作。新task一次回源即停，源最多一次就绪后结束，回传后独立复验再衔接。
+
+
+源在main以新受管SQLite/会话/端口独立复跑一次，3核心case/11检查PASS，guest_8de36ea0响应/GET/SQLite/刷新DOM及登录退出一致。执行任务6实例92启动＋源2实例32启动共8实例124准确退出、8guardian退出；准确存活身份、全任务前缀/temp/socket/端口/deleted-open当前0，240保护文件保持。源已独立通过核心业务及资源门，结论CORE_PASS_WITH_ACCEPTED_HISTORY_EXCEPTION，仅入口范围；旧精细13PASS/20FAIL、103未验/6受限、原raw及历史缺口不改。见[独立验收](docs/合并后核心入口独立验收_20261012.md)及执行目录source-core-entry-independent-20261012-01/source-final-independent-core-review-20261012.json。
+
+原元数据seal展开全历史对象发生JSON.stringify RangeError退出1，失败保留；源以13316B有大小限制的复核记录核本轮8实例和208旧登记哈希，未改工具、未重跑业务或扩大历史例外。后续验收汇总只引用旧证据/字节/SHA与摘要，不复制整份历史payload。实际窗口756×469，宽桌面排列未验，留第2轮。中断后仅完成资源收尾和验收记录，本轮未派下一阶段；原App任务已回传停止，9db2/dfa3源码及所有旧失败、必要截图、报告保留，不Git写。后续串行核心计划继续保留。
+
+
+最新续办：repair-01已回传BLOCKED，原因是验收工具把Node Fetch的status数字属性当成方法；网页有效注册已实际201，但独立GET/SQLite同ID、刷新、登录退出未完整证明。源独立核4实例60启动准确退出、4guardian退出、含owner的40唯一登记PID和全前缀/temp/deleted-open当前0，240保护文件、报告交付SHA及原前缀、repair-01版本均保持。只原任务01a12bb4-8493-7150-b82c-d62cae3cf0b3 / local、gpt-6.1-sol / high已获repair-02新工具版本及一次worker-core-repair-02核心补验：必须先无服务验证Node/浏览器两种响应契约，静态通过才允许单次业务尝试，重试0，原失败全部保留。源证据source-review-repair01-before-repair02-20261012.json、派发收据same-thread-tool-repair02-dispatch-20261012.json均在原独占执行目录。用户最新“继续”沿用此已派发安排，不重复派发或开新线程；当前仍未进第2轮，源不再查询就绪或运行业务，等待回传独验。原31/20数为首次失败时点，下文按历史保留。
+
+本轮已通过App send_message_to_thread将工具修复及一次受控核心补验要求发给原任务01a12bb4-8493-7150-b82c-d62cae3cf0b3 / local，明确模型gpt-6.1-sol、推理high；未新建任务或工作树，未派下一阶段。派发收据为该执行目录same-thread-tool-repair-dispatch-20261012.json。仅原三个case的代表性核心路线，先静态预检再最多一次新业务尝试，重试0，完成/阻塞一次回源后停。源本次不再查询就绪或运行业务，等待回传后独立复验。
+
+
+入口执行App任务实际ID已确认01a12bb4-8493-7150-b82c-d62cae3cf0b3 / local，工作树/Users/wangshanchong/.codex/worktrees/9db2/haiyu_wellness，完成回传后idle。原报告第42轮，工具误等客户端确认密码留空时不存在的HTTP导致BLOCKED，正常注册/登录退出尚未验。源独立核240保护文件一致、两个实例31启动的准确退出/两个guardian退出，当前PID/前缀/临时目录/deleted-open残留0，资源收尾证据通过；旧raw与scope执行者provenance BLOCKED/2保留，不新增历史豁免。仅向这个原6.1 Sol / High任务安排验收工具新版本和一次代表性核心补验，未派下一阶段；详细范围见[入口补验安排](docs/合并后核心验收入口补验安排_20261012.md)。原失败脚本与证据保留，第42轮追加段，父Sol不实现代码。补验只核非法输入不写入、有效注册同身份回读、登录退出；原F文字样式差异保留为遗留，不展开全面精细验收。原源派发收据中的clientThreadId为历史准备标识，现以实际ID为准。
+
+
+最新验收范围（2026-10-12）：按用户“基本能用，只查最核心部分”的要求，后续采用[核心可用性验收计划](docs/合并后核心可用性验收计划_20261012.md)。默认7轮App核心实测（含当前入口一轮），合理估算总计6–8轮；后续约5–7轮，不含另行补证/修复。覆盖入口、资料/网页、真实多智能体方案、机构审核、预约与每日服务、反馈调整、海滨环境及本地收尾。完整109项/223用例稿保留为参考，未选择项仍未验；不能宣称全部原F已通过。当前已派发任务保持原3用例及冻结文件，回源后停；源分开判定核心业务、原F差异与资源门。不阻断主流程的外观文案问题记录为遗留，关键流程失败、证据缺失或资源残留仍FAIL/BLOCKED。普通60秒/8MiB/512MiB/15min等全部资源约束保持，实际任务串行一次一个。没有新产品实现或Git授权。
+
+最新用户派发规则（2026-10-12）：之后恢复串行执行，每次只发布一个独立App子线程。此规则适用于后续设计和实测任务；任意时刻仅一个阶段任务执行。当前唯一客人入口验收任务继续完成已派发范围并回源后停止。源独立核对业务证据及全部资源退出、清理，两门通过且交接完整后才派发下一任务；不并行创建或恢复第二任务，不因本次规则调整重新创建当前任务。下文两条并行设计仅保留为已完成历史安排。
+
+首批独立App任务“海屿合并后验收1-E01：客人注册与登录”已按gpt-6.1-sol / high，从当前working-tree创建一次隔离验收工作树。App返回排队标识client-new-thread:c8daf739-7ed5-470e-bc54-52f79c95cf1b / local；源仅查一次就绪列表，尚未取得实际threadId与新工作树路径，不能把clientThreadId用于实际线程工具。具体派发收据为项目源码/output/resource-audit/post-merge-acceptance-20261011/first-runtime-App-dispatch-receipt.json。任务仅执行下述3个客人入口用例，保留第42轮报告并一次主动回源后停止；源本轮不启动测试资源、不再轮询，不派发第二个实测任务，等待该任务完成或阻塞回传再独立复验。实际报告日期使用2026-10-12，既有20261011计划/证据文件名保留。
+
+用户要求合并后验收，模型GPT-6.1 Sol / High；此前批准的两条并行设计A/B均已回传并停止。源独立设计门PASS_DESIGN_ONLY，109主ID无重复、223用例，231保护文件未变，设计资源0。原103 UNVERIFIED/6受限、NOT_FINAL_ACCEPTED与raw31/exit2保留；不表示功能已全验。见[设计复核](docs/合并后验收阶段0设计复核_20261011.md)。后续派发遵循本头最新串行规则。
+
+当前仅派发一个6.1Sol High独立App实测任务，阶段1-E01：A-010-02/A-011-01/A-008-01，客人非法注册→有效注册引导→同客人登录/退出，第42轮。main HEAD仍e3b2b2047650d8de569fd6f1c554d0678a22c5bc。main当前dirty仅本次协调/设计文档，按用户未提交时working-tree隔离要求创建一次App验收工作树继承完整稿，后续复用，不反复创建或复制依赖；实际API/Vite必须运行main源码，临时SQLite在受管tempDir，报告/脚本/证据保存main对应独占路径。dfa3因本地依赖/证据别名保持。
+
+本次新授权允许受管临时SQLite/API/Vite/单测试浏览器，最多外层+服务owner两个Session；日志8MiB/目录512MiB/15min/普通60秒、准确PID/child/guardian退出→句柄→临时清理、全部前缀/lsof/空间双门保持。MySQL/provider/外部服务/scheduler/npm test/build/冷装/产品修改/Git暂存提交推送PR0。不读取输出密钥、用户库，不改系统/用户服务或清理用户文件。只网页自然扩展排列，不移动端、不固定整页尺寸。
+
+具体产品子条款PASS/FAIL与验收执行包完整性分开；文案差异不能掩盖，也不能误认全部业务不存在。有效注册失败则依赖登录NOT_RUN；不自动重试、扩批或修产品。新task一次主动回源01a0cbfe-a161-72d0-992d-12fad655d4ef / local后停；源独立复验业务和全部资源，派发后最多一次就绪确认即结束，不轮询。见[本次唯一实测计划](docs/合并后验收阶段1E01客人入口执行计划_20261011.md)。此最新明确授权优先下文仅设计/仅整合/旧暂停及Luna模型历史范围。
+
+---
+# 当前有效状态：合并后验收阶段0，两条6.1 Sol / High任务并行设计（2026-10-11）
+
+用户明确要求合并后验收，指定GPT-6.1 Sol / High，允许每次两个并行子线程设计验收。源合并最终独验已PASS_WITH_ACCEPTED_HISTORY_EXCEPTION，main HEAD e3b2b2047650d8de569fd6f1c554d0678a22c5bc，225完整合入、58test/build/diff通过、20实例退出清理；原103 UNVERIFIED/6受限与NOT_FINAL_ACCEPTED保持，109功能未整体验收。
+
+当前仅两独立App设计任务，均gpt-6.1-sol / high / local：A 01a12b86-e71f-73d3-991c-275bc6114db8（RTM1–40、73–85、108，54条，第40轮）；B 01a12b86-e914-7b13-ad1f-8917fdd248d2（RTM41–72、86–107、109，55条，第41轮）。工作目录是本地main /Users/wangshanchong/Codes/haiyu_wellness，创建时clean，不建worktree/checkout或复制依赖；dfa3因本地依赖/证据别名必须保留。两任务只写各自新增设计文档/报告/ignored JSON，不改已有文件；本批provider/DB/API/Vite/browser/guardian/npm test/build/冷装/Git写入/产品实现修改0。源仅更新协调计划及本头。
+
+设计任务分别一次App回源01a0cbfe-a161-72d0-992d-12fad655d4ef / local并停止；PASS仅设计待评审。源最多一次就绪后结束，不轮询。设计最多2并行，后续实测按评审小批串行，资源8MiB/512MiB/15min/普通60秒、逐实例准确PID/child/guardian退出→句柄→临时清理及全前缀/lsof/空间双门保持；旧raw31/exit2例外保留。不Git提交/推送/PR，不删用户改动/数据/证据，不读取输出密钥，不做移动端或固定整页尺寸。见[当前总计划](docs/合并后功能验收总计划_20261011.md)及项目源码/output/resource-audit/post-merge-acceptance-20261011/design-baseline.json。最新明确人类授权优先下文旧暂停、Luna模型及只限合并的历史范围。
+
+---
 # 当前交付状态：进阶版本已整合本地main，待源最终独验（2026-10-11）
 
 唯一整合任务01a12ac0-76d8-7230-bd2e-01e888aa1699 / local、GPT-6.1 Sol / xhigh已按授权完成本地main双父合并`dd07421c86a94764a2ef85890b1f2e14a1445502`。main原8修改/48新增与dfa3完整交付分别保存在本地恢复分支，详见[第39轮报告](wangshanchong/第39轮报告.md)和[提交内摘要](docs/evidence/主分支整合摘要_20261011.json)。

@@ -1,5 +1,9 @@
 # 海屿康养社区智能康养系统
 
+> 新开发者请先看[前后端启动手册](docs/开发者启动手册.md)，其中包含安装、SQLite/MySQL、分开启动、构建、代理和当前验收边界。
+
+> 最新核心验收状态（2026-10-12）：第1轮入口、第2轮资料/桌面网页及第3A轮机构前置已独立通过限定核心范围；第3B轮原“四领域同一 run/session 的持久方案”合同为 `BLOCKED_STATIC_DEPENDENCY`。选项2的两个拆分流程尚未执行，109条需求仍未全验，`NOT_FINAL_ACCEPTED` 保持。见[核心验收计划](docs/合并后核心可用性验收计划_20261012.md)及[第46轮交付报告](wangshanchong/第46轮报告.md)。
+
 > 源端最新R5结论（2026-10-11）：Q27.7/Q27.8业务通过；Q27.9源05:09行级证据通过，05:11阶段汇总退出2、NOT_FINAL_ACCEPTED。映射33 PASS/76 BLOCKED，功能103 UNVERIFIED/6受限子场景。源资源门PASS_WITH_ACCEPTED_HISTORY_EXCEPTION；外层cwd执行违规保留，原546,982 B前缀完整、两条新增实例已追溯和清理，资源门无待审项。详见[逐项清单与串行计划](docs/阶段27剩余需求与后续最小阶段清单_20261011.md)及[第38轮报告](wangshanchong/第38轮报告.md)。 本轮D1只修改指定文档；未运行Quest、测试、安装、provider、API、MySQL或浏览器。
 
 这是海屿康养社区四角色应用的本地开发交付包，默认使用 SQLite，也可通过 `DB_DRIVER` 显式切换到 MySQL 8.x。先阅读[交接文档](交接文档_海屿康养社区.md)和[现行 API 与运行契约](docs/API运行契约.md)。[开发基线](docs/开发基线.md)与[API 基线快照](docs/API当前基线.md)基于旧 `67813a1`，不描述当前组合工作区。Stage15 的预约/容量/日程、Stage16 的确定性演示膳食、Stage17 的健康指标和 Stage18 的心情记录/陪伴资源均有本地实现。
@@ -71,7 +75,7 @@ export ASSISTANT_SESSION_TTL_MS=28800000
 npm start
 ```
 
-`AUTH_SECRET` 必须替换为随机强密钥，不能使用源码默认值或演示值。当前 `.env` 预置 `LLM_BASE_URL=https://api.deepseek.com`、`LLM_MODEL=deepseek-flash`，只需在本地填写 `LLM_API_KEY` 并重启 API；更换兼容服务时修改这三个 `LLM_*` 值。只有同时设置 `LLM_BASE_URL` 和 `LLM_API_KEY` 才会尝试调用 OpenAI-compatible `/chat/completions`；key 留空时使用安全引导模式。`.env` 已被 Git 忽略，不要把真实密钥提交到仓库。
+`AUTH_SECRET` 必须替换为随机强密钥，不能使用源码默认值或演示值。`.env.example` 提供 `LLM_BASE_URL=https://api.deepseek.com`、`LLM_MODEL=deepseek-flash` 示例；复制为本地配置后填写 `LLM_API_KEY` 并重启 API。更换兼容服务时修改这三个 `LLM_*` 值。只有同时设置 `LLM_BASE_URL` 和 `LLM_API_KEY` 才会尝试调用 OpenAI-compatible `/chat/completions`；key 留空时使用安全引导模式。`.env` 已被 Git 忽略，不要把真实密钥提交到仓库。
 
 `LLM_TIMEOUT_MS` 控制模型请求超时，默认 20,000 毫秒；正数有效，超过 120,000 毫秒时按 120,000 计算，缺失、非正数或无效值使用默认值。`ASSISTANT_SESSION_TTL_MS` 控制新助手会话有效期，默认 28,800,000 毫秒（8 小时），最大按 604,800,000 毫秒（7 天）计算；缺失、非正数或无效值使用默认值。修改环境变量后需重启 API。
 
