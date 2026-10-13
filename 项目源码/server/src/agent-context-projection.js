@@ -31,5 +31,7 @@ export function modelToolReply(agentId, item) {
   if (agentId === 'domain.nutrition') {
     return { status: item.status, data: projectNutritionData(item.toolName, item.data) };
   }
-  return { status: item.status, data: item.data, sources: item.sources };
+  // Full source labels remain in the persisted trace. Tool data keeps the
+  // safety rules and knowledge references used for candidate selection.
+  return { status: item.status, data: item.data };
 }

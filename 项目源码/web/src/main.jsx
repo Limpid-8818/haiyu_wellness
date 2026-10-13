@@ -1341,7 +1341,7 @@ function GuestDailyBrief({ me, go }) {
 
 function GuestOverview({ me, go }) {
   const profile = me.profile || {};
-  return <><PageTitle eyebrow="PERSONAL SPACE" title={`你好，${me.name}`} desc="这里是你的康养主页，重要的信息都会在这里清晰呈现。"/><GuestDailyBrief me={me} go={go}/><div className="welcome-banner"><div><span className="banner-kicker">今日状态</span><h2>把今天过得松弛一点</h2><p>你的个人资料和健康信息已安全保存。需要帮助时，工作人员会在这里留下新的建议。</p></div><div className="banner-orb">海</div></div><div className="metric-grid"><Metric label="入住状态" value={admissionLabel(me.admissionStatus)} hint={profile.roomNo ? `房间 ${profile.roomNo}` : '等待机构办理入住'} tone="teal"/><button type="button" className="metric-card blue metric-button" onClick={() => go('health')}><span>健康记录</span><strong>{`${me.health?.length || 0} 条`}</strong><small>点击查看详情　→</small></button><button type="button" className="metric-card orange metric-button" onClick={() => go('advice')}><span>当前医嘱</span><strong>{`${me.advice?.length || 0} 条`}</strong><small>点击查看详情　→</small></button></div><EnvironmentPanel/><section className="surface guest-agent-placeholder"><span aria-hidden="true">⌘</span><div><h2>管家协作</h2><p>当前没有可展示的智能体运行结果，本页不会显示预设结果。</p><p>需要帮助时，可使用右下角的现有助手入口。</p></div></section><div className="two-col"><section className="surface"><SectionHead title="我的健康概览" link="查看全部" onClick={() => go('health')}/><div className="health-glance"><div className="health-icon">⌁</div><div><strong>{me.health?.[0]?.type || '还没有健康记录'}</strong><p>{me.health?.[0] ? `${me.health[0].value} ${me.health[0].unit} · ${fmtDate(me.health[0].recordedAt)}` : '可以在“我的健康”中查看工作人员记录。'}</p></div><span className="health-status">已记录</span></div></section><section className="surface"><SectionHead title="最近的医嘱" link="查看全部" onClick={() => go('advice')}/><div className="advice-preview">{me.advice?.[0] ? <><div className="advice-priority important">重要</div><strong>{me.advice[0].title}</strong><p>{me.advice[0].content}</p><small>{me.advice[0].authorName || '工作人员'} · {fmtDate(me.advice[0].createdAt)}</small></> : <Empty text="暂无新的医嘱"/>}</div></section></div></>;
+  return <><PageTitle eyebrow="PERSONAL SPACE" title={`你好，${me.name}`} desc="这里是你的康养主页，重要的信息都会在这里清晰呈现。"/><GuestDailyBrief me={me} go={go}/><div className="welcome-banner"><div><span className="banner-kicker">今日状态</span><h2>把今天过得松弛一点</h2><p>你的个人资料和健康信息已安全保存。需要帮助时，工作人员会在这里留下新的建议。</p></div><div className="banner-orb">海</div></div><div className="metric-grid"><Metric label="入住状态" value={admissionLabel(me.admissionStatus)} hint={profile.roomNo ? `房间 ${profile.roomNo}` : '等待机构办理入住'} tone="teal"/><button type="button" className="metric-card blue metric-button" onClick={() => go('health')}><span>健康记录</span><strong>{`${me.health?.length || 0} 条`}</strong><small>点击查看详情　→</small></button><button type="button" className="metric-card orange metric-button" onClick={() => go('advice')}><span>当前医嘱</span><strong>{`${me.advice?.length || 0} 条`}</strong><small>点击查看详情　→</small></button></div><EnvironmentPanel/><GuestAgentResults/><div className="two-col"><section className="surface"><SectionHead title="我的健康概览" link="查看全部" onClick={() => go('health')}/><div className="health-glance"><div className="health-icon">⌁</div><div><strong>{me.health?.[0]?.type || '还没有健康记录'}</strong><p>{me.health?.[0] ? `${me.health[0].value} ${me.health[0].unit} · ${fmtDate(me.health[0].recordedAt)}` : '可以在“我的健康”中查看工作人员记录。'}</p></div><span className="health-status">已记录</span></div></section><section className="surface"><SectionHead title="最近的医嘱" link="查看全部" onClick={() => go('advice')}/><div className="advice-preview">{me.advice?.[0] ? <><div className="advice-priority important">重要</div><strong>{me.advice[0].title}</strong><p>{me.advice[0].content}</p><small>{me.advice[0].authorName || '工作人员'} · {fmtDate(me.advice[0].createdAt)}</small></> : <Empty text="暂无新的医嘱"/>}</div></section></div></>;
 }
 
 const HEALTH_PROFILE_FIELDS = [
@@ -2725,6 +2725,32 @@ function fmtDateTime(value) {
   return value ? new Date(value).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 }
 
+function agentStateLabel(state) {
+  return ({ not_run: '尚未运行', queued: '等待执行', running: '正在执行', completed: '已完成', partial_failure: '部分任务未完成', failed: '执行失败', interrupted: '执行已中断' })[state] || state;
+}
+
+function GuestAgentResults() {
+  const [status, setStatus] = useState(null);
+  const [error, setError] = useState('');
+  const [open, setOpen] = useState(false);
+  const load = useCallback(async () => {
+    try { setStatus(await request('/agent/status')); setError(''); }
+    catch (error) { setError(error.message || '暂时无法读取协作记录'); }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+  const run = status?.run;
+  return <section className="surface" data-testid="guest-agent-results"><SectionHead title="管家协作" link="刷新协作" onClick={load}/>
+    {error ? <p role="alert">{error}</p> : !status ? <p>正在读取协作记录…</p> : <>
+      <p>{agentStateLabel(status.state)}</p>
+      {run ? <><small>运行 {run.runId} · {fmtDateTime(run.createdAt)}</small><p style={{whiteSpace:'pre-wrap'}}>{run.reply || '任务尚未返回答复。'}</p>
+        <button type="button" className="outline-btn" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? '收起原运行详情' : '打开原运行详情'}</button>
+        {open && <div data-run-id={run.runId}><p>会话 {run.sessionId}</p><div className="assistant-sources"><strong>查询来源</strong>{run.sources.map(source => <article key={`${source.type}:${source.id}`}><span>{source.label}</span><small>{source.id}</small></article>)}</div>
+          {run.collaboration && <AssistantCollaborationTrace collaboration={run.collaboration}/>}
+          {run.steps.map(step => <p key={step.stepIndex}>{step.summary} · {step.status}</p>)}</div>}</> : <p>当前授权范围内没有协作记录。可使用右下角助手整理建议。</p>}
+    </>}
+  </section>;
+}
+
 function AgentPanel({ role }) {
   const [status, setStatus] = useState(null);
   const [open, setOpen] = useState(true);
@@ -2733,7 +2759,7 @@ function AgentPanel({ role }) {
     request('/agent/status').then((data) => { if (active) setStatus(data); }).catch(() => {});
     return () => { active = false; };
   }, []);
-  return <section className="surface agent-panel"><div className="agent-panel-head"><div><div className="eyebrow">AGENT ORCHESTRATION</div><h2><span className="agent-pulse"/>康养智能协作台</h2><p>{role === 'guest' ? '你的今日信息由康养管家协调多个专业 Agent 整理。' : '系统以康养管家为调度 Agent，辅助团队完成信息整理与建议生成。'}</p></div><div className="agent-mode">{status?.mode || '可解释规则协作模式'}<button type="button" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? '收起' : '展开'}　⌃</button></div></div>{open && <><div className="agent-flow"><div className="flow-node orchestrator"><span>⌘</span><strong>康养管家</strong><small>调度与汇总</small></div><div className="flow-line"/><div className="flow-agents">{(status?.agents || []).slice(1).map((agent, index) => <div className="flow-node" key={agent.agent}><span>{['◒', '✣', '♧', '◌'][index]}</span><strong>{agent.agent}</strong><small>{agent.action}</small></div>)}</div></div><div className="agent-events">{(status?.agents || []).map((agent) => <div key={agent.agent}><span className={`event-state ${agent.state}`}>{agent.state === 'done' ? '✓' : '·'}</span><div><strong>{agent.agent} · {agent.action}</strong><p>{agent.detail}</p></div></div>)}</div><div className="agent-gate">⌁ 人工确认边界：{status?.humanGate || '健康风险建议由工作人员最终确认'}</div></>}</section>;
+  return <section className="surface agent-panel"><div className="agent-panel-head"><div><div className="eyebrow">AGENT ORCHESTRATION</div><h2><span className="agent-pulse"/>康养智能协作台</h2><p>{role === 'guest' ? '你的今日信息由康养管家协调多个专业 Agent 整理。' : '系统以康养管家为调度 Agent，辅助团队完成信息整理与建议生成。'}</p></div><div className="agent-mode">{status?.mode || '可解释规则协作模式'}<button type="button" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? '收起' : '展开'}　⌃</button></div></div>{open && <><p>实际运行：{agentStateLabel(status?.state || 'not_run')} · 服务健康：{({unknown:'尚未验证',unconfigured:'未配置',last_request_succeeded:'最近请求成功',last_request_failed:'最近请求失败'})[status?.serviceHealth?.state] || '尚未验证'}</p><div className="agent-flow"><div className="flow-node orchestrator"><span>⌘</span><strong>康养管家</strong><small>调度与汇总</small></div><div className="flow-line"/><div className="flow-agents">{(status?.agents || []).slice(1).map((agent, index) => <div className="flow-node" key={agent.agent}><span>{['◒', '✣', '♧', '◌'][index]}</span><strong>{agent.agent}</strong><small>{agent.action}</small></div>)}</div></div><div className="agent-events">{(status?.agents || []).map((agent) => <div key={agent.agent}><span className={`event-state ${agent.state}`}>{agent.state === 'done' ? '✓' : '·'}</span><div><strong>{agent.agent} · {agent.action}</strong><p>{agent.detail}</p></div></div>)}</div><div className="agent-gate">⌁ 人工确认边界：{status?.humanGate || '健康风险建议由工作人员最终确认'}</div></>}</section>;
 }
 
 function StaffCareFollowUpTasks({ guests, onChooseGuest }) {

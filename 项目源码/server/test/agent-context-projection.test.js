@@ -2,6 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { modelToolReply } from '../src/agent-context-projection.js';
 
+test('domain projection keeps full safety evidence while omitting duplicated source labels only from model input', () => {
+  const item={status:'completed',data:{evaluations:[{projectId:'sea',outcome:'rejected',matchedRules:[{reason:'未批准下海'}]}]},sources:[{id:'rule-sea',label:'重复安全规则标签'}]};
+  const projected=modelToolReply('domain.physio',item);
+  assert.equal(projected.data,item.data);
+  assert.equal(projected.data.evaluations[0].matchedRules[0].reason,'未批准下海');
+  assert.equal(projected.sources,undefined);
+  assert.equal(item.sources[0].id,'rule-sea');
+});
+
 test('nutrition model context deduplicates dish objects while preserving meal options, allergy exclusions, and knowledge', () => {
   const sharedDish = { id: 'dish-rice', name: '鸡肉饭', ingredients: ['鸡肉', '米'], allergens: [],
     mealTypes: ['breakfast', 'lunch', 'dinner'], slot: 'main', supplyStatus: 'demo_available',
