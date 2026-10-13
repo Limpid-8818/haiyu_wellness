@@ -66,6 +66,21 @@ function zeroExerciseRun() {
   return run;
 }
 
+test('four-domain adoption retains physio/companionship candidates and rejects missing or failed professional evidence', () => {
+  const run=validRun();
+  run.collaboration.agents.push(completedAgent('domain.physio',['mud'],'get_physio_context','get_therapy_knowledge'),
+    completedAgent('domain.psychology',['breathing'],'get_psychology_context','get_companionship_knowledge'));
+  run.collaboration.candidates.push({candidateId:'mud',domain:'physio',status:'adopted'},
+    {candidateId:'breathing',domain:'psychology',status:'adopted'});
+  run.collaboration.finalAdoptedCandidateIds.push('mud','breathing');
+  const result=inspectWellnessCollaboration(run,{expectedExerciseDate:'2026-10-06'});
+  assert.equal(result.valid,true);assert.equal(result.candidates.length,4);
+  run.collaboration.agents[3].status='failed';
+  assert.equal(inspectWellnessCollaboration(run,{expectedExerciseDate:'2026-10-06'}).rejection.condition,'domain_agent_not_completed');
+  run.collaboration.agents.pop();
+  assert.equal(inspectWellnessCollaboration(run,{expectedExerciseDate:'2026-10-06'}).rejection.condition,'required_domain_agent_missing');
+});
+
 test('read-only tool summaries retain bounded inventory counts and source IDs without raw result data', () => {
   const summary = summarizeReadOnlyToolResult('get_nutrition_context', {
     data: { candidates: [{ candidateId: 'meal:breakfast', mealType: 'breakfast' }],

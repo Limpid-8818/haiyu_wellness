@@ -209,7 +209,9 @@ async function copyVersion({ actor, source, edits, reason, requestKey, requestFi
       label: `${checked.slot.businessDate} ${checked.slot.localStart} 项目时段` }];
     if (checked.environment?.environmentSnapshotId) sourceIds.push({ type: 'environment_snapshot',
       id: checked.environment.environmentSnapshotId, label: '当前环境快照' });
-    edited.push({ ...old, date: checked.slot.businessDate, localStart: checked.slot.localStart,
+    edited.push({ ...old, date: checked.slot.businessDate,
+      slotKey: `revision:${crypto.createHash('sha256').update(old.id).digest('hex').slice(0,20)}`,
+      localStart: checked.slot.localStart,
       localEnd: checked.slot.localEnd, title: text(edit.title, 160) || checked.slot.projectName,
       candidateId: `clinician:${checked.slot.projectId}`, location: checked.slot.location,
       status: 'pending_review', reason: editReason, ruleIds: (checked.environment?.checks || [])
