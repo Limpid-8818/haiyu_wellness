@@ -1,3 +1,11 @@
+# 当前有效状态：3B V01已验合入并普通push，待Source77核整合（2026-10-14）
+
+独立产品6c72ea1ee4260113d61871fe576dad255319f288经main merge6a2d653bf5a2c935fbf55ef4ebbc80ad1b3a5961合入；公开文稿9d92128b2386135496a91a9f6f57c4d300d933dd已普通push exit0，本地HEAD/origin-main/实际ls-remote一致，main检查干净。第76轮main12产品SHA与候选相同、61/61/build0、在线50/16384/12/90秒，新整合5实例及原3B16实例资源PASS，两audit自身8身份/4组为空，旧67+14引用保持。V01原条目已完成，U01阶段6解释需求待改，私密.env未改。
+
+本次只追加这一已发生的push公开回执并正常提交推送，最后文稿SHA以integration76最终封包/App回传为准，不循环填本报告自己的SHA。Source77独核整合、实际远端和资源后才派4；当前4—6未派，109未全验/整体NOT_FINAL_ACCEPTED/CI延后和全部旧FAIL/定位重试/历史例外保持。worker完成一次主动回Source后停止，不自行续派/轮询。以下push前和旧时点完整保留。
+
+---
+
 # 当前有效状态：3B已验产品合入main，整合推送收尾（2026-10-14）
 
 V01已由Source第75轮独立业务/资源验收通过；产品6c72ea1ee4260113d61871fe576dad255319f288在新codex/accepted-bug-stage3b-20261014分支提交，经main merge6a2d653bf5a2c935fbf55ef4ebbc80ad1b3a5961合入，12已验文件逐件SHA一致。main同61定向回归/build通过，3020/5180只读status为50/16384/12/90秒/live，未重启服务或改.env。V01原条目标已完成；原只读建议措辞与激活后状态解释归U01阶段6待改，本次不扩产品。
