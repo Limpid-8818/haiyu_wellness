@@ -95,10 +95,12 @@ export async function listGuestCheckins(guestId) {
       s.local_start AS localStart,s.local_end AS localEnd,p.name AS projectName,p.location,
       c.id AS checkinId,c.checked_in_at AS checkedInAt,c.business_date AS checkedInBusinessDate,
       f.id AS feedbackId,f.feeling,f.note AS feedbackNote,f.revision AS feedbackRevision,
-      f.business_date AS feedbackBusinessDate,f.created_at AS feedbackCreatedAt,f.updated_at AS feedbackUpdatedAt
+      f.business_date AS feedbackBusinessDate,f.created_at AS feedbackCreatedAt,f.updated_at AS feedbackUpdatedAt,
+      a.status AS attendanceStatus
     FROM reservations r JOIN activity_slots s ON s.id=r.slot_id JOIN projects p ON p.id=s.project_id
     LEFT JOIN wellness_checkins c ON c.reservation_id=r.id
     LEFT JOIN wellness_feedback f ON f.reservation_id=r.id
+    LEFT JOIN stage26_reservation_checkins a ON a.reservation_id=r.id
     WHERE r.guest_id=? ORDER BY s.starts_at DESC,r.id DESC LIMIT 100`).all(guestId);
   const items = [];
   for (const row of rows) {
@@ -110,14 +112,14 @@ export async function listGuestCheckins(guestId) {
         checkinId: row.checkinId, feeling: row.feeling, note: row.feedbackNote, revision: row.feedbackRevision,
         businessDate: row.feedbackBusinessDate, createdAt: row.feedbackCreatedAt, updatedAt: row.feedbackUpdatedAt }, revisions);
     }
-    items.push({ reservationId: row.reservationId, reservationStatus: row.reservationStatus,
+    items.push({ reservationId: row.reservationId, reservationStatus: row.attendanceStatus === 'no_show' ? 'no_show' : row.reservationStatus,
       businessDate: dateText(row.businessDate),
       startsAt: Number.isFinite(parseInstant(row.startsAt)) ? new Date(parseInstant(row.startsAt)).toISOString() : row.startsAt,
       endsAt: Number.isFinite(parseInstant(row.endsAt)) ? new Date(parseInstant(row.endsAt)).toISOString() : row.endsAt,
       localStart: row.localStart, localEnd: row.localEnd, projectName: row.projectName, location: row.location,
       checkin: row.checkinId ? { id: row.checkinId, checkedInAt: row.checkedInAt,
         businessDate: dateText(row.checkedInBusinessDate) } : null,
-      feedback });
+      feedback, executions: await (await import('./service-execution.js')).reservationExecutions(row.reservationId) });
   }
   return { items, total: items.length };
 }
@@ -129,6 +131,8 @@ export async function createGuestCheckin({ guestId, reservationId, clock = syste
   return await transaction(async () => {
     const reservation = await reservationForGuest(guestId, reservationId, true);
     if (!reservation) throw new AppError(404, 'RESERVATION_NOT_FOUND', '没有找到本人预约');
+    const attendance = await db.prepare('SELECT status FROM stage26_reservation_checkins WHERE reservation_id=?').get(reservationId);
+    if (attendance?.status === 'no_show') throw new AppError(409, 'CHECKIN_NO_SHOW_RECORDED', '该预约已登记未参加，请联系负责人员核对，不能重新签到');
     const existing = await db.prepare(`SELECT id,guest_id AS guestId,reservation_id AS reservationId,
       business_date AS businessDate,checked_in_at AS checkedInAt,created_at AS createdAt
       FROM wellness_checkins WHERE reservation_id=?`).get(reservationId);

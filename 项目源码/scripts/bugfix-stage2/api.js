@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+assert.equal(process.env.DB_DRIVER, 'sqlite');
+assert.ok(process.env.DB_PATH?.startsWith('/tmp/haiyu-resource-'));
+assert.equal(process.env.DEMO_SEED, '0'); assert.equal(process.env.LLM_API_KEY, '');
+const { app } = await import('../../server/src/app.js');
+const { db } = await import('../../server/src/db.js');
+if (process.env.STAGE2_CATALOG_FIXTURE === '1') await (await import('./catalog-fixture.js')).prepareSyntheticIndoorExercise();
+const server = app.listen(Number(process.env.PORT), '127.0.0.1', () => console.log('STAGE2_READY'));
+let closing = false;
+const close = () => { if (closing) return; closing = true; server.close(async () => { await db.close(); process.exit(0); }); };
+process.once('SIGTERM', close); process.once('SIGINT', close);

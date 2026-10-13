@@ -6,6 +6,7 @@ import { createNotificationOnce } from './wellness-notifications.js';
 import { listProjects } from './catalog.js';
 import { systemBusinessClock } from './clock.js';
 import { effectiveHealthConstraints, normalizeHealthProfile } from './health-profile.js';
+import { staffServiceDetails } from './service-execution.js';
 
 const SERVICE_JOBS = new Set(['coach', 'therapist', 'dietitian']);
 const lock = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
@@ -168,6 +169,9 @@ export async function markReservationNoShow({ reservationId, actorId }) {
       JOIN users u ON u.id=r.guest_id WHERE r.id=?${lock()}`).get(reservationId);
     if (!row) throw new AppError(404, 'RESERVATION_NOT_FOUND', '预约不存在');
     if (row.status !== 'confirmed') throw new AppError(409, 'RESERVATION_NOT_ACTIVE', '只有有效预约可以登记未参加');
+    if (await db.prepare('SELECT id FROM wellness_checkins WHERE reservation_id=?').get(reservationId)) {
+      throw new AppError(409, 'CHECKIN_ALREADY_RECORDED', '客人已实际签到，不能登记未参加');
+    }
     const existing = await db.prepare('SELECT id,status,checked_at AS checkedAt FROM stage26_reservation_checkins WHERE reservation_id=?').get(reservationId);
     if (existing) {
       if (existing.status === 'no_show') return { reservationId, status: 'no_show', checkinStatus: 'not_attended', checkedAt: existing.checkedAt, replayed: true };
@@ -369,9 +373,10 @@ export async function listStaffDailySchedule(user, date = systemBusinessClock.da
     FROM stage26_staff_slot_assignments a JOIN activity_slots s ON s.id=a.slot_id
       JOIN projects p ON p.id=s.project_id LEFT JOIN reservations r ON r.slot_id=s.id AND r.status='confirmed'
       LEFT JOIN users u ON u.id=r.guest_id
-    WHERE a.staff_id=? AND a.status='active' AND s.business_date=?
-    ORDER BY s.starts_at,p.name,r.id`).all(user.id, date);
-  return { date, jobType, items, total: items.length,
+    WHERE a.staff_id=? AND a.job_type=? AND a.status='active' AND s.business_date=?
+    ORDER BY s.starts_at,p.name,r.id`).all(user.id, jobType, date);
+  const scopedItems = await Promise.all(items.map(item => staffServiceDetails(user, item)));
+  return { date, jobType, items: scopedItems, total: scopedItems.length,
     privacyNote: '只显示当前岗位任务所需的客人姓名与预约编号；不包含电话、健康档案或医护审核操作。' };
 }
 
