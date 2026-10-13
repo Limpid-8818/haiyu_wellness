@@ -1,3 +1,11 @@
+# 当前有效状态：阶段1与阶段2分别提交合入main完成，待Source核整合回包（2026-10-13）
+
+整合App 01a133ed-5729-7893-aafe-112d1c491ca0 / local已完成：阶段1产品ee75a01481ab9b7f2f975f087d8c30960a98c210、main合并bc1558a1208f715cccbfcfeba49386683143d2c9；阶段2产品72aa5c8f51c458955344e0ae3543fba2a715ca87、main合并05c81acd9bfd088c47438f428d02a5c1d5637beb。main隔离定向18/18测试、web build exit0；本轮3实例/8登记启动/14唯一身份准确退出与句柄/temp/socket清理通过，残留及历史退出缺口0。第67轮为整合记录，最终文稿提交SHA以回包为准。
+
+BUG原条目F01/F02/F03/F11、F05已完成，V02仅五岗位核心旅程已完成；第65轮旧worker BLOCKED、全部旧FAIL和历史例外保持，整体NOT_FINAL_ACCEPTED/109未全验。main原协调收据合理保留，d42c原候选与旧HEAD仍完整保全；无push/PR、无真实库/MySQL/模型/CI修复。Source核整合回包前不派阶段3—6；后续继承已合入main成果。详见[第67轮报告](wangshanchong/第67轮报告.md)。以下旧时点记录完整保留。
+
+---
+
 # 最新人类授权：已验阶段分别提交合入main并更新BUG条目（2026-10-13）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef已阶段2独验18/18、build0、93网页断言/61HTTP/7PNG、12实例资源PASS，旧workerBLOCKED保留，详见第66轮。用户新要求每阶段验收后分别commit/merge main，并在BUG原条目写已完成；覆盖下方旧Git0仅限已验成果整合。唯一整合App01a133ed-5729-7893-aafe-112d1c491ca0 / local、GPT-6.1 Sol/High，同目录fork已停止阶段2，沿用d42c；先阶段1后阶段2单独产品提交/整合。主仓库协调文稿合理对比兼容，未验BUG不关闭，私密/真实库/依赖/output不入Git，不推断push权限。阶段3尚未派，完整边界见docs/阶段1与阶段2逐阶段整合main_20261013.md；第67轮留整合任务，完成/阻塞只回本Source一次停止。旧报告/FAIL/历史例外和以下全文保持。
