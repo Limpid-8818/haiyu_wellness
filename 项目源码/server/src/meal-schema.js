@@ -1,3 +1,62 @@
+export const sqliteMealReviewSchema = `
+CREATE TABLE IF NOT EXISTS meal_restriction_reviews (
+  id TEXT PRIMARY KEY,
+  guest_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  basis_fingerprint TEXT NOT NULL,
+  restrictions_json TEXT NOT NULL,
+  status TEXT NOT NULL CHECK(status IN ('pending','resolved')),
+  requested_by TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  assigned_to TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  decisions_json TEXT NOT NULL DEFAULT '[]',
+  reviewed_by TEXT REFERENCES users(id) ON DELETE RESTRICT,
+  review_note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  reviewed_at TEXT,
+  UNIQUE(guest_id,basis_fingerprint)
+);
+CREATE TABLE IF NOT EXISTS meal_order_checks (
+  order_id TEXT PRIMARY KEY REFERENCES meal_orders(id) ON DELETE CASCADE,
+  basis_fingerprint TEXT NOT NULL,
+  dishes_fingerprint TEXT NOT NULL,
+  checked_by TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  note TEXT NOT NULL,
+  checked_at TEXT NOT NULL
+);
+`;
+
+export const mysqlMealReviewSchema = [
+  `CREATE TABLE IF NOT EXISTS meal_restriction_reviews (
+    id VARCHAR(64) NOT NULL PRIMARY KEY,
+    guest_id VARCHAR(36) NOT NULL,
+    basis_fingerprint VARCHAR(64) NOT NULL,
+    restrictions_json JSON NOT NULL,
+    status VARCHAR(16) NOT NULL,
+    requested_by VARCHAR(36) NOT NULL,
+    assigned_to VARCHAR(36) NOT NULL,
+    decisions_json JSON NOT NULL,
+    reviewed_by VARCHAR(36) NULL,
+    review_note VARCHAR(1000) NOT NULL,
+    created_at DATETIME(3) NOT NULL,
+    reviewed_at DATETIME(3) NULL,
+    UNIQUE KEY uq_meal_restriction_review(guest_id,basis_fingerprint),
+    FOREIGN KEY(guest_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY(requested_by) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY(assigned_to) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY(reviewed_by) REFERENCES users(id) ON DELETE RESTRICT,
+    CHECK(status IN ('pending','resolved'))
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci`,
+  `CREATE TABLE IF NOT EXISTS meal_order_checks (
+    order_id VARCHAR(64) NOT NULL PRIMARY KEY,
+    basis_fingerprint VARCHAR(64) NOT NULL,
+    dishes_fingerprint VARCHAR(64) NOT NULL,
+    checked_by VARCHAR(36) NOT NULL,
+    note VARCHAR(1000) NOT NULL,
+    checked_at DATETIME(3) NOT NULL,
+    FOREIGN KEY(order_id) REFERENCES meal_orders(id) ON DELETE CASCADE,
+    FOREIGN KEY(checked_by) REFERENCES users(id) ON DELETE RESTRICT
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci`
+];
+
 export const sqliteMealSchema = `
 CREATE TABLE IF NOT EXISTS dishes (
   id TEXT PRIMARY KEY,

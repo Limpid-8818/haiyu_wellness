@@ -11,7 +11,7 @@ import { mysqlCoreSchema, sqliteCoreSchema } from './schema.js';
 import { mysqlCatalogSchema, sqliteCatalogSchema } from './catalog-schema.js';
 import { mysqlEnvironmentSchema, sqliteEnvironmentSchema } from './environment-schema.js';
 import { mysqlBookingSchema, sqliteBookingSchema } from './booking-schema.js';
-import { mysqlMealSchema, sqliteMealSchema } from './meal-schema.js';
+import { mysqlMealSchema, sqliteMealSchema, mysqlMealReviewSchema, sqliteMealReviewSchema } from './meal-schema.js';
 import { mysqlMoodSchema, sqliteMoodSchema } from './mood-schema.js';
 import { mysqlAssistantRunsSchema, sqliteAssistantRunsSchema } from './assistant-runs-schema.js';
 import { mysqlStage21Schema, sqliteStage21Schema } from './stage21-schema.js';
@@ -536,6 +536,9 @@ export async function migrate() {
       } },
       { version: 25, name: 'stage26-operations-schedules-and-incidents', up: async () => {
         await db.exec(sqliteStage26Schema);
+      } },
+      { version: 26, name: 'meal-restriction-and-order-review', up: async () => {
+        await db.exec(sqliteMealReviewSchema);
       } }
     ];
     for (const migration of migrations) {
@@ -786,6 +789,9 @@ export async function migrate() {
     } },
     { version: 25, name: 'stage26-operations-schedules-and-incidents', up: async () => {
       for (const statement of mysqlStage26Schema) await db.exec(statement);
+    } },
+    { version: 26, name: 'meal-restriction-and-order-review', up: async () => {
+      for (const statement of mysqlMealReviewSchema) await db.exec(statement);
     } }
   ];
   for (const migration of migrations) {

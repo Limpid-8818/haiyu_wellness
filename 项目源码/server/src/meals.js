@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { db, guestProfile, id, json, now, log, transaction, hasActiveTransaction } from './db.js';
 import { AppError } from './errors.js';
 import { effectiveHealthConstraints, normalizeHealthProfile } from './health-profile.js';
-import { isDateOnly, stayStatus } from './staffing.js';
+import { isDateOnly, stayStatus, jobTypeFor } from './staffing.js';
 import { authorizeGuestAccess } from './authorization.js';
 
 const MEALS = ['breakfast', 'lunch', 'dinner'];
@@ -93,6 +93,28 @@ async function healthState(guestId, { lock = false } = {}) {
     profile: safeJsonProfile(row.structuredJson)
   }));
   const constraints = effectiveHealthConstraints({ verified: profile, pendingIntakes, legacyAllergies });
+  const basisFingerprint = hash({ profileVersion: Number(profileRow.health_profile_version || 0), constraints });
+  const review = await db.prepare(`SELECT r.*,u.name AS assigned_name,v.name AS reviewer_name
+    FROM meal_restriction_reviews r JOIN users u ON u.id=r.assigned_to
+    LEFT JOIN users v ON v.id=r.reviewed_by WHERE r.guest_id=? AND r.basis_fingerprint=?`)
+    .get(guestId, basisFingerprint);
+  const rawConstraints = structuredClone(constraints);
+  const nonFoodRestrictions = [];
+  if (review?.status === 'resolved') {
+    const decisions = decode(review.decisions_json);
+    for (const field of ['allergies', 'dietaryRestrictions']) {
+      constraints[field] = constraints[field].flatMap(entry => {
+        const decision = decisions.find(item => item.field === field && item.value === entry.value
+          && item.source === entry.source && item.sourceId === entry.sourceId);
+        if (!decision) return [entry];
+        if (decision.classification === 'non_food') {
+          nonFoodRestrictions.push({ ...entry, decision, reviewId: review.id });
+          return [];
+        }
+        return [{ ...entry, originalValue: entry.value, value: decision.foodValue, reviewId: review.id }];
+      });
+    }
+  }
   const audiencePreferences = [
     ...profile.audienceTags.items.map(value => ({ value, source: 'verified-profile', sourceId: null })),
     ...pendingIntakes.flatMap(intake => intake.candidate.audienceTags.items.map(value => ({ value, source: intake.source, sourceId: intake.id })))
@@ -114,6 +136,10 @@ async function healthState(guestId, { lock = false } = {}) {
   }
   return {
     profile,
+    basisFingerprint,
+    rawConstraints,
+    nonFoodRestrictions,
+    restrictionReview: review ? decodeRestrictionReview(review) : null,
     pendingIntakes,
     constraints,
     audiencePreferences,
@@ -128,6 +154,82 @@ async function healthState(guestId, { lock = false } = {}) {
 function knownConstraint(value) {
   const normalized = normalizeValue(value);
   return Boolean(normalized && (ALIASES.has(normalized) || KNOWN_INGREDIENTS.has(normalized)));
+}
+
+function decodeRestrictionReview(row) {
+  return { id: row.id, guestId: row.guest_id, status: row.status, assignedTo: row.assigned_to,
+    assignedName: row.assigned_name || '', reviewerName: row.reviewer_name || '', reviewedBy: row.reviewed_by,
+    restrictions: decode(row.restrictions_json), decisions: decode(row.decisions_json),
+    note: row.review_note, createdAt: isoUtc(row.created_at), reviewedAt: isoUtc(row.reviewed_at) };
+}
+
+function unmappedRestrictions(health) {
+  return ['allergies', 'dietaryRestrictions'].flatMap(field => health.rawConstraints[field]
+    .filter(entry => !knownConstraint(entry.value)).map(entry => ({ field, ...entry })));
+}
+
+export async function getMealRestrictionReview(guestId) {
+  const health = await healthState(guestId);
+  const staff = await db.prepare(`SELECT DISTINCT u.id,u.name FROM staff_guest_assignments a JOIN users u ON u.id=a.staff_id
+    WHERE a.guest_id=? AND a.status='active' AND a.start_at<=? AND (a.end_at IS NULL OR a.end_at>?)
+      AND u.role='staff' AND u.status='active' AND u.job_type='clinician' ORDER BY u.id`).all(guestId, now(), now());
+  const history = await db.prepare(`SELECT r.*,u.name AS assigned_name,v.name AS reviewer_name
+    FROM meal_restriction_reviews r JOIN users u ON u.id=r.assigned_to LEFT JOIN users v ON v.id=r.reviewed_by
+    WHERE r.guest_id=? ORDER BY r.created_at DESC,r.id DESC LIMIT 30`).all(guestId);
+  return { review: health.restrictionReview, unrecognized: unmappedRestrictions(health), responsibleClinicians: staff,
+    history: history.map(decodeRestrictionReview), nonFoodRestrictions: health.nonFoodRestrictions };
+}
+
+export async function requestMealRestrictionReview({ user, guestId }) {
+  await authorizeGuestAccess(user, guestId);
+  return inTransaction(async () => {
+    const health = await healthState(guestId, { lock: true });
+    if (health.restrictionReview) return { created: false, ...(await getMealRestrictionReview(guestId)) };
+    const restrictions = unmappedRestrictions(health);
+    if (!restrictions.length) throw new AppError(409, 'MEAL_REVIEW_NOT_NEEDED', '当前没有未映射限制需要转交');
+    const state = await getMealRestrictionReview(guestId);
+    const assigned = state.responsibleClinicians[0];
+    if (!assigned) throw new AppError(409, 'MEAL_CLINICIAN_NOT_ASSIGNED', '当前未配置负责医护，请联系机构管理员安排医护分工后再转交');
+    await db.prepare(`INSERT INTO meal_restriction_reviews
+      (id,guest_id,basis_fingerprint,restrictions_json,status,requested_by,assigned_to,decisions_json,review_note,created_at)
+      VALUES(?,?,?,?,'pending',?,?,'[]','',?)`).run(id('meal_review'), guestId, health.basisFingerprint,
+      JSON.stringify(restrictions), user.id, assigned.id, now());
+    await log(user.id, 'meal.restriction.request', 'guest', guestId, `未映射限制已转交负责医护 ${assigned.name}`);
+    return { created: true, ...(await getMealRestrictionReview(guestId)) };
+  });
+}
+
+export async function resolveMealRestrictionReview({ user, reviewId, decisions, note }) {
+  if (user.role !== 'staff' || jobTypeFor(user) !== 'clinician') throw new AppError(403, 'CLINICIAN_REQUIRED', '仅负责医护可核对食物与非食物限制');
+  const reviewNote = typeof note === 'string' ? note.trim() : '';
+  if (!reviewNote || reviewNote.length > 1000 || !Array.isArray(decisions)) throw new AppError(400, 'MEAL_REVIEW_INPUT_INVALID', '请逐项选择分类并填写核对依据（最多1000字）');
+  return inTransaction(async () => {
+    const row = await db.prepare('SELECT * FROM meal_restriction_reviews WHERE id=?').get(reviewId);
+    if (!row) throw new AppError(404, 'MEAL_REVIEW_NOT_FOUND', '核对记录不存在');
+    await authorizeGuestAccess(user, row.guest_id);
+    const health = await healthState(row.guest_id, { lock: true });
+    if (row.basis_fingerprint !== health.basisFingerprint) throw new AppError(409, 'MEAL_REVIEW_STALE', '健康限制已变化，请重新转交当前版本核对');
+    const restrictions = decode(row.restrictions_json);
+    if (decisions.length !== restrictions.length) throw new AppError(400, 'MEAL_REVIEW_DECISIONS_REQUIRED', '必须核对全部未映射限制');
+    const normalized = restrictions.map((entry, index) => {
+      const choice = decisions[index];
+      if (!choice || !['food', 'non_food'].includes(choice.classification)
+        || (choice.classification === 'food' && !knownConstraint(choice.foodValue))) {
+        throw new AppError(400, 'MEAL_REVIEW_DECISION_INVALID', '请选择食物/非食物；食物须填写可精确匹配的食材或饮食标签');
+      }
+      return { ...entry, classification: choice.classification, foodValue: choice.classification === 'food' ? choice.foodValue.trim() : '' };
+    });
+    if (row.status === 'resolved') {
+      if (JSON.stringify(normalized) !== JSON.stringify(decode(row.decisions_json)) || reviewNote !== row.review_note) {
+        throw new AppError(409, 'MEAL_REVIEW_ALREADY_RESOLVED', '此版本已核对，原决定保留；更正请先更新健康自述');
+      }
+      return { changed: false, ...(await getMealRestrictionReview(row.guest_id)) };
+    }
+    await db.prepare(`UPDATE meal_restriction_reviews SET status='resolved',decisions_json=?,reviewed_by=?,review_note=?,reviewed_at=? WHERE id=?`)
+      .run(JSON.stringify(normalized), user.id, reviewNote, now(), row.id);
+    await log(user.id, 'meal.restriction.resolve', 'meal_review', row.id, reviewNote);
+    return { changed: true, ...(await getMealRestrictionReview(row.guest_id)) };
+  });
 }
 
 function domainMatches(value, dishValues) {
@@ -194,6 +296,9 @@ function menuBasis(state) {
   return {
     profileVersion: state.profileVersion,
     effectiveHealthConstraints: state.constraints,
+    rawHealthConstraints: state.rawConstraints,
+    nonFoodRestrictions: state.nonFoodRestrictions,
+    restrictionReview: state.restrictionReview,
     audiencePreferences: state.audiencePreferences,
     notices: state.notices,
     evaluatedAt: now(),
@@ -304,7 +409,7 @@ export async function getGuestMenu(guestId, businessDate) {
   const health = await healthState(guestId);
   dateInStay(health, businessDate);
   const menu = await menuForGuest(guestId, businessDate);
-  if (!menu) return { status: 'needs_generation', businessDate, menu: null, items: [], orders: [] };
+  if (!menu) return { status: 'needs_generation', businessDate, menu: null, items: [], orders: [], currentRuleBasis: menuBasis(health) };
   const catalog = (await catalogRows()).map(decodeDish);
   const unmapped = [...health.constraints.allergies, ...health.constraints.dietaryRestrictions].some(item => !knownConstraint(item.value));
   const storedRuleBasis = decode(menu.rule_basis_json, {});
@@ -379,6 +484,30 @@ export async function generateGuestMenu(guestId, businessDate) {
   });
 }
 
+export async function reviewGuestMenu({ guestId, menuId: menuIdValue, version }) {
+  return inTransaction(async () => {
+    const health = await healthState(guestId, { lock: true });
+    const menu = await menuById(menuIdValue, { lock: true });
+    if (!menu || menu.guest_id !== guestId) throw new AppError(404, 'MEAL_MENU_NOT_FOUND', '本人餐单不存在');
+    if (Number(menu.version) !== version) throw new AppError(409, 'MEAL_MENU_STALE_VERSION', '餐单已变化，请刷新后核对');
+    dateInStay(health, String(menu.business_date).slice(0, 10));
+    const items = await menuItems(menu.id, { lock: true });
+    if (items.length !== 9 || items.some(item => !item.dish)) throw new AppError(409, 'MEAL_MENU_INCOMPLETE', '请先补足全部餐位');
+    if (health.constraints.conflictState !== 'clear') throw new AppError(409, 'MEAL_HEALTH_PENDING', '新增健康限制尚待医护核实');
+    for (const item of items) validateDishForSlot(item.dish, item, item.mealType, health);
+    const previous = decode(menu.rule_basis_json, {});
+    if (Number(previous.profileVersion || 0) === health.profileVersion
+      && JSON.stringify(previous.effectiveHealthConstraints) === JSON.stringify(health.constraints)) {
+      return { changed: false, ...(await getGuestMenu(guestId, String(menu.business_date).slice(0, 10))) };
+    }
+    const basis = { ...menuBasis(health), generatedRuleBasis: previous.generatedRuleBasis || previous };
+    await db.prepare('UPDATE meal_menus SET version=?,rule_basis_json=?,avoided_items_json=?,updated_at=? WHERE id=?')
+      .run(Number(menu.version) + 1, JSON.stringify(basis), JSON.stringify([...health.constraints.allergies, ...health.constraints.dietaryRestrictions]), now(), menu.id);
+    await log(guestId, 'meal.menu.review', 'meal_menu', menu.id, '客人确认全部餐位符合当前限制；订单仍由配餐员独立复核');
+    return { changed: true, ...(await getGuestMenu(guestId, String(menu.business_date).slice(0, 10))) };
+  });
+}
+
 async function menuById(menuId, { lock = false } = {}) {
   return db.prepare(`SELECT * FROM meal_menus WHERE id=?${lock ? LOCK : ''}`).get(menuId);
 }
@@ -419,11 +548,12 @@ function decodeOrder(row) {
   };
 }
 
-async function updateReservedOrderSnapshot(menu, mealType, version) {
+async function updateReservedOrderSnapshot(menu, mealType, version, health) {
   const orderRow = await db.prepare(`SELECT * FROM meal_orders WHERE guest_id=? AND business_date=? AND meal_type=?${LOCK}`)
     .get(menu.guest_id, menu.business_date, mealType);
   if (!orderRow) return;
-  if (orderRow.status !== 'reserved') {
+  const paused = orderRow.status === 'preparing' && (await orderWithReview(orderRow, health)).reviewRequired;
+  if (orderRow.status !== 'reserved' && !paused) {
     throw new AppError(409, 'MEAL_ORDER_IN_PROGRESS', '订单已进入备餐或送达阶段，不能再修改；请联系配餐员处理。', { status: orderRow.status });
   }
   const items = await menuItems(menu.id, { lock: true });
@@ -447,7 +577,9 @@ export async function previewGuestMenuReplacement({ guestId, menuId: menuIdValue
   validateDishForSlot(dish, item, item.meal_type, health);
   const order = await db.prepare(`SELECT id,status,menu_version AS menuVersion FROM meal_orders
     WHERE guest_id=? AND business_date=? AND meal_type=?`).get(guestId, menu.business_date, item.meal_type);
-  if (order && order.status !== 'reserved') {
+  const orderRow = order ? await db.prepare('SELECT * FROM meal_orders WHERE id=?').get(order.id) : null;
+  const paused = orderRow?.status === 'preparing' && (await orderWithReview(orderRow, health)).reviewRequired;
+  if (order && order.status !== 'reserved' && !paused) {
     throw new AppError(409, 'MEAL_ORDER_IN_PROGRESS', '订单已进入备餐或送达阶段，不能在对话中静默换菜；请联系配餐员处理。', { status: order.status });
   }
   return { menuId: menu.id, businessDate: String(menu.business_date).slice(0, 10), version: Number(menu.version),
@@ -480,10 +612,12 @@ export async function replaceMenuItem({ guestId, menuId: menuIdValue, itemId, ve
       .run(dish.id, JSON.stringify(dishSnapshot(dish)), trimmedReason, itemId);
     const itemsAfter = await db.prepare('SELECT meal_type,slot,dish_id FROM meal_menu_items WHERE menu_id=?').all(menu.id);
     const complete = itemsAfter.length === 9 && itemsAfter.every(row => row.dish_id);
+    const previousBasis = decode(menu.rule_basis_json, {});
+    const updatedBasis = { ...menuBasis(health), generatedRuleBasis: previousBasis.generatedRuleBasis || previousBasis };
     await db.prepare(`UPDATE meal_menus SET version=?,status=?,rule_basis_json=?,avoided_items_json=?,updated_at=? WHERE id=?`)
-      .run(nextVersion, complete ? 'ready' : 'incomplete', JSON.stringify(menuBasis(health)),
+      .run(nextVersion, complete ? 'ready' : 'incomplete', JSON.stringify(updatedBasis),
         JSON.stringify([...health.constraints.allergies, ...health.constraints.dietaryRestrictions]), stamp, menu.id);
-    await updateReservedOrderSnapshot(menu, itemRow.meal_type, nextVersion);
+    await updateReservedOrderSnapshot(menu, itemRow.meal_type, nextVersion, health);
     await log(guestId, 'meal.menu.swap', 'meal_menu', menu.id, `替换原因已保存；餐次=${itemRow.meal_type}；餐位=${itemRow.slot}`);
     return { ...(await getGuestMenu(guestId, String(menu.business_date).slice(0, 10))), replaced: true };
   });
@@ -492,7 +626,75 @@ export async function replaceMenuItem({ guestId, menuId: menuIdValue, itemId, ve
 export async function listGuestOrders(guestId, businessDate) {
   const rows = await db.prepare(`SELECT * FROM meal_orders WHERE guest_id=? AND business_date=?
     ORDER BY CASE meal_type WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2 ELSE 3 END`).all(guestId, businessDate);
-  return rows.map(decodeOrder);
+  const health = await healthState(guestId);
+  return Promise.all(rows.map(row => orderWithReview(row, health)));
+}
+
+async function orderEligibility(order, health) {
+  const reasons = [];
+  if (health.constraints.conflictState !== 'clear') reasons.push('健康自述中的新增限制尚待负责医护核实');
+  if ([...health.constraints.allergies, ...health.constraints.dietaryRestrictions].some(entry => !knownConstraint(entry.value))) reasons.push('有未映射限制尚待医护分类核对');
+  const catalog = (await catalogRows()).map(decodeDish);
+  if (order.dishes.length !== 3) reasons.push('订单餐位不完整');
+  for (const snapshot of order.dishes) {
+    const current = catalog.find(dish => dish.id === snapshot.dishId);
+    const snapshotDish = { ...snapshot, id: snapshot.dishId };
+    if (!current || current.supplyStatus !== 'demo_available'
+      || !current.mealTypes.includes(order.mealType) || current.slot !== snapshot.slot
+      || dishConflictReason(current, health.constraints) || dishConflictReason(snapshotDish, health.constraints)) {
+      reasons.push(`“${snapshot.name}”与当前限制或供货资料不符，请客人在膳食页更换`);
+    }
+  }
+  return [...new Set(reasons)];
+}
+
+async function orderWithReview(row, health) {
+  const order = decodeOrder(row);
+  const check = await db.prepare(`SELECT c.*,u.name AS checked_name FROM meal_order_checks c
+    JOIN users u ON u.id=c.checked_by WHERE c.order_id=?`).get(order.id);
+  const reasons = await orderEligibility(order, health);
+  const basisFingerprint = hash({ basis: health.basisFingerprint, decisions: health.restrictionReview?.decisions || [] });
+  const checkMatches = check?.basis_fingerprint === basisFingerprint && check?.dishes_fingerprint === hash(order.dishes);
+  const reviewRequired = order.status !== 'delivered' && (!checkMatches || reasons.length > 0);
+  return { ...order, reviewRequired, fulfillmentStatus: reviewRequired ? 'review_required' : order.status,
+    reviewReasons: reviewRequired ? [...reasons, ...(!checkMatches ? ['当前限制或订单内容已变化，需负责配餐员复核后继续'] : [])] : [],
+    canReview: reasons.length === 0 && order.status !== 'delivered',
+    review: check ? { checkedBy: check.checked_by, checkedName: check.checked_name, note: check.note, checkedAt: isoUtc(check.checked_at) } : null };
+}
+
+async function saveOrderCheck(order, health, actorId, note) {
+  const basis = hash({ basis: health.basisFingerprint, decisions: health.restrictionReview?.decisions || [] });
+  const prior = await db.prepare('SELECT order_id FROM meal_order_checks WHERE order_id=?').get(order.id);
+  if (prior) await db.prepare('UPDATE meal_order_checks SET basis_fingerprint=?,dishes_fingerprint=?,checked_by=?,note=?,checked_at=? WHERE order_id=?')
+    .run(basis, hash(order.dishes), actorId, note, now(), order.id);
+  else await db.prepare('INSERT INTO meal_order_checks(order_id,basis_fingerprint,dishes_fingerprint,checked_by,note,checked_at) VALUES(?,?,?,?,?,?)')
+    .run(order.id, basis, hash(order.dishes), actorId, note, now());
+}
+
+export async function reviewDietitianOrder({ user, orderId, note }) {
+  if (user.role !== 'staff' || jobTypeFor(user) !== 'dietitian') throw new AppError(403, 'DIETITIAN_REQUIRED', '仅负责配餐员可复核订单');
+  const reviewNote = typeof note === 'string' ? note.trim() : '';
+  if (!reviewNote || reviewNote.length > 1000) throw new AppError(400, 'MEAL_ORDER_REVIEW_NOTE_REQUIRED', '请填写订单复核说明（最多1000字）');
+  return inTransaction(async () => {
+    const { row, health } = await lockedOrderHealth(user, orderId);
+    const order = await orderWithReview(row, health);
+    if (order.status === 'delivered') throw new AppError(409, 'MEAL_ORDER_COMPLETED', '已送达订单不能重新复核或回退');
+    if (!order.canReview) throw new AppError(409, 'MEAL_ORDER_RESTRICTED', '请先完成医护核对及冲突菜品更换', { reasons: order.reviewReasons });
+    if (!order.reviewRequired) return { order, changed: false };
+    await saveOrderCheck(order, health, user.id, reviewNote);
+    await log(user.id, 'meal.order.review', 'meal_order', order.id, reviewNote);
+    return { order: await orderWithReview(row, health), changed: true };
+  });
+}
+
+async function lockedOrderHealth(user, orderId) {
+  const target = await db.prepare('SELECT guest_id FROM meal_orders WHERE id=?').get(orderId);
+  if (!target) throw new AppError(404, 'MEAL_ORDER_NOT_FOUND', '餐食订单不存在');
+  await authorizeGuestAccess(user, target.guest_id);
+  // Match menu replacement's lock order to avoid order/profile lock inversion on MySQL.
+  const health = await healthState(target.guest_id, { lock: true });
+  const row = await db.prepare(`SELECT * FROM meal_orders WHERE id=?${LOCK}`).get(orderId);
+  return { row, health };
 }
 
 export async function getGuestMealOrders(guestId, businessDate) {
@@ -521,7 +723,7 @@ export async function createGuestMealOrder({ guestId, idempotencyKey, menuId: me
       FROM meal_order_requests WHERE guest_id=? AND idempotency_key=?${LOCK}`).get(guestId, idempotencyKey);
     if (priorRequest) {
       if (priorRequest.requestFingerprint !== fingerprint) throw new AppError(409, 'MEAL_IDEMPOTENCY_CONFLICT', '相同幂等键不能用于不同订单请求');
-      const order = await loadOrder(priorRequest.orderId, { lock: true });
+      const order = await orderWithReview(await db.prepare(`SELECT * FROM meal_orders WHERE id=?${LOCK}`).get(priorRequest.orderId), health);
       return { order, replayed: true };
     }
     if (Number(menu.version) !== version) throw new AppError(409, 'MEAL_MENU_STALE_VERSION', '餐单已更新，请刷新后再提交订单', { currentVersion: Number(menu.version) });
@@ -532,13 +734,15 @@ export async function createGuestMealOrder({ guestId, idempotencyKey, menuId: me
     }
     for (const item of mealItems) validateDishForSlot(item.dish, { slot: item.slot }, mealType, health);
     const orderDishes = mealItems.map(item => ({ ...dishSnapshot(item.dish), slot: item.slot }));
+    const eligibility = await orderEligibility({ dishes: orderDishes, mealType }, health);
+    if (eligibility.length) throw new AppError(409, 'MEAL_ORDER_RESTRICTED', '请先完成健康限制核实再提交订单', { reasons: eligibility });
     const existing = await db.prepare(`SELECT * FROM meal_orders WHERE guest_id=? AND business_date=? AND meal_type=?${LOCK}`)
       .get(guestId, businessDate, mealType);
     if (existing) {
       if (existing.request_fingerprint !== fingerprint) throw new AppError(409, 'MEAL_ORDER_ALREADY_EXISTS', '该日期和餐次已有订单，刷新页面查看当前状态');
       await db.prepare(`INSERT INTO meal_order_requests(guest_id,idempotency_key,request_fingerprint,order_id,created_at)
         VALUES(?,?,?,?,?)`).run(guestId, idempotencyKey, fingerprint, existing.id, now());
-      return { order: decodeOrder(existing), replayed: true };
+      return { order: await orderWithReview(existing, health), replayed: true };
     }
     const stamp = now();
     const orderId = id('meal_order');
@@ -553,7 +757,8 @@ export async function createGuestMealOrder({ guestId, idempotencyKey, menuId: me
     await db.prepare(`INSERT INTO meal_order_requests(guest_id,idempotency_key,request_fingerprint,order_id,created_at)
       VALUES(?,?,?,?,?)`).run(guestId, idempotencyKey, fingerprint, orderId, stamp);
     await log(guestId, 'meal.order.create', 'meal_order', orderId, `${businessDate} ${mealType}; UTC=${stamp}; supply not reserved`);
-    return { order: await loadOrder(orderId), replayed: false };
+    await saveOrderCheck(await loadOrder(orderId), health, guestId, '下单时服务端按当前已核对限制校验');
+    return { order: await orderWithReview(await db.prepare('SELECT * FROM meal_orders WHERE id=?').get(orderId), health), replayed: false };
   });
 }
 
@@ -576,7 +781,7 @@ export async function listDietitianMealOrders(user, { businessDate, mealType }) 
   for (const row of rows) {
     const health = await healthState(row.guest_id);
     result.push({
-      ...decodeOrder(row), guestName: row.guest_name, roomNo: row.room_no || '',
+      ...(await orderWithReview(row, health)), guestName: row.guest_name, roomNo: row.room_no || '',
       explicitRestrictions: [...health.constraints.allergies, ...health.constraints.dietaryRestrictions],
       reviewNotices: health.notices
     });
@@ -585,20 +790,21 @@ export async function listDietitianMealOrders(user, { businessDate, mealType }) 
 }
 
 export async function updateDietitianOrderStatus({ user, orderId, status }) {
+  if (user.role !== 'staff' || jobTypeFor(user) !== 'dietitian') throw new AppError(403, 'DIETITIAN_REQUIRED', '仅负责配餐员可推进订单');
   if (!['preparing', 'delivered'].includes(status)) throw new AppError(400, 'MEAL_ORDER_STATUS_INVALID', '只能将订单推进到备餐中或已送达');
   return transaction(async () => {
-    const row = await db.prepare(`SELECT * FROM meal_orders WHERE id=?${LOCK}`).get(orderId);
-    if (!row) throw new AppError(404, 'MEAL_ORDER_NOT_FOUND', '餐食订单不存在');
-    await authorizeGuestAccess(user, row.guest_id);
+    const { row, health } = await lockedOrderHealth(user, orderId);
     const current = row.status;
-    if (current === status) return { order: decodeOrder(row), changed: false };
+    if (current === status) return { order: await orderWithReview(row, health), changed: false };
     const allowed = (current === 'reserved' && status === 'preparing') || (current === 'preparing' && status === 'delivered');
     if (!allowed) throw new AppError(409, 'MEAL_ORDER_TRANSITION_INVALID', '订单只能按“已预订 → 备餐中 → 已送达”的顺序推进，不能跳步或回退', { currentStatus: current, requestedStatus: status });
+    const checked = await orderWithReview(row, health);
+    if (checked.reviewRequired) throw new AppError(409, 'MEAL_ORDER_REVIEW_REQUIRED', '订单已暂停，请先完成医护核对、合规更换及配餐复核', { reasons: checked.reviewReasons });
     const stamp = now();
     if (status === 'preparing') await db.prepare("UPDATE meal_orders SET status='preparing',preparing_at=? WHERE id=?").run(stamp, row.id);
     else await db.prepare("UPDATE meal_orders SET status='delivered',delivered_at=? WHERE id=?").run(stamp, row.id);
     await log(user.id, 'meal.order.status', 'meal_order', row.id, `${current} -> ${status}`);
-    return { order: await loadOrder(row.id), changed: true };
+    return { order: await orderWithReview(await db.prepare('SELECT * FROM meal_orders WHERE id=?').get(row.id), health), changed: true };
   });
 }
 
