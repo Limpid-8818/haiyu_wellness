@@ -1,3 +1,27 @@
+# 当前有效状态：阶段4已验产品合入main，整合推送收尾（2026-10-14）
+
+F07/F08已由Source79三新客人/三原生case与资源独验通过，产品7b0091f572371e0bad8b1e89becbd51abce5282c在新codex/accepted-bug-stage4-20261014分支提交，经main正常merge208a92d20646756a52c32de5d8776b7ac3c9dd31合入，11已验文件SHA逐件一致。main65/65/build0，现有3020/5180只读status预算50/16384/12/90秒未变。BUG原F07/F08已完成仅本部分目录规则/稳定/保护与未知ETA语义，V01及U01原状态保留；无厨房SLA预测功能。
+
+仅原worker01a13639-e159-7412-b49e-1b7814b41ca0/local完成第80轮公开记录/资源与普通push核远端；最后SHA见integration80最终封包/App回传。Source81独核整合/远端/资源后才派5，当前5/6未派，109未全验/NOT_FINAL_ACCEPTED/旧FAIL/历史例外/CI延期保持。原3B分支6c72ea1及公开37文件快照保全，不用旧worker文稿覆盖main最新77/79/AGENTS/V01完成条目；不读.env或新真人模型、用户库/MySQL/scheduler/internal agent/新worktree/安装复制。完成一次回Source后停，不自行续派/轮询。以下旧时点完整保留。
+
+---
+
+# 当前有效状态：阶段4 Source79双门通过，仅原任务整合push（2026-10-14）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local在28d6新三guest/source-stage4-independent-20261014-01实际复跑65/65、build49，三日规则菜单/人工替代稳定、限制暂停→医护核对→配餐复核→送达、餐次前后/次日/午夜时间同对象正确，146断言91HTTP15PNG/6菜单54项6订单/agent_runs0；私密.env读取及真模型0。原66引用前后保持，worker8+Source4共12实例资源PASS、精准退出/句柄/temp/socket/监听/退出缺口0，Source链接与auditor自身关闭。详第79轮与9005B/SHA9e083996…Source封包。
+
+只原4 App01a13639-e159-7412-b49e-1b7814b41ca0/local、GPT-6.1 Sol/High按docs/阶段4已验修复整合与推送_20261014.md同本部分收尾，新独立4产品分支commit/main merge/F07-F08原条目完成/main65测试build与资源/普通push核SHA，worker80/Source81。当前main仍fdc4bbe，尚未合入4；5/6不派，禁止旧worker BUG文稿覆盖main新V01已完成记录。ETA未确定是诚实不提供预测，常规供餐非预计；不称新厨房SLA。旧FAIL/例外/109未验/NOT_FINAL_ACCEPTED/CI延后保持，不新真模型/读取.env/用户库/MySQL/scheduler/internal agents。收尾一次回Source停，源独核后才派5，不轮询。以下旧阶段按时点保留。
+
+---
+
+# 当前有效阶段：仅阶段4餐单与供餐时间已派（2026-10-14）
+
+已验3B产品6c72ea1/main merge6a2d653及Source77收据fdc4bbe已普通push，main/远端一致；Source亲核12产品/92引用和旧16/新7实例资源全退，V01已完成，旧失败和U01解释需求保持。唯一新独立App01a13639-e159-7412-b49e-1b7814b41ca0/local、GPT-6.1 Sol/High，同目录fork停止3B/sync complete，复用28d6实际全部tracked源码与main diff0，不新worktree/复制依赖。仅F07/F08按docs/阶段4餐单推荐与供餐时间执行计划_20261014.md，实际派发收据同docs；worker78/Source79。
+
+只目录规则的基本多样/餐次/推荐理由/替代和同订单时间，不真人模型/读取.env/用户库/MySQL/scheduler/CI/内部agent，5/6未派。Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local只规划独验，源码未验worker Git0；通过后逐阶段产品commit/merge main/BUG完成/push核SHA，再下一阶段。准确退出→句柄→自身temp/链接资源双门保持，不重建历史缺口；旧FAIL/例外/109未验/NOT_FINAL_ACCEPTED保持。完成/失败/阻塞只一次主动回Source停，Source最多一次必要就绪后结束不轮询。以下旧阶段按时点保留，不复用旧3B停止范围/模型授权到本4。
+
+---
+
 # 最新有效状态：3B已验合入远端，Source77独核通过，准备阶段4（2026-10-14）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local独核第76轮31135B包/92整件引用及12产品冻结SHA/product与main blobs全部相同，product6c72ea1/main merge6a2d653，实际本地/远端dbbf1f1一致且main干净。V01原条目仅3B闭环已完成，U01生成时措辞区别仍未修。Source亲测3020与5180 status50/16384/12/90/live；原3B资源16实例+新整合worker5/Source2共7实例双根精确退出PASS、残留/退出缺口0，审计自身另关闭。旧3A分支56cb179/失败/例外/109未验/CI延后保持。详第77轮，源收据另正常提交push。
