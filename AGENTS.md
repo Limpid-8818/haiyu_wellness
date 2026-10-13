@@ -1,3 +1,29 @@
+# 最新人类授权：已验阶段分别提交合入main并更新BUG条目（2026-10-13）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef已阶段2独验18/18、build0、93网页断言/61HTTP/7PNG、12实例资源PASS，旧workerBLOCKED保留，详见第66轮。用户新要求每阶段验收后分别commit/merge main，并在BUG原条目写已完成；覆盖下方旧Git0仅限已验成果整合。唯一整合App01a133ed-5729-7893-aafe-112d1c491ca0 / local、GPT-6.1 Sol/High，同目录fork已停止阶段2，沿用d42c；先阶段1后阶段2单独产品提交/整合。主仓库协调文稿合理对比兼容，未验BUG不关闭，私密/真实库/依赖/output不入Git，不推断push权限。阶段3尚未派，完整边界见docs/阶段1与阶段2逐阶段整合main_20261013.md；第67轮留整合任务，完成/阻塞只回本Source一次停止。旧报告/FAIL/历史例外和以下全文保持。
+
+---
+
+# 当前BUG修复衔接：阶段1Source独验通过，仅阶段2已派（2026-10-13）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef / local已亲自新库/58902与58903复跑13测试、构建、36网页断言/13HTTP/9PNG，F01/F02/F03/F11在d42c修复树通过。双方30实例及审计自身准确退出/句柄/temp/socket/deleted-open/端口0，历史退出缺口0，依赖链接移除，旧20份原件SHA保持。见第64轮与source-final-packet.json，6593B/SHA9999ba9dd5506a219365b356712693cfc1ec199d64490cbb94fd277dc9a73354。
+
+修复仍为d42c的未提交代码，main未合入，用户原档案/服务不改。仅阶段2F05/V02按docs/阶段2多岗位业务修复执行计划_20261013.md，GPT-6.1 Sol/high，App同目录fork复用已验d42c，不从main旧状态新起。 实际新App01a133be-2f9d-7160-8150-1d322bc07cf7 / local已派，一次必要快照后Source结束等主动回传。worker报告65，Source下次66；阶段3—6未派。最新任务允许本范围产品修复，旧暂停/仅验收/dirty阻塞条款不复用；CI/model/用户真实数据/MySQL/Git写0。保留旧FAIL/历史例外/109未全验，Source派完等一次主动回传，双门通过再衔接。以下原文保留。
+
+---
+
+# 最新用户授权：按BUG清单串行修复，GPT-6.1 Sol / High（2026-10-13）
+
+用户明确暂不修CI，按待修复BUG列表派发独立App执行任务，模型gpt-6.1-sol/high。本授权恢复产品BUG修复，优先下文“本轮不修BUG/仅验收/不改产品”等旧阶段限制；不恢复旧自动任务。当前Source为01a0cbfe-a161-72d0-992d-12fad655d4ef / local，任意时刻只执行一个阶段，不用内部子代理。
+
+完整计划见[BUG修复分阶段执行计划](docs/BUG修复分阶段执行计划_20261013.md)，本轮报告62。 阶段1已创建：01a1338e-aa7b-7412-8a56-21ea74142270 / local，工作树/Users/wangshanchong/.codex/worktrees/d42c/haiyu_wellness，GPT-6.1 Sol/high，一次就绪确认active；Source此后等主动回传，不轮询。第一阶段仅F01/F02/F03/F11（健康/膳食限制一致性和恢复闭环），worker报告63；阶段2—6未派。产品基线e78b79f；Source按用户新授权将报告61单独提交6d7e1c7（未push），main为6d7e1c7，origin仍e78b79f；未提交协调文稿保留，不构成执行阻塞；第一任务从当前working-tree创建隔离工作树，不在用户main/用户库实现或测试，不复制依赖/证据/私密.env。
+
+仅允许本阶段产品实现、必要定向测试、合成网页/API业务与报告。CI/workflow/全套时间断言不修，真实模型/MySQL/员工真实初始化/其他阶段/Git暂存提交推送PR0；App管理working-tree快照按创建工具保留状态，不手工stash/commit。既有代码、旧FAIL/历史例外/原件与109未全验保持。
+
+8MiB日志/512MiB临时目录/15min租期/普通命令OS硬60秒，最多外层+owner两Session和一个API/Vite/browser组不放宽。当前阶段新资源退出→句柄→自身temp清理后才可进入下一阶段；不因旧记录缺口无限重做历史资源审计。worker完成/失败/阻塞只一次send_message_to_thread回真实Source（用户已授权）后停止；Source独验双门后才衔接，派发后至多一次必要就绪即结束，不连续轮询。以下旧时点记录完整保留。
+
+---
+
 # 最新用户授权：当前main归档推送与BUG修复交接（2026-10-13）
 
 用户明确授权本轮将未提交文稿和有效改动提交、必要分支整合并普通push origin/main，便于另一同学修BUG；此Git授权优先下文旧阶段Git0限制。本轮不继续修BUG、不派开发任务。进阶成果此前已在main，旧分支和工作树已比较，无需用旧版覆盖新版；恢复/dirty-state快照保留，不推送。
