@@ -73,6 +73,9 @@
 .environment-availability span { line-height: 1.55; }
 .environment-availability small { color: #58717a; }
 .environment-disclaimer { line-height: 1.55; }
+.environment-mock-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: .7rem 0; font-size: .85rem; }
+.environment-mock-controls label { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.environment-mock-controls select { min-width: 12rem; max-width: 100%; padding: .45rem; border: 1px solid #b0c7c3; border-radius: 4px; background: #fff; }
 @media (max-width: 680px) {
   .environment-heading { align-items: flex-start; flex-direction: column; }
   .environment-heading-actions { width: 100%; justify-content: space-between; }

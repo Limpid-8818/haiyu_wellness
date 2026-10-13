@@ -1040,12 +1040,8 @@ function deterministicGraphReply({ candidates, selectedIds, gaps, targetDate, ex
 
 async function executeCoordinatedRun({ run, user, role, guestId, contracts, controller, stopAt, started, coordinationTask = null }) {
   const executionMode = assistantExecutionMode();
-  // Each domain child currently makes one model call to select its two
-  // required read-only tools and one to choose from their results. A complete
-  // four-domain graph therefore needs nine calls including its coordinator.
-  // Keep smaller graphs on the existing configured cap.
-  const graphModelCallLimit = contracts.length === DOMAIN_AGENT_CONTRACTS.length
-    ? Math.min(MAX_MODEL_CALLS, contracts.length * 2 + 1) : MAX_MODEL_CALLS;
+  // Domain agents and the coordinator share the configured per-run call cap.
+  const graphModelCallLimit = MAX_MODEL_CALLS;
   const budget = createGraphBudget(controller.signal, graphModelCallLimit);
   budget.graphRunId = run.id;
   await db.prepare(`UPDATE agent_runs SET agent_id=?,instruction_version=?,agent_input_json=?,execution_mode=?,is_live=?,updated_at=? WHERE id=?`)

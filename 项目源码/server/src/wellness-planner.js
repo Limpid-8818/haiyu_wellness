@@ -64,6 +64,7 @@ function decodeItem(row) {
 }
 
 function decodeDraft(row, items = []) {
+  const evidence = json(row.evidence_json, {});
   return {
     draftId: row.id,
     guestId: row.guest_id,
@@ -78,10 +79,53 @@ function decodeDraft(row, items = []) {
     supersedesDraftId: row.supersedes_draft_id || null,
     active: row.status === 'active',
     reviewPolicy: { mode: row.review_policy, samplePercent: Number(row.review_sample_percent || 0) },
-    evidence: json(row.evidence_json, {}),
+    evidence,
+    parentRunId: evidence.parentRunId || row.source_run_id || null,
+    selectedCandidateIds: Array.isArray(evidence.coordinator?.selectedCandidateIds)
+      ? evidence.coordinator.selectedCandidateIds : [],
     createdAt: row.created_at,
     items
   };
+}
+
+function adoptionBody(body) {
+  return body && typeof body === 'object' && !Array.isArray(body)
+    && body.action === 'adopt_candidate';
+}
+
+function validateAdoptionBody(body) {
+  if (!adoptionBody(body)) throw new AppError(400, 'WELLNESS_ADOPTION_INPUT_INVALID', '采纳请求必须明确指定已有助手运行');
+  const allowed = ['action', 'sourceRunId', 'sessionId', 'candidateId', 'selectedCandidateIds'];
+  if (Object.keys(body).some(key => !allowed.includes(key))) {
+    throw new AppError(400, 'WELLNESS_ADOPTION_INPUT_INVALID', '采纳请求包含不允许字段');
+  }
+  if (typeof body.sourceRunId !== 'string' || !/^run_[0-9a-f-]{36}$/.test(body.sourceRunId)
+    || typeof body.sessionId !== 'string' || !/^as_[0-9a-f-]{36}$/.test(body.sessionId)) {
+    throw new AppError(400, 'WELLNESS_ADOPTION_SOURCE_INVALID', '采纳请求缺少有效来源运行或会话');
+  }
+  const selectedCandidateIds = Array.isArray(body.selectedCandidateIds)
+    ? [...new Set(body.selectedCandidateIds)] : [];
+  if (!selectedCandidateIds.length || selectedCandidateIds.some(item => typeof item !== 'string' || item.length > 160)) {
+    throw new AppError(400, 'WELLNESS_ADOPTION_CANDIDATES_INVALID', '采纳请求必须包含候选编号');
+  }
+  if (body.candidateId !== undefined && (typeof body.candidateId !== 'string' || !selectedCandidateIds.includes(body.candidateId))) {
+    throw new AppError(400, 'WELLNESS_ADOPTION_CANDIDATE_INVALID', '当前候选不在本次管家选择中');
+  }
+  return { ...body, selectedCandidateIds };
+}
+
+export function validateWellnessAdoptionSelection({ sessionId, runSessionId, runStatus, selectedCandidateIds,
+  candidateIds, adoptedCandidateIds }) {
+  if (runStatus !== 'completed') return { ok: false, errorCode: 'WELLNESS_ADOPTION_RUN_INCOMPLETE' };
+  if (sessionId !== runSessionId) return { ok: false, errorCode: 'WELLNESS_ADOPTION_SESSION_MISMATCH' };
+  const allowlist = new Set(Array.isArray(candidateIds) ? candidateIds : []);
+  const adopted = new Set(Array.isArray(adoptedCandidateIds) ? adoptedCandidateIds : []);
+  const selected = Array.isArray(selectedCandidateIds) ? selectedCandidateIds : [];
+  if (!selected.length) return { ok: false, errorCode: 'WELLNESS_ADOPTION_CANDIDATES_INVALID' };
+  if (selected.some(candidateId => !allowlist.has(candidateId) || !adopted.has(candidateId))) {
+    return { ok: false, errorCode: 'WELLNESS_ADOPTION_CANDIDATE_FORBIDDEN' };
+  }
+  return { ok: true, selectedCandidateIds: [...new Set(selected)] };
 }
 
 function loadReviewPolicy() {
@@ -637,6 +681,108 @@ export async function createWellnessDraft({ user, body, requestKey }) {
       model: graph.run.model, provider: graph.run.provider, inputTokens: graph.run.inputTokens,
       outputTokens: graph.run.outputTokens, estimatedCostUsd: graph.run.estimatedCostUsd,
       graphBudget: graph.collaboration.graphBudget } };
+}
+
+// Persist a guest's explicit selection from an already completed collaboration.
+// This path deliberately never calls chatWithAssistant or creates another run.
+export async function adoptWellnessDraft({ user, body, requestKey }) {
+  if (!user || user.role !== 'guest') throw new AppError(403, 'GUEST_REQUIRED', '仅客人可采纳本人疗程方案');
+  if (typeof requestKey !== 'string' || !/^[A-Za-z0-9:_-]{8,120}$/.test(requestKey)) {
+    throw new AppError(400, 'IDEMPOTENCY_KEY_INVALID', '草案请求缺少有效的幂等标识');
+  }
+  const input = validateAdoptionBody(body);
+  const existing = await db.prepare('SELECT * FROM wellness_drafts WHERE guest_id=? AND request_key=?').get(user.id, requestKey);
+  if (existing) return { ...(await getWellnessDraft(user.id, existing.id)), deduplicated: true };
+
+  const run = await getAssistantRun({ user, role: 'guest', runId: input.sourceRunId });
+  const runSelection = validateWellnessAdoptionSelection({ sessionId: input.sessionId, runSessionId: run.sessionId,
+    runStatus: run.status, selectedCandidateIds: input.selectedCandidateIds,
+    candidateIds: run.collaboration?.candidates?.map(candidate => candidate.candidateId),
+    adoptedCandidateIds: run.collaboration?.finalAdoptedCandidateIds || run.collaboration?.selectedCandidateIds });
+  if (!runSelection.ok) {
+    const messages = {
+      WELLNESS_ADOPTION_SESSION_MISMATCH: '来源会话与运行记录不一致',
+      WELLNESS_ADOPTION_RUN_INCOMPLETE: '只能采纳已完成的助手运行',
+      WELLNESS_ADOPTION_CANDIDATES_INVALID: '采纳请求必须包含候选编号',
+      WELLNESS_ADOPTION_CANDIDATE_FORBIDDEN: '候选不属于该运行的管家采纳结果'
+    };
+    throw new AppError(409, runSelection.errorCode, messages[runSelection.errorCode]);
+  }
+  const collaboration = run.collaboration;
+  const sourceAgents = new Map((collaboration?.agents || []).map(agent => [agent.agentId, agent]));
+  const dateByAgent = {};
+  for (const name of ['domain.nutrition', 'domain.exercise']) {
+    dateByAgent[name] = await collaborationDate(run.runId, sourceAgents.get(name));
+  }
+  if (!dateByAgent['domain.nutrition'] || !dateByAgent['domain.exercise']) {
+    throw new AppError(409, 'WELLNESS_ADOPTION_DATE_MISSING', '来源运行缺少可核对的业务日期');
+  }
+  const validated = inspectWellnessCollaboration(run, { expectedExerciseDate: dateByAgent['domain.exercise'] });
+  if (!validated.valid) {
+    throw new AppError(409, 'WELLNESS_ADOPTION_SOURCE_INVALID', '来源运行缺少可核对的协作证据', { evidenceRejection: validated.rejection });
+  }
+  const selectedIds = new Set(runSelection.selectedCandidateIds);
+  const candidates = (collaboration.candidates || []).filter(candidate => selectedIds.has(candidate.candidateId));
+  if (!candidates.length) throw new AppError(409, 'WELLNESS_ADOPTION_CANDIDATE_REQUIRED', '没有可采纳的候选');
+
+  const profile = await guestProfile(user.id);
+  if (!profile) throw new AppError(409, 'PROFILE_NOT_READY', '客人档案尚未建立');
+  const startDate = String(profile.check_in || '').slice(0, 10);
+  const endDate = String(profile.check_out || '').slice(0, 10);
+  if (!isDateOnly(startDate) || !isDateOnly(endDate) || endDate <= startDate) {
+    throw new AppError(409, 'WELLNESS_STAY_INVALID', '请先由工作人员维护有效入住日期');
+  }
+  const dayCount = Math.min(dateDistance(startDate, endDate), MAX_STAY_DAYS);
+  if (dayCount < 1) throw new AppError(409, 'WELLNESS_STAY_INVALID', '入住区间没有可规划日期');
+  const policy = loadReviewPolicy();
+  const selectedPlanning = validated.planningCandidates.filter(candidate => selectedIds.has(candidate.candidateId));
+  const items = await buildDraftItems({ guestId: user.id, profile, startDate, dayCount,
+    candidates, agents: validated.agents, dateByAgent, exerciseInventory: validated.exerciseInventory,
+    parentRunId: run.runId, policy });
+  const evidence = {
+    ...draftEvidence(run, collaboration, validated.agents, dateByAgent, candidates, policy,
+      selectedPlanning, validated.emptyCandidateDomains),
+    adoption: { sourceRunId: run.runId, sessionId: run.sessionId, selectedCandidateIds: input.selectedCandidateIds,
+      candidateId: input.candidateId || input.selectedCandidateIds[0], mode: 'existing_completed_parent_run' }
+  };
+  evidence.coordinator.selectedCandidateIds = runSelection.selectedCandidateIds;
+  const draftId = id('wellness_draft');
+  let createdRow;
+  await transaction(async () => {
+    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${guestLock()}`).get(user.id);
+    const previous = await db.prepare('SELECT * FROM wellness_drafts WHERE guest_id=? AND request_key=?').get(user.id, requestKey);
+    if (previous) { createdRow = previous; return; }
+    const latest = await db.prepare('SELECT COALESCE(MAX(version),0) AS version,MAX(created_at) AS latest_created_at FROM wellness_drafts WHERE guest_id=?').get(user.id);
+    const version = Number(latest?.version || 0) + 1;
+    const wallClockMs = Date.parse(now());
+    const previousCreated = latest?.latest_created_at instanceof Date ? latest.latest_created_at.getTime()
+      : Date.parse(String(latest?.latest_created_at || '').replace(' ', 'T') + (String(latest?.latest_created_at || '').endsWith('Z') ? '' : 'Z'));
+    const timestamp = new Date(Math.max(wallClockMs, Number.isFinite(previousCreated) ? previousCreated + 1 : wallClockMs)).toISOString();
+    await db.prepare(`INSERT INTO wellness_drafts
+      (id,guest_id,version,request_key,source_run_id,stay_start,stay_end,status,review_policy,review_sample_percent,
+       evidence_json,created_at,review_status,review_thread_id,supersedes_draft_id)
+      VALUES(?,?,?,?,?,?,?,'pending_review',?,?,?,?,'pending_review',?,NULL)`).run(
+      draftId, user.id, version, requestKey, run.runId, startDate, endDate, policy.mode, policy.samplePercent,
+      JSON.stringify(evidence), timestamp, draftId
+    );
+    for (const item of items) {
+      await db.prepare(`INSERT INTO wellness_draft_items
+        (id,draft_id,business_date,slot_key,item_type,candidate_id,title,local_start,local_end,status,reason,location,
+         rule_ids_json,source_ids_json,environment_snapshot_id,evidence_json)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        item.id, draftId, item.date, item.slotKey, item.type, item.candidateId, item.title,
+        item.localStart, item.localEnd, item.status, item.reason, item.location,
+        JSON.stringify(item.ruleIds), JSON.stringify(item.sourceIds), item.environmentSnapshotId, JSON.stringify(item.evidence)
+      );
+    }
+    await log(user.id, 'wellness_draft.adopt', 'wellness_draft', draftId,
+      `版本 ${version}；采纳来源运行 ${run.runId}；候选 ${input.selectedCandidateIds.join(',')}；仅保存待审草案`);
+    createdRow = await db.prepare('SELECT * FROM wellness_drafts WHERE id=? AND guest_id=?').get(draftId, user.id);
+  });
+  const result = await getWellnessDraft(user.id, createdRow.id);
+  return { ...result, deduplicated: createdRow.id !== draftId,
+    diagnostics: { sourceRunId: run.runId, sessionId: run.sessionId, selectedCandidateIds: input.selectedCandidateIds,
+      modelCalls: run.modelCallCount, toolCalls: run.toolCallCount } };
 }
 
 export async function createRestChangeDraft({ user, reservationId, sessionId, sourceRunId, actionCardId, reason, requestKey }) {

@@ -50,10 +50,12 @@ export default function EnvironmentPanel({ projectId = '' }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refresh, setRefresh] = useState(0);
+  const [mockScenario, setMockScenario] = useState('');
   useEffect(() => {
     let current = true;
     const query = new URLSearchParams({ date });
     if (projectId) query.set('projectId', projectId);
+    if (mockScenario) query.set('mockScenario', mockScenario);
     const token = localStorage.getItem('community_token');
     setLoading(true);
     fetch('/api/environment?' + query.toString(), {
@@ -74,8 +76,9 @@ export default function EnvironmentPanel({ projectId = '' }) {
       if (current) setLoading(false);
     });
     return () => { current = false; };
-  }, [date, projectId, refresh]);
-  const statusLabel = data?.providerFixture?.mode === 'offline_fixture' ? data.providerFixture.label
+  }, [date, projectId, refresh, mockScenario]);
+  const statusLabel = data?.mock ? data.mock.label
+    : data?.providerFixture?.mode === 'offline_fixture' ? data.providerFixture.label
     : data && data.status === 'demo' ? '合成演示资料 · 非实时'
     : data && data.status === 'available' ? '来源数据可用'
       : data && data.status === 'stale' ? '数据已过期'
@@ -105,6 +108,16 @@ export default function EnvironmentPanel({ projectId = '' }) {
     {loading ? <div className="environment-state" role="status">正在读取环境快照…</div>
       : error ? <div className="environment-state environment-state-error" role="alert">{error}<p>没有数据时，下海项目保持待确认。</p></div>
         : <div className="environment-content">
+          {data.mock && <div className="environment-mock-controls">
+            <label>合成/mock场景 <select aria-label="合成/mock场景" value={mockScenario || data.mock.scenario}
+              onChange={event => setMockScenario(event.target.value)} disabled={loading}>
+              <option value="normal">normal · 字段齐全</option>
+              <option value="risk">risk · 风险超限</option>
+              <option value="missing">missing · 数据缺失</option>
+              <option value="stale">stale · 快照过期</option>
+            </select></label>
+            <span>非实时 · 非机构批准 · 时间步 {data.mock.timeStep}</span>
+          </div>}
           <div className="environment-location"><strong>{(data.location && data.location.name) || '机构地点未配置'}</strong><span>查询坐标 WGS84 {(data.location && data.location.latitude) ?? '未配置'} · {(data.location && data.location.longitude) ?? '未配置'}</span>
             {data.location?.coordinatesStatus === 'region-representative' && <span>地区代表点，非机构精确地址</span>}
             {tide?.mode === 'modeled-sea-level-including-tides'

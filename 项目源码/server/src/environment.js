@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { db, driver, now, json } from './db.js';
 import { createCachedLoader } from './environment-cache.js';
+import { makeEnvironmentMockSnapshot } from './environment-mock.js';
 import {
   DEMO_ENVIRONMENT_LOCATION, ENVIRONMENT_DEMO_RULES, ENVIRONMENT_SOURCES,
   getEnvironmentMode, liveEnvironmentConfig
@@ -116,8 +117,19 @@ function unavailableRecord(domain, errorCode, missingConfig = []) {
   };
 }
 
-export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false } = {}) {
+export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false, mockScenario } = {}) {
   const mode = getEnvironmentMode();
+  if (mode === 'demo') {
+    const snapshot = makeEnvironmentMockSnapshot(targetDate, now(), mockScenario);
+    if (snapshot.status === 'demo') {
+      for (const domain of ['weather', 'tide', 'marine']) await saveEnvironmentSnapshot({
+        locationId: snapshot.location.id,
+        stationId: `mock:${snapshot.mock.scenario}:${snapshot.mock.timeStep}`,
+        targetDate, domain, data: snapshot[domain], expiresAt: snapshot[domain].expiresAt
+      });
+    }
+    return snapshot;
+  }
   const liveConfig = mode === 'live' ? liveEnvironmentConfig() : null;
   const location = mode === 'demo' ? DEMO_ENVIRONMENT_LOCATION : liveConfig?.location || {
     id: 'institution-location-unconfigured',

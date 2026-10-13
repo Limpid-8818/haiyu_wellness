@@ -20,6 +20,8 @@ import {
 import { getProject, listKnowledge, listProjects, listRules, updateProject } from './catalog.js';
 import { evaluateProjectRules } from './rules-engine.js';
 import { getEnvironmentSnapshot } from './environment.js';
+import { getEnvironmentMode } from './environment-config.js';
+import { environmentMockScenario } from './environment-mock.js';
 import { assessProjectAvailability } from './environment-availability.js';
 import { systemBusinessClock } from './clock.js';
 import { getGuestDailyBrief } from './daily-brief.js';
@@ -46,8 +48,9 @@ import {
   listHealthExtractionDrafts, saveHealthAssessmentAnswer
 } from './health-assessment.js';
 import {
-  createWellnessDraft, getWellnessDraft, listWellnessDrafts, wellnessTimeline
+  adoptWellnessDraft, createWellnessDraft, getWellnessDraft, listWellnessDrafts, wellnessTimeline
 } from './wellness-planner.js';
+import { finishWellnessDraftPost } from './wellness-draft-post.js';
 import {
   approveWellnessDraft, autoActivateWellnessDraft, correctActiveWellnessDraft,
   getWellnessReviewDetail, listWellnessAdminAttention, listWellnessReviewHistory,
@@ -481,7 +484,13 @@ routes.get('/api/environment', auth, async (req, res) => {
   }).format(new Date(now()));
   const targetDate = typeof req.query.date === 'string' && req.query.date ? req.query.date : defaultDate;
   if (!isDateOnly(targetDate)) throw new AppError(400, 'ENVIRONMENT_DATE_INVALID', '日期必须是有效的 YYYY-MM-DD');
-  const snapshot = await getEnvironmentSnapshot(targetDate);
+  let mockScenario;
+  if (req.query.mockScenario !== undefined) {
+    if (getEnvironmentMode() !== 'demo') throw new AppError(400, 'ENVIRONMENT_MOCK_DISABLED', '仅合成/mock模式可选择测试场景');
+    try { mockScenario = environmentMockScenario(req.query.mockScenario); }
+    catch { throw new AppError(400, 'ENVIRONMENT_MOCK_SCENARIO_INVALID', '测试场景须为 normal、risk、missing 或 stale'); }
+  }
+  const snapshot = await getEnvironmentSnapshot(targetDate, { mockScenario });
   const projectId = typeof req.query.projectId === 'string' ? req.query.projectId.trim() : '';
   if (!projectId) return res.json({ ...snapshot, availability: null });
   const project = await getProject(projectId);
@@ -936,10 +945,14 @@ routes.get('/api/me/therapy-drafts', auth, async (req, res) => {
 routes.post('/api/me/therapy-drafts', auth, async (req, res) => {
   requireGuestRole(req.user);
   const requestKey = req.get('Idempotency-Key');
-  let draft = await createWellnessDraft({ user: req.user, body: req.body, requestKey });
-  const autoActivation = draft.deduplicated ? null : await autoActivateWellnessDraft(draft.draftId);
-  if (autoActivation) draft = await getWellnessDraft(req.user.id, draft.draftId);
-  res.status(draft.deduplicated ? 200 : 201).json({ ...draft, autoActivation });
+  const isAdoption = req.body && typeof req.body === 'object' && !Array.isArray(req.body)
+    && req.body.action === 'adopt_candidate';
+  const draft = isAdoption
+    ? await adoptWellnessDraft({ user: req.user, body: req.body, requestKey })
+    : await createWellnessDraft({ user: req.user, body: req.body, requestKey });
+  const result = await finishWellnessDraftPost({ draft, isAdoption, guestId: req.user.id,
+    autoActivate: autoActivateWellnessDraft, getDraft: getWellnessDraft });
+  res.status(draft.deduplicated ? 200 : 201).json(result);
 });
 routes.get('/api/me/therapy-drafts/:id', auth, async (req, res) => {
   requireGuestRole(req.user);

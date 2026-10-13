@@ -3221,6 +3221,28 @@ function AssistantWidget({ role = 'public', user = null, guestId = '', onAuthExp
     } finally { setConfirmingActionId(''); }
   }
 
+  async function adoptCollaboration(collaboration) {
+    const parentRunId = collaboration?.parent?.runId;
+    const selectedCandidateIds = Array.isArray(collaboration?.finalAdoptedCandidateIds)
+      ? collaboration.finalAdoptedCandidateIds : collaboration?.selectedCandidateIds;
+    if (!sessionId || !parentRunId || !Array.isArray(selectedCandidateIds) || !selectedCandidateIds.length) return;
+    const key = `assistant-adopt:${parentRunId}:${selectedCandidateIds.join(',')}`;
+    setAdviceSaving(true);
+    setAdvicePublishNotice('正在保存已选方案…');
+    try {
+      const result = await request('/me/therapy-drafts', {
+        method: 'POST', body: JSON.stringify({ action: 'adopt_candidate', sourceRunId: parentRunId,
+          sessionId, selectedCandidateIds, candidateId: selectedCandidateIds[0] }),
+        headers: { 'Idempotency-Key': key }, onUnauthorized: onAuthExpired
+      });
+      setAdviceDraft(result);
+      setAdvicePublishNotice(`已保存疗程草案 ${result.draftId} · 版本 ${result.version}，来源运行 ${result.sourceRunId || parentRunId}；仍需医护审核。`);
+      window.dispatchEvent(new CustomEvent(WELLNESS_NOTIFICATION_EVENT));
+    } catch (error) {
+      setAdvicePublishNotice(error.message || '方案保存失败，请稍后重试');
+    } finally { setAdviceSaving(false); }
+  }
+
   function navigateForAction(card) {
     const page = card.impact?.page || card.result?.page;
     const section = ({ schedule: 'schedule', reservations: 'reservations', projects: 'projects',
@@ -3447,7 +3469,8 @@ function AssistantWidget({ role = 'public', user = null, guestId = '', onAuthExp
                 onClick={() => onOpenOperationsSource?.(source, message.content)}>打开运营时段</button>}
             </article>;
           })}</div>}
-          {message.collaboration && <AssistantCollaborationTrace collaboration={message.collaboration} onSelectResource={onSelectResource}/>}
+          {message.collaboration && <AssistantCollaborationTrace collaboration={message.collaboration} onSelectResource={onSelectResource}
+            onAdopt={role === 'guest' ? adoptCollaboration : null}/>}
           {message.mode && <small className="assistant-mode">{message.mode}</small>}
           {message.quickReplies?.length > 0 && <div className="quick-replies">{message.quickReplies.map((quickReply) => <button type="button" key={quickReply} onClick={() => send(quickReply)} disabled={sending}>{quickReply}</button>)}</div>}
         </div>)}
@@ -3497,7 +3520,7 @@ function assistantExecutionModeLabel(mode) {
   return '安全引导模式';
 }
 
-function AssistantCollaborationTrace({ collaboration, onSelectResource }) {
+function AssistantCollaborationTrace({ collaboration, onSelectResource, onAdopt }) {
   const [expanded, setExpanded] = useState(false);
   const parent = collaboration.parent || {};
   const selectionVerified = collaboration.coordinatorStatus === 'completed'
@@ -3539,6 +3562,10 @@ function AssistantCollaborationTrace({ collaboration, onSelectResource }) {
           id: candidate.details.resourceId || candidate.candidateId, title: candidate.title, audioUrl: candidate.details.audioUrl,
           durationSeconds: candidate.details.durationSeconds, source: candidate.details.resourceSource, license: candidate.details.license
         })}>打开陪伴课程</button>}
+        {onAdopt && selectionVerified && candidate.status === 'adopted'
+          && collaboration.finalAdoptedCandidateIds?.includes(candidate.candidateId)
+          && <button type="button" className="assistant-resource-button" disabled={false}
+            onClick={() => onAdopt(collaboration)}>采纳此方案</button>}
       </div>)}</div>}
       {collaboration.graphBudget && <small className="assistant-trace-budget">协作预算：模型 {collaboration.graphBudget.modelCalls}/{collaboration.graphBudget.maxModelCalls} 次 · 工具 {collaboration.graphBudget.toolCalls}/{collaboration.graphBudget.maxToolCalls} 次 · {Number(collaboration.graphBudget.inputTokens || 0) + Number(collaboration.graphBudget.outputTokens || 0)} tokens · ${Number(collaboration.graphBudget.estimatedCostUsd || 0).toFixed(6)} · {formatTraceDuration(collaboration.graphDurationMs)}</small>}
     </div>}
