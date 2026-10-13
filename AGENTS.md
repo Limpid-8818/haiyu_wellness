@@ -1,3 +1,11 @@
+# 当前有效状态：阶段4已验合入并普通push，待Source81核整合（2026-10-14）
+
+产品7b0091f572371e0bad8b1e89becbd51abce5282c经main merge208a92d20646756a52c32de5d8776b7ac3c9dd31合入；公开文稿e1eab9e88aa025962c2c78fe204ce0cc54bcc0d2已普通push exit0，local/origin-main/实际ls-remote一致，main检查干净。第80轮11冻结产品一致、main65/65/build0、在线预算50/16384/12/90秒，新整合4实例和原阶段4十二实例资源PASS，两个auditor自身7身份/4组为空；worker66+Source13原件保持。F07/F08原条目已完成，仅基本目录规则/保护和未知ETA语义，V01已完成/U01待改原段不变。
+
+本次只追加这一已发生的push收据并正常commit/push，最后文稿SHA以integration80最终封包/App回传为准，避免报告循环填自身SHA。Source81独核整合/远端/资源后才派5；当前5/6未派，109未全验/整体NOT_FINAL_ACCEPTED/CI延后/旧FAIL及历史例外保留。私密.env读取/新真模型/用户库/MySQL/scheduler/internal agents/新worktree/安装复制0，未手工重启或杀用户服务。worker一次回Source后停，不自行续派/轮询。以下push前和更早状态完整保留。
+
+---
+
 # 当前有效状态：阶段4已验产品合入main，整合推送收尾（2026-10-14）
 
 F07/F08已由Source79三新客人/三原生case与资源独验通过，产品7b0091f572371e0bad8b1e89becbd51abce5282c在新codex/accepted-bug-stage4-20261014分支提交，经main正常merge208a92d20646756a52c32de5d8776b7ac3c9dd31合入，11已验文件SHA逐件一致。main65/65/build0，现有3020/5180只读status预算50/16384/12/90秒未变。BUG原F07/F08已完成仅本部分目录规则/稳定/保护与未知ETA语义，V01及U01原状态保留；无厨房SLA预测功能。
