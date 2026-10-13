@@ -5,6 +5,7 @@ import {
   db, hashPassword, verifyPassword, now, log, publicUser, guestProfile, guestSummary, transaction, json, id
 } from './db.js';
 import { signToken, readToken } from './auth.js';
+import { recordStaffExecution } from './service-execution.js';
 import { assistantStatus, chatWithAssistant, getAssistantHistory, startAssistantRun, scheduleAssistantRun, getAssistantRun, retryAssistantRun } from './assistant.js';
 import { confirmAssistantAction } from './assistant-actions.js';
 import { accessibleGuestIds, authorizeGuestAccess, countAccessibleGuests } from './authorization.js';
@@ -483,6 +484,11 @@ routes.post('/api/admin/operations/slots/:slotId/assignments', auth, staffManage
 });
 routes.get('/api/staff/schedule', auth, staffOnly, async (req, res) => {
   res.json(await listStaffDailySchedule(req.user, queryString(req.query.date) || systemBusinessClock.dateKey()));
+});
+routes.post('/api/staff/schedule/:reservationId/execution', auth, staffOnly, async (req, res) => {
+  if (Object.keys(req.body || {}).some(key => !['status', 'note'].includes(key))) throw new AppError(400, 'SERVICE_EXECUTION_INPUT_INVALID', '只接受服务状态和工作说明');
+  const result = await recordStaffExecution({ user: req.user, reservationId: req.params.reservationId, status: req.body?.status, note: req.body?.note });
+  res.status(result.replayed ? 200 : 201).json(result);
 });
 routes.get('/api/admin/operations/summary', auth, staffManagementOnly, async (req, res) => {
   res.json(await getOperationsSummary({ date: queryString(req.query.date) || systemBusinessClock.dateKey(),

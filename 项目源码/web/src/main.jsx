@@ -336,6 +336,8 @@ function AppShell({ user, onLogout }) {
       { id: 'admissions', label: '入住管理', icon: '⌂' },
       { id: 'assignments', label: '客人分工', icon: '♧' }
     ] : []),
+    ...(user.role === 'staff' && user.jobType === 'coach' ? [{ id: 'daily', label: '每日安排', icon: '▦' }] : []),
+    ...(user.role === 'staff' && user.jobType === 'therapist' ? [{ id: 'therapy', label: '理疗工作台', icon: '◇' }] : []),
     ...(user.role === 'staff' && user.jobType === 'dietitian' ? [{ id: 'meal-prep', label: '备餐工作台', icon: '◒' }] : []),
     ...(capabilities.medicalAdvicePublish ? [{ id: 'rules', label: '禁忌规则', icon: '⊘' }] : []),
     ...(capabilities.medicalAdvicePublish ? [{ id: 'wellness-review', label: '疗程审核', icon: '✓' }] : []),
@@ -732,8 +734,9 @@ function CheckinFeedbackCard({ item, onCheckin, onFeedback, busy }) {
   return <article className="q24-execution-card" data-testid={`q24-appointment-${item.reservationId}`}>
     <div className="q24-execution-main"><div><span className="eyebrow">项目执行 · {item.businessDate}</span><h3>{item.projectName}</h3>
       <p>{item.localStart}–{item.localEnd} · {item.location || '地点待核对'} · 预约编号 {item.reservationId}</p></div>
-      <span className={`q24-state ${item.reservationStatus}`}>{item.reservationStatus === 'confirmed' ? '预约有效' : '已取消'}</span>
+      <span className={`q24-state ${item.reservationStatus}`}>{item.reservationStatus === 'confirmed' ? '预约有效' : item.reservationStatus === 'no_show' ? '未参加' : '已取消'}</span>
     </div>
+    {item.executions?.map(entry => <p className="health-review-note" role="status" key={entry.id}>{STAFF_JOB_LABELS[entry.jobType]}：{entry.status === 'completed' ? '服务已完成' : '已登记未参加'} · {entry.actorName} · {entry.note}</p>)}
     {item.checkin ? <div className="q24-checkin-saved" role="status"><strong>已签到</strong><span>签到编号 {item.checkin.id} · {mealLocalTime(item.checkin.checkedInAt)}</span></div>
       : <div className="q24-checkin-action"><span>项目开始后可完成签到；未签到的预约不会标记为已参加。</span>
         <button type="button" className="primary-btn small-btn" data-testid={`q24-checkin-${item.reservationId}`}
@@ -1991,7 +1994,7 @@ function StaffView({ section, me, notify, onGuestChange, go, reviewDraftId = '',
   if (section === 'guests') return <StaffGuests notify={notify} onGuestChange={onGuestChange} canReview={canReview}/>;
   if (section === 'operations' && canManage) return <OperationsWorkbench notify={notify} me={me} initialSource={operationsSource}/>;
   if ((section === 'daily' && me.jobType === 'coach') || (section === 'therapy' && me.jobType === 'therapist')) {
-    return <StaffDailySchedule jobType={me.jobType}/>;
+    return <StaffDailySchedule jobType={me.jobType} notify={notify}/>;
   }
   if (section === 'wellness-review' && canReview) return <WellnessReviewWorkbench notify={notify} initialDraftId={reviewDraftId} onInitialDraftOpened={onReviewDraftOpened}/>;
   if (section === 'wellness-history' && (canReview || canManage)) return <WellnessHistoryWorkbench canOpenDetails={canReview} notify={notify}/>;
@@ -2192,13 +2195,25 @@ function OperationsWorkbench({ notify, me, initialSource = null }) {
   </div>;
 }
 
-function StaffDailySchedule({ jobType }) {
-  const [date, setDate] = useState(() => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(new Date()));
+function StaffDailySchedule({ jobType, notify }) {
+  const [date, setDate] = useState(businessToday);
   const [data, setData] = useState(null); const [error, setError] = useState('');
-  const load = useCallback(() => request(`/staff/schedule?date=${encodeURIComponent(date)}`).then(setData).catch(loadError => setError(loadError.message || '日程暂不可用')), [date]);
+  const [notes, setNotes] = useState({}); const [busy, setBusy] = useState('');
+  const load = useCallback(async () => { setError(''); try { setData(await request(`/staff/schedule?date=${encodeURIComponent(date)}`)); } catch (err) { setError(err.message); } }, [date]);
   useEffect(() => { void load(); }, [load]);
+  async function record(item, status) {
+    setBusy(item.reservationId);
+    try { await request(`/staff/schedule/${item.reservationId}/execution`, { method: 'POST', body: JSON.stringify({ status, note: notes[item.reservationId] || '' }) }); notify('服务工作记录已保存，客人可回读'); await load(); }
+    catch (err) { setError(err.message); notify(err.message); } finally { setBusy(''); }
+  }
   const label = jobType === 'coach' ? '教练每日安排' : '理疗师工作安排';
-  return <div className="stage26-operations" data-testid="stage26-staff-schedule"><PageTitle eyebrow="SERVICE SCHEDULE" title={label} desc="只显示当前岗位完成任务所需的项目、客人、预约与时段信息。" action={<button type="button" className="outline-btn" onClick={load}>刷新日程</button>}/><section className="surface stage26-filter-row"><label>业务日期<input type="date" value={date} onChange={event => setDate(event.target.value)}/></label><span>{data?.total ?? 0} 个任务 · {data?.jobType || jobType}</span></section>{error && <div className="stage26-error" role="alert">{error}</div>}<section className="surface stage26-panel stage26-reservations">{data?.items?.length ? data.items.map(item => <article key={item.id} data-testid={`stage26-staff-task-${item.slotId}`} data-reservation-id={item.reservationId || ''} data-guest-id={item.guestId || ''} data-reservation-status={item.reservationStatus || ''}><div><strong>{item.projectName} · {item.guestName || '待分配客人'}</strong><small>{item.businessDate} {item.localStart}–{item.localEnd} · {item.jobType} · {item.reservationId || '尚无预约'} · 预约状态 {item.reservationStatus || '暂无预约'}</small></div></article>) : <Empty text="当天没有已分配的服务时段。"/>}<small className="stage26-muted">{data?.privacyNote}</small></section></div>;
+  return <div className="stage26-operations" data-testid="stage26-staff-schedule"><PageTitle eyebrow="SERVICE SCHEDULE" title={label} desc="查看本人时段分工及负责客人的签到/反馈；服务结束后记录完成，未参加须在开始后登记。" action={<button type="button" className="outline-btn" onClick={load}>刷新日程</button>}/><section className="surface stage26-filter-row"><label>业务日期<input type="date" value={date} onChange={event => setDate(event.target.value)}/></label><span>{data?.total ?? 0} 个任务 · {STAFF_JOB_LABELS[jobType]}</span></section>{error && <div className="stage26-error" role="alert">{error}</div>}<section className="surface stage26-panel stage26-reservations">{data?.items?.length ? data.items.map(item => {
+    const execution = item.executions?.find(entry => entry.jobType === jobType);
+    return <article key={`${item.id}:${item.reservationId || 'empty'}`} data-reservation-id={item.reservationId || ''} data-guest-id={item.guestId || ''}><div><strong>{item.projectName} · {item.guestName || '暂无有效负责关系或预约'}</strong><small>{item.businessDate} {item.localStart}–{item.localEnd} · {item.reservationId || '尚无可处理预约'}</small>
+      {item.reservationId && <><p>{item.checkin ? `客人已签到 · ${mealLocalTime(item.checkin.checkedInAt)}` : '客人尚未签到'}</p>{item.feedback && <p>客人反馈第 {item.feedback.revision} 版：{({comfortable:'舒服',general:'一般',uncomfortable:'不舒服'})[item.feedback.feeling] || item.feedback.feeling} · {item.feedback.note}</p>}
+      {execution ? <p role="status">{execution.status === 'completed' ? '服务已完成' : '已登记未参加'} · {execution.actorName} · {execution.note}</p> : <div className="meal-swap-form"><label>服务工作说明<textarea maxLength={500} value={notes[item.reservationId] || ''} onChange={event => setNotes(current => ({ ...current, [item.reservationId]: event.target.value }))}/></label><button type="button" className="primary-btn" disabled={Boolean(busy) || !item.checkin || !notes[item.reservationId]?.trim()} onClick={() => record(item, 'completed')}>记录服务完成</button><button type="button" className="outline-btn" disabled={Boolean(busy) || Boolean(item.checkin) || !notes[item.reservationId]?.trim()} onClick={() => record(item, 'no_show')}>登记未参加</button></div>}</>}
+    </div></article>;
+  }) : <Empty text="当天没有已分配的服务时段。"/>}<small className="stage26-muted">{data?.privacyNote}</small></section></div>;
 }
 
 function WellnessReviewWorkbench({ notify, initialDraftId = '', onInitialDraftOpened }) {
@@ -2700,6 +2715,7 @@ function staffActionLabel(action) {
     'guest.view': '查看客人档案',
     'advice.create': '发布医嘱与建议',
     'profile.update': '更新客人资料',
+    'service.execution.record': '记录服务执行',
     'password.change': '修改登录密码',
     login: '登录系统'
   })[action] || action || '工作操作';
@@ -3055,7 +3071,7 @@ function DeanTeam({ notify }) {
                 <SectionHead title="近期工作记录"/>
                 <div className="staff-log-list">
                   {selected.logs.length ? selected.logs.map((log) => (
-                    <div key={log.id}><span className="log-dot"/><div><strong>{log.action}</strong><p>{log.detail || '完成一项工作操作'}</p><small>{log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN') : '—'}</small></div></div>
+                    <div key={log.id}><span className="log-dot"/><div><strong>{log.action === 'service.execution.record' ? '记录服务执行' : log.action}</strong><p>{log.detail || '完成一项工作操作'}</p><small>{log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN') : '—'}</small></div></div>
                   )) : <Empty text="暂无工作记录"/>}
                 </div>
               </section>
