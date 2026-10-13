@@ -1,3 +1,11 @@
+# 最新有效状态：阶段3A已验合入远端并Source复核通过，准备串行3B（2026-10-13）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local第73轮独核3A整合15029B包/24整件引用/17源码blob与已验候选一致，BUG-F04/F06/R01/U05原条目已完成，product56cb179/main merge2d0cfce及推送最终fd89ddd本地/远端一致；实际3020/5180 status均50/16384/12/90秒/live。旧3A资源18实例、新整合worker5+Source2审计共7实例双根PASS，精确残留/退出缺口0，审计自身关闭，旧Source86306B注册簿前缀保持。main工作区检查时干净，源73公开收据将另提交push。
+
+后续仅3B V01计划，不派4—6，不恢复原3A。28d6全部tracked项目源码经实际git diff main为0，App同目录fork可复用已验产品而无需新工作树/依赖复制；协调文稿兼容最新main，不旧覆盖。3B新task/caller/guest/session/parent/draft/attempt独占，worker74/Source75，具体身份以新合同/收据为准。人类逐部分Source独验→commit/merge main→BUG完成→push核SHA→下一部分授权有效；源码未验时执行者Git0，不internal agents，不无限模型试。V01未验、整体NOT_FINAL_ACCEPTED/109未全验/旧FAIL/例外/CI延后保持。以下旧时点完整保留。
+
+---
+
 # 当前有效状态：阶段3A已完成合入及首次普通push，待Source整合独核（2026-10-13）
 
 3A产品56cb179f26807ecee9dc8b65b2cc4673bfba0c4f经main merge2d0cfced1df837abba0af9eb7174ecc1ee225c6b合入，公开验收/BUG完成文稿04e47c376d69b20596af7b0ad612783450110b03已普通push exit0，本地HEAD/origin-main/ls-remote SHA一致且main干净。第72轮main17冻结文件一致、40/40/build0、在线3020与5180预算50/16384/12/90秒，新整合5实例及审计自身准确退出、句柄/temp/socket/端口/缺口0，主.env未改。
