@@ -1,3 +1,59 @@
+# 最新用户授权：当前main归档推送与BUG修复交接（2026-10-13）
+
+用户明确授权本轮将未提交文稿和有效改动提交、必要分支整合并普通push origin/main，便于另一同学修BUG；此Git授权优先下文旧阶段Git0限制。本轮不继续修BUG、不派开发任务。进阶成果此前已在main，旧分支和工作树已比较，无需用旧版覆盖新版；恢复/dirty-state快照保留，不推送。
+
+源码已形成64d304aa79274fbb27b7da09fad252abaab2f93e：方案同源采纳/待审、环境mock、共享调用上限、测试和公开.env.example；当前文稿与第47—59轮报告一并归档。后续当前入口为[待修复BUG列表](待修复BUG列表.md)、[BUG修复交接](docs/BUG修复交接_20261013.md)及[第60轮报告](wangshanchong/第60轮报告.md)。第59轮记录21项问题和4项待复测/验收缺口，不是全功能PASS；当前整体NOT_FINAL_ACCEPTED、109未全验、旧FAIL和历史例外保持。
+
+本轮定向测试7/7和网页构建通过，两次受管资源已退出并清理；没有新API/Vite/browser/provider/用户库/MySQL/依赖安装。私密.env、真实用户数据、旧失败和ignored证据不提交，公开模板提供50次/8192Token及大连地区代表点配置。源码提交不替代真实模型采纳/审批闭环验收；后续由人类另行授权BUG修复，不恢复旧自动派发。最终文档提交及远端一致性以本轮完成回传和Git核对为准，下文按历史时点保留。
+
+---
+
+# 最新用户配置调整：大连开发区真实环境已接入当前网页（2026-10-13）
+
+用户在原任务01a0cbfe-a161-72d0-992d-12fad655d4ef明确要求解决潮汐配置未落地。本次仅在main项目源码/.env补齐13个公开环境字段：live/1、open-meteo、大连开发区地区代表点39.052585/121.787513、Asia/Shanghai、region-representative/机构精确地点未核实、公开地点来源和官方Weather/Marine endpoint。纯配置验证0、missing=[]；保留模型Key和50次协作上限，.env继续忽略。
+
+现有开发API经Node --watch重载（入口JS字节无变化），用户现有网页实际显示“来源数据可用”、大连代表点与三域来源；本次气温15.5°C、波高0.4m、含潮汐模式海面高度1.19m。预测曲线实际展开范围-1.21至1.57m；Marine获取2026-10-13T02:12:19.438Z，模型潮汐与海况同一响应，天气和Marine各自网格位置明确。快照前缀已为environment:dalian-etdz-region-representative:2026-10-13。页面保留站点实测/精确满干潮时刻不提供、地区代表点与现有未批准阈值限制，不用mock冒充、不自动放行下海活动，不需要新QWeather Key/Host/Station。
+
+新增[环境配置与验证](docs/大连开发区环境配置与验证_20261013.md)，启动手册加6.1节和可移植文档链接，[第58轮报告](wangshanchong/第58轮报告.md)记录实际检查。环境截图/可见文本/最终验证在main项目源码/output/resource-audit/environment-config-live-20261013-01；必要公开证据保留约114KB，截图保存时曲线收起，展开范围由实际可见AX文本证明。env忽略、入口内容保全、手册diff检查0，5180助手状态HTTP200/maxModelCalls50。
+
+本轮没有新模型请求、App派发/恢复、内部代理、测试库/API/Vite/browser/guardian、安装或Git写；用户开发服务与已有浏览器保留。只完成配置落地和当前网页回读，不表示核心第3B、机构审批或109功能整体验收通过，不自动派后续。新配置和文档为用户本次授权修改，下一验收基线须明确继承；下文“环境未配置”是本次修复前历史状态。
+
+---
+
+# 最新用户配置调整：协作调用上限50，核心第3B仍待闭环（2026-10-13）
+
+用户在原任务01a0cbfe-a161-72d0-992d-12fad655d4ef要求核对当前进度和实际网页问题，随后明确“帮我设置上限为50次”。本次已在main项目源码/.env设置ASSISTANT_MAX_MODEL_CALLS=50，并按该明确要求将server/src/assistant.js的四领域额外9次裁剪改为共享配置上限。现有Node --watch后端自动重载，3020实际API及5180代理的/api/assistant/status均HTTP200且maxModelCalls=50；语法/本文件diff检查0，前端原PID21796保持。密钥未输出，.env仍忽略，其他已有产品/mock改动保留，不Git写，不新增或恢复App任务，不重跑真实模型。
+
+总Token8192、工具12次和总运行90秒保持。本次50次是协作总请求上限，不是每个领域各50次，不表示已复测或业务通过。验收tools-v05/owner.mjs此前用9次/Token32768，日常启动修改前是5次/Token8192，配置差异须在后续受控复测中核对；新授权助手预算改动须明确纳入下一次冻结基线，不能以旧SHA冒称源码未变。
+
+本次以第56轮Source原包2886B/SHA6653184235d7bdd2b8e260f13fb5711cf273a319be047ed3193856b8607168c2及business.json277570B/SHA865027c3eaed3b839ff5658dfb48c7397f6fc205d567cf8fc5333582dd8caf7c核当前进度：核心1/2/3A已有独验，最新3B真实四领域已执行，但六项未答资料明列/领域截图覆盖仍CORE_FAIL，采纳持久化未运行。B草案201有局部证据，完整采集/Source独验未完成。109未全验、旧FAIL/raw31/exit2及历史例外保持，不派第4阶段。
+
+实际网页的天气/潮汐/海况仍显示地点坐标未配置/来源不可用；main本地.env没有环境模式、live开关及地点字段。临时mock测试没有配置日常运行环境；本轮未修改环境配置或调用真实环境API。详见[第57轮配置与现状记录](wangshanchong/第57轮报告.md)。下文2026-10-12“产品diff空/B仍执行”等为旧时点记录，不代表当前工作区；用户运行的前后端保留。本轮仅配置调整与分析，不恢复原任务自动派发。
+
+---
+
+# 当前有效状态：选项2两包已复核，A仅修工具，B安全前置阻塞（2026-10-12）
+
+Source `01a12e8c-5fa8-74d1-9b74-a8738cef1f33 / local` 已独立执行A第50轮提供的tools-v02：caller/static/control合同和唯一preflight均退出0；新Source attempt `source-core3b1-fourdomain-independent-20261012-02` 实际运行一次，guest=`guest_5f1d3aa3`、run=`run_f9830018-d176-4b0a-bbdb-55188d4ec42a`、session=`as_e5d8e579-e2a3-4f2f-b016-f20f3d0f2a1e`。observe-1为terminal完成，未重试；verify真实结论`CORE_FAIL`，仍缺最终回复六项健康资料缺口明列和完整回复/来源/协调器/四领域截图覆盖。原第47轮失败、第50轮工具包和全部旧原件保留，不能将工具通过记为业务通过。
+
+本Source新增7实例全部准确退出、guardian/句柄/temp/socket清理通过，最终资源审计`RESOURCE_PRESERVATION_PASS`，当前物理残留0；资源文件为`source-final-resource-v02-20261012.json`，SHA256 `641de1b84c0f815d87c7dd205c9b6315b07f505e90f53e1af6b33e2db267df93`。Source封包`source-final-packet.json`为`SOURCE_EXECUTION_PACKAGE_COMPLETE`但`businessResult=CORE_FAIL`、`overall=NOT_FINAL_ACCEPTED`，SHA256 `7e31ee24ffcfacdc20d6a361bfe02b9ab593eca8cce05568a2863ef2a82018ab`。详见`wangshanchong/第51轮报告.md`。
+
+当前产品diff为空，Git HEAD/origin仍为`d75fa99fad048f306c350d2dc6ca636260225b91`。B按用户要求改为多场景mock（正常、风险超限、缺失、过期，逐时数据且明确非机构批准）仍在执行；第4阶段不派发，四领域持久方案、109项未全验、旧FAIL/raw31/exit2和历史例外保持。
+
+Source `01a12e8c-5fa8-74d1-9b74-a8738cef1f33 / local` 已收到A第47轮及B第48/49轮主动回传并独立复核。A的四领域/协调器9次真实模型调用、8只读工具和同对象回读有实证；原CORE_FAIL及BLOCKED_EXECUTION_PACKAGE保留，business/owner收尾文件、内部滚动截图及最终回复列健康资料缺口尚未通过，Source业务未跑。已只向原A `01a12ff5-7c0c-7e52-b4a2-792e7230498c` 授权tools-v02工具修复和第50轮Source复跑准备，不允许再跑worker业务或改产品。B `01a12ff5-d32e-7fe3-b26c-6fe7a0c95958` 第49轮静态安全阻塞由Source生产纯函数独立复现：4运动项目均户外、unavailable环境及无机构批准阈值，各为pending；未启动库/服务/浏览器/provider。
+
+双方全范围1162登记/1991组/29853身份引用当前物理残留0，A两实例23准确启动退出/2guardian退出；B原保全审计退出1保留。Source已精确重建AGENTS和派发状态文档旧冻结SHA，证明差异仅本Source授权协调新增、HEAD全文尾部不变；不修改原FAIL或基线。详见 `docs/核心验收选项2本批Source复核_20261012.md`。main/origin仍d75fa99，产品diff空，Git写0。原四领域持久方案缺口、109未全验及历史例外不变。当前只等A工具一次主动回传；B等待用户明确本地演示或真实运营用途，未擅自降安全门、加项目或编造机构阈值。第4阶段不派发，源不再连续轮询。
+
+---
+
+# 当前有效状态：选项2双验收任务已派发，等待回传（2026-10-12）
+
+B 已完成第48轮主动回传，结论为 `BLOCKED_STATIC_DEPENDENCY`，不是业务PASS：指定前置不会生成 activity_slots。Source 真实只读复核确认 caller=0、静态仍阻塞、资源保全PASS且当前残留0。根据用户“继续进行验收和修复”授权，已向 B 发送一次新的源指令，允许新 attempt `worker-core3b2-draft-20261012-03` 通过网页项目时段页面自然 GET 物化 activity_slots，必要时用网页“生成此日期餐单”，随后仅一次原生草案生成尝试；不允许 API/SQL 写入、产品修改、业务重试或复用旧 guest/attempt。B 完成/阻塞/失败后仍只回传一次并停止。A 仍按第47轮合同独立执行，尚未改变其范围。详见 `docs/核心验收选项2B前置补验安排_20261012.md`。
+
+最新人类指令为“现在开始继续进行验收和修复”。此前要求的main整合、提交、前后端启动手册和push已完成，`main` 与 `origin/main` 当前同为 `d75fa99fad048f306c350d2dc6ca636260225b91`，派发前工作区干净。按已授权的选项2和每次两个独立App任务规则，现已从停止的第3B任务同目录fork并同步完成两个新的GPT-6.1 Sol/xhigh/local任务：A=`01a12ff5-7c0c-7e52-b4a2-792e7230498c`（3B-1四领域真实协作，第47轮，worker 58880/58881，Source 58884/58885），B=`01a12ff5-d32e-7fe3-b26c-6fe7a0c95958`（3B-2营养/运动持久草案，第48轮，worker 58882/58883，Source 58886/58887）。两任务均已active并开始无服务静态核对，尚未消耗业务attempt；证据根、临时库、浏览器、端口、session、run均不共享。源协调任务仍为`01a12e8c-5fa8-74d1-9b74-a8738cef1f33 / local`。
+
+本覆盖段取代下方旧的“未派发/暂不执行”描述。A/B 各自最多一次网页业务尝试、重试0，完成/阻塞/失败后只向源回传一次并停止；源收到两包后以新的Source caller分别独立复跑，业务门和资源清理门均通过后才可进入第4阶段。原3B四领域持久方案阻塞、旧失败/raw31/exit2、限定历史例外及109项未全验状态保持。本轮不修改产品代码、不降门、不执行Git写入、测试/build、冷安装、用户库/MySQL、内部子代理或新工作树。详见`docs/核心验收选项2实际派发状态_20261012.md`。
+
 # 当前有效状态：人类要求先交付main整合、提交、启动手册及push，再恢复选项2验收（2026-10-12）
 
 最新人类明确选2，允许每次两个独立App验收任务；随后把交付顺序改为“在分发子任务之前，先进行合并并完成提交、编写前后端启动手册和push”，并说明比较急。此最新授权优先旧Git0/仅验收及等本批通过后再整合安排。两个选项2验收均尚未派发、业务/资源0，准备的三份计划已标未派发/暂不执行；原3B静态BLOCKED及四领域持久方案缺口不改。
