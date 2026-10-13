@@ -8,6 +8,7 @@ import { createGuestMealOrder, getGuestMenu, previewGuestMenuReplacement, replac
 import { createHealthRecord, validateHealthMetricInput } from './health-metrics.js';
 import { systemBusinessClock } from './clock.js';
 import { isDateOnly } from './staffing.js';
+import { mealDeliveryTiming } from './meal-policy.js';
 
 const ACTION_TTL_MS = 10 * 60 * 1000;
 const ACTION_TYPES = new Set(['book_program','cancel_booking','book_meal','swap_dish','record_metric','rest_change']);
@@ -269,14 +270,14 @@ async function buildProposal(actionType, parameters, guestId, sessionId) {
         } else {
           const items = mealItems.map(item => ({ id: item.id, slot: item.slot, dishId: item.dish.id,
             dishName: item.dish.name, ingredients: item.dish.ingredients, allergens: item.dish.allergens }));
-          const expectedDeliveryAt = estimatedMealTime(parameters.businessDate, parameters.mealType);
+          const timing = mealDeliveryTiming(parameters.businessDate, parameters.mealType);
           basis.meal = { menuId: view.menu.id, menuVersion: Number(view.menu.version),
             profileVersion: Number(view.currentRuleBasis?.profileVersion || 0),
             itemsFingerprint: digest(stableJson(items)), orderStatus: null };
-          impact = { page: 'meals', summary: '确认后会按当前菜单版本创建一张配餐订单。预计送餐时间为演示估算。',
+          impact = { page: 'meals', summary: '确认后会按当前菜单版本创建配餐订单；预计送达时间未确定，常规供餐时刻不是预计。',
             menu: { id: view.menu.id, version: Number(view.menu.version), status: view.menu.status },
             businessDate: parameters.businessDate, mealType: parameters.mealType, mealLabel: mealLabel(parameters.mealType),
-            items, expectedDeliveryAt, expectedTimeIsDemo: true, pageEntry: '/guest/meals' };
+            items, ...timing, expectedTimeIsDemo: true, pageEntry: '/guest/meals' };
           parameters = { ...parameters, menuId: view.menu.id, version: Number(view.menu.version) };
         }
       }
@@ -370,11 +371,6 @@ async function buildProposal(actionType, parameters, guestId, sessionId) {
 }
 
 function mealLabel(value) { return ({ breakfast: '早餐', lunch: '午餐', dinner: '晚餐' })[value] || value; }
-function estimatedMealTime(date, mealType) {
-  const hour = ({ breakfast: 8, lunch: 12, dinner: 18 })[mealType];
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, day, hour - 8)).toISOString();
-}
 
 export async function proposeGuestAction({ actionType, parameters, user, role, guestId, sessionId, runId,
   expectedPreviousCard = null }) {

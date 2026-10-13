@@ -32,6 +32,8 @@
 .meal-order-status.preparing strong{color:#5472a5}
 .meal-order-status.delivered strong{color:#438265}
 .meal-order-status small{color:#95a8a3}
+.meal-timing{display:grid;gap:4px;line-height:1.6}
+.meal-selection-reason{line-height:1.7}
 .meal-notices{display:grid;gap:8px;margin:0 0 12px}
 .meal-notices p{margin:0;padding:11px 14px;border:1px solid #f0dfbe;border-radius:10px;background:#fff9ed;color:#8b7049;font-size:11px;line-height:1.7}
 .meal-notices strong{margin-right:8px;color:#b08343}

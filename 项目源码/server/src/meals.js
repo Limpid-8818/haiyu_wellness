@@ -4,6 +4,7 @@ import { AppError } from './errors.js';
 import { effectiveHealthConstraints, normalizeHealthProfile } from './health-profile.js';
 import { isDateOnly, stayStatus, jobTypeFor } from './staffing.js';
 import { authorizeGuestAccess } from './authorization.js';
+import { chooseMenuDish, MEAL_RECOMMENDATION_POLICY, mealDeliveryTiming } from './meal-policy.js';
 
 const MEALS = ['breakfast', 'lunch', 'dinner'];
 const SLOTS = ['main', 'side', 'soup'];
@@ -445,9 +446,11 @@ export async function generateGuestMenu(guestId, businessDate) {
     if (existing) return { created: false, ...(await getGuestMenu(guestId, businessDate)) };
     const catalog = await catalogRows();
     const basis = menuBasis(health);
+    basis.recommendationPolicy = { ...MEAL_RECOMMENDATION_POLICY, businessDate };
     const avoided = [...health.constraints.allergies, ...health.constraints.dietaryRestrictions];
     const picks = [];
     const missing = [];
+    const usedBySlot = Object.fromEntries(SLOTS.map(slot => [slot, new Set()]));
     for (const mealType of MEALS) for (const slot of SLOTS) {
       const candidates = catalog.filter(row => row.slot === slot && decode(row.meal_types_json).includes(mealType));
       const mappedUnknown = avoided.some(item => !knownConstraint(item.value));
@@ -460,8 +463,10 @@ export async function generateGuestMenu(guestId, businessDate) {
         const rightScore = health.audiencePreferences.filter(item => right.audienceTags.some(tag => canonical(tag) === canonical(item.value))).length;
         return rightScore - leftScore || left.id.localeCompare(right.id);
       });
-      const dish = eligible[0] || null;
-      const reason = dish ? '' : incompleteReason(mealType, slot, health, candidates);
+      const selection = chooseMenuDish({ eligible, usedIds: usedBySlot[slot], businessDate, mealType, slot });
+      const dish = selection?.dish || null;
+      const reason = selection?.reason || incompleteReason(mealType, slot, health, candidates);
+      if (dish) usedBySlot[slot].add(dish.id);
       if (!dish) missing.push(reason);
       picks.push({ mealType, slot, dish, reason });
     }
@@ -541,9 +546,10 @@ function decodeOrder(row) {
     id: row.id, orderNo: row.id, guestId: row.guest_id, menuId: row.menu_id,
     businessDate: String(row.business_date).slice(0, 10), mealType: row.meal_type,
     menuVersion: Number(row.menu_version), dishes: decode(row.dishes_snapshot_json, []),
-    status: row.status, createdAt: isoUtc(row.created_at), expectedDeliveryAt: isoUtc(row.expected_delivery_at),
+    status: row.status, createdAt: isoUtc(row.created_at),
+    ...mealDeliveryTiming(String(row.business_date).slice(0, 10), row.meal_type, isoUtc(row.expected_delivery_at)),
     expectedTimeIsDemo: Boolean(Number(row.expected_time_is_demo)),
-    expectedDeliveryNote: '演示估算时刻，不代表实际送餐承诺。', preparingAt: isoUtc(row.preparing_at),
+    preparingAt: isoUtc(row.preparing_at),
     deliveredAt: isoUtc(row.delivered_at)
   };
 }
@@ -746,13 +752,12 @@ export async function createGuestMealOrder({ guestId, idempotencyKey, menuId: me
     }
     const stamp = now();
     const orderId = id('meal_order');
-    const expectedHour = ({ breakfast: 8, lunch: 12, dinner: 18 })[mealType];
-    const [year, month, day] = businessDate.split('-').map(Number);
-    const expectedDeliveryAt = new Date(Date.UTC(year, month - 1, day, expectedHour - 8)).toISOString();
+    // Legacy NOT NULL column retains the regular serving time, never an ETA.
+    const { regularServingAt } = mealDeliveryTiming(businessDate, mealType);
     await db.prepare(`INSERT INTO meal_orders(id,guest_id,menu_id,business_date,meal_type,menu_version,request_fingerprint,
       dishes_snapshot_json,status,created_at,expected_delivery_at,expected_time_is_demo,preparing_at,delivered_at)
       VALUES(?,?,?,?,?,?,?,?, 'reserved',?,?,1,NULL,NULL)`).run(
-      orderId, guestId, menu.id, businessDate, mealType, version, fingerprint, JSON.stringify(orderDishes), stamp, expectedDeliveryAt
+      orderId, guestId, menu.id, businessDate, mealType, version, fingerprint, JSON.stringify(orderDishes), stamp, regularServingAt
     );
     await db.prepare(`INSERT INTO meal_order_requests(guest_id,idempotency_key,request_fingerprint,order_id,created_at)
       VALUES(?,?,?,?,?)`).run(guestId, idempotencyKey, fingerprint, orderId, stamp);
