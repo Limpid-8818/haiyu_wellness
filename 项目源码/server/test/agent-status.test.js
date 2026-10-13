@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import http from 'node:http';
+Object.assign(process.env,{DB_DRIVER:'sqlite',DB_PATH:':memory:',DEMO_SEED:'1',ENVIRONMENT_MODE:'unavailable',ENVIRONMENT_LIVE:'0'});
+delete process.env.ASSISTANT_MAX_MODEL_CALLS;
+delete process.env.ASSISTANT_MAX_TOKENS;
+let allFail=false;
+const stub=http.createServer(async(req,res)=>{let raw='';for await(const chunk of req)raw+=chunk;const payload=JSON.parse(raw);const system=payload.messages[0].content;
+  res.setHeader('Content-Type','application/json');
+  if(allFail||system.includes('agentId=domain.nutrition')){res.statusCode=503;return res.end(JSON.stringify({error:{message:'synthetic provider outage'}}))}
+  const first=payload.tool_choice==='required';const message=first?{role:'assistant',content:null,tool_calls:payload.tools.map((tool,index)=>({id:'stub-'+index,type:'function',function:{name:tool.function.name,arguments:tool.function.name==='get_exercise_context'?JSON.stringify({date:JSON.parse(payload.messages[1].content).date}):'{}'}}))}:{role:'assistant',content:system.includes('adoptedCandidateIds')?'{"selectedCandidateIds":[]}':'{"candidateIds":[]}'};
+  res.end(JSON.stringify({id:'offline-stub',model:'offline-stub',choices:[{message,finish_reason:first?'tool_calls':'stop'}],usage:{prompt_tokens:50,completion_tokens:20}}));
+});
+await new Promise(resolve=>stub.listen(0,'127.0.0.1',resolve));
+Object.assign(process.env,{LLM_BASE_URL:`http://127.0.0.1:${stub.address().port}`,LLM_API_KEY:'synthetic-stub-only',LLM_MODEL:'offline-stub'});
+const {db}=await import('../src/db.js');const {getAgentStatus,chatWithAssistant,assistantStatus}=await import('../src/assistant.js');
+test.after(async()=>{await new Promise(resolve=>stub.close(resolve));await db.close()});
+test('status is private, reads no fake completion and preserves actual partial provider failure across rereads',async()=>{
+  const guest=await db.prepare("SELECT * FROM users WHERE id='guest_001'").get();
+  assert.equal(assistantStatus().maxModelCalls,50);assert.equal(assistantStatus().maxRunTokens,16384);
+  const empty=await getAgentStatus({user:guest});assert.equal(empty.state,'not_run');assert.equal(empty.serviceHealth.state,'unknown');assert.ok(empty.agents.every(row=>row.state!=='done'));
+  await assert.rejects(()=>getAgentStatus({user:guest,guestId:'staff_001'}));
+  const result=await chatWithAssistant({user:guest,role:'guest',text:'请从理疗、营养、运动和心理陪伴四方面一起整理建议',clientRequestId:'offline-status-partial'});
+  const status=await getAgentStatus({user:guest});assert.equal(status.run.runId,result.runId);assert.equal(status.state,'partial_failure');
+  assert.ok(status.run.collaboration.gaps.some(gap=>gap.agentId==='domain.nutrition'&&gap.errorCode==='MODEL_HTTP_503'));
+  assert.equal((await getAgentStatus({user:guest})).run.runId,result.runId);
+  const outsider={...guest,id:'other_guest'};await assert.rejects(()=>getAgentStatus({user:outsider,guestId:guest.id}));
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM wellness_drafts').get()).n,0);
+  allFail=true;
+  await chatWithAssistant({user:guest,role:'guest',text:'请从理疗、营养、运动和心理陪伴四方面一起整理建议',clientRequestId:'offline-status-failed'});
+  const failed=await getAgentStatus({user:guest});assert.equal(failed.state,'failed');assert.equal(failed.serviceHealth.state,'last_request_failed');
+  assert.ok(failed.agents.every(agent=>agent.state!=='done'));
+});

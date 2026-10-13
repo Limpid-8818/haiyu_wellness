@@ -6,7 +6,7 @@ import {
 } from './db.js';
 import { signToken, readToken } from './auth.js';
 import { recordStaffExecution } from './service-execution.js';
-import { assistantStatus, chatWithAssistant, getAssistantHistory, startAssistantRun, scheduleAssistantRun, getAssistantRun, retryAssistantRun } from './assistant.js';
+import { getAgentStatus, assistantStatus, chatWithAssistant, getAssistantHistory, startAssistantRun, scheduleAssistantRun, getAssistantRun, retryAssistantRun } from './assistant.js';
 import { confirmAssistantAction } from './assistant-actions.js';
 import { accessibleGuestIds, authorizeGuestAccess, countAccessibleGuests } from './authorization.js';
 import { AppError, sendError } from './errors.js';
@@ -1103,24 +1103,7 @@ routes.get('/api/me/advice', auth, async (req, res) => {
     FROM medical_advice a JOIN users u ON u.id=a.author_id WHERE a.guest_id=? AND a.status='active' ORDER BY a.created_at DESC`).all(guest.id));
 });
 routes.get('/api/agent/status', auth, async (req, res) => {
-  const guestId = req.user.role === 'guest'
-    ? (req.query.guestId ?? req.user.id)
-    : req.query.guestId;
-  const guest = guestId === undefined ? null : await authorizeGuestAccess(req.user, guestId);
-  const events = guest ? [
-    { agent: '康养管家', action: '读取健康档案', detail: `已读取 ${guest.name} 的授权档案`, state: 'done' },
-    { agent: '理疗顾问', action: '执行安全规则', detail: '核对慢病、过敏与项目禁忌', state: 'done' },
-    { agent: '营养师', action: '生成膳食建议', detail: '结合过敏源与饮食偏好筛选餐食', state: 'done' },
-    { agent: '运动教练', action: '评估活动强度', detail: '根据行动能力给出运动建议', state: 'done' },
-    { agent: '心理陪伴', action: '准备陪伴策略', detail: '根据最近状态准备沟通建议', state: 'ready' }
-  ] : [
-    { agent: '康养管家', action: '等待任务', detail: '登录后可为客人编排服务任务', state: 'ready' },
-    { agent: '理疗顾问', action: '规则库在线', detail: '禁忌规则服务正常', state: 'done' },
-    { agent: '营养师', action: '规则库在线', detail: '膳食策略服务正常', state: 'done' },
-    { agent: '运动教练', action: '规则库在线', detail: '运动强度服务正常', state: 'done' },
-    { agent: '心理陪伴', action: '规则库在线', detail: '陪伴策略服务正常', state: 'done' }
-  ];
-  res.json({ mode: process.env.LLM_BASE_URL ? 'llm+rules' : '可解释规则协作模式', orchestrator: '康养管家', agents: events, humanGate: '涉及健康风险的建议由工作人员最终确认' });
+  res.json(await getAgentStatus({ user: req.user, guestId: req.query.guestId }));
 });
 
 routes.get('/api/staff/overview', auth, staffOnly, operationsSummaryOnly, async (req, res) => {

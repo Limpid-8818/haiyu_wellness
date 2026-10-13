@@ -2,7 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
-import { db, now, guestSummary, log, transaction, json } from './db.js';
+import { db, now, guestProfile, guestSummary, log, transaction, json } from './db.js';
+import { collaborationState, healthDisclosure } from './agent-presentation.js';
 import { authorizeGuestAccess } from './authorization.js';
 import { AppError } from './errors.js';
 import { effectiveHealthConstraints, recommendationHealthContext } from './health-profile.js';
@@ -32,10 +33,10 @@ const DEFAULT_TIMEOUT_MS = 20_000;
 const DEFAULT_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 const TOOL_TIMEOUT_MS = positiveEnvNumber('ASSISTANT_TOOL_TIMEOUT_MS', 15_000, 15_000);
 const MAX_RUN_MS = positiveEnvNumber('ASSISTANT_MAX_RUNTIME_MS', 90_000, 300_000);
-const MAX_MODEL_CALLS = positiveEnvNumber('ASSISTANT_MAX_MODEL_CALLS', 5, 100);
+const MAX_MODEL_CALLS = positiveEnvNumber('ASSISTANT_MAX_MODEL_CALLS', 50, 100);
 const MAX_TOOL_ROUNDS = positiveEnvNumber('ASSISTANT_MAX_TOOL_ROUNDS', 4, 20);
 const MAX_TOOL_CALLS = positiveEnvNumber('ASSISTANT_MAX_TOOL_CALLS', 12, 100);
-const MAX_RUN_TOKENS = positiveEnvNumber('ASSISTANT_MAX_TOKENS', 8_192, 256_000);
+const MAX_RUN_TOKENS = positiveEnvNumber('ASSISTANT_MAX_TOKENS', 16_384, 256_000);
 const MAX_RUN_COST_USD = positiveEnvNumber('ASSISTANT_MAX_ESTIMATED_COST_USD', 0.10, 10);
 // DeepSeek's published peak cache-miss/output rates are used as an upper-bound
 // estimate. The provider rates page is intentionally centralized and replaceable:
@@ -1173,8 +1174,10 @@ async function executeCoordinatedRun({ run, user, role, guestId, contracts, cont
     .run(JSON.stringify(orchestration), JSON.stringify({ selectedCandidateIds, coordinatorError,
       coordinatorStatus: orchestration.coordinatorStatus, selectionSource, fallbackSource: orchestration.fallbackSource,
       selectionValidation }), now(), run.id);
+  const profile = await guestProfile(guestId);
+  const disclosure = healthDisclosure(profile?.health_profile, profile?.health_profile_version || 0, guestId);
   const reply = deterministicGraphReply({ candidates: finalCandidates, selectedIds: selectedCandidateIds,
-    gaps, targetDate: date, executionMode, coordinatorError, fallbackSource });
+    gaps, targetDate: date, executionMode, coordinatorError, fallbackSource }) + '\n' + disclosure.text;
   const completedChildren = results.filter(result => result.run?.status === 'completed').length;
   const status = completedChildren > 0 || contracts.length === 0 ? 'completed' : 'failed';
   const errorCode = status === 'failed' ? (gaps[0]?.errorCode || 'AGENT_GRAPH_EMPTY') : null;
@@ -1184,7 +1187,7 @@ async function executeCoordinatedRun({ run, user, role, guestId, contracts, cont
     diagnostic: { kind: 'graph_final_response', coordinatorStatus: coordinatorError ? 'failed' : 'completed',
       selectionSource, fallbackSource: coordinatorError ? fallbackSource : null,
       finalAdoptedCandidateIds: selectedCandidateIds },
-    sources: candidateSources(...finalCandidates.map(item => item.sourceIds)), startedAt: now(), completedAt: now(), durationMs: totalDurationMs });
+    sources: candidateSources([disclosure.source], ...finalCandidates.map(item => item.sourceIds)), startedAt: now(), completedAt: now(), durationMs: totalDurationMs });
   await finishRun(run.id, { status, output: reply, errorCode, live: executionMode === 'live', executionMode,
     model: parentUsage.model, provider: parentUsage.provider, inputTokens: parentUsage.inputTokens,
     outputTokens: parentUsage.outputTokens, estimatedCost: parentUsage.estimatedCostUsd,
@@ -1669,6 +1672,31 @@ export async function chatWithAssistant({ user, role: requestedRole, sessionId, 
       : Number(run.is_live) === 1 ? '真实模型服务' : '安全引导模式', status: run.status,
     sources: (await getAssistantRun({ user, role, runId: run.id })).sources
   };
+}
+
+export async function getAgentStatus({ user, guestId }) {
+  const role = resolveRole(user, user.role);
+  if (role === 'guest') guestId = guestId ?? user.id;
+  if (guestId !== undefined) await authorizeGuestAccess(user, guestId);
+  const latest = await db.prepare(`SELECT r.id FROM agent_runs r JOIN assistant_sessions s ON s.id=r.session_id
+    WHERE r.actor_id=? AND r.assistant_role=? AND r.parent_run_id IS NULL
+    ${guestId === undefined ? '' : 'AND s.related_guest_id=?'} ORDER BY r.created_at DESC,r.id DESC LIMIT 1`)
+    .get(user.id, role, ...(guestId === undefined ? [] : [guestId]));
+  const run = latest ? await getAssistantRun({ user, role, runId: latest.id }) : null;
+  const state = collaborationState(run);
+  const attempts = run?.modelUsage?.filter(item => item.requestAttempted) || [];
+  const lastAttempt = [...attempts].sort((a,b) => String(a.providerResponseReceivedAt || a.startedAt).localeCompare(String(b.providerResponseReceivedAt || b.startedAt))).at(-1);
+  const health = !endpointConfigured() ? 'unconfigured' : !lastAttempt ? 'unknown' : lastAttempt.status === 'completed' ? 'last_request_succeeded' : 'last_request_failed';
+  const events = run ? [
+    { agent: '康养管家', action: state, detail: run.reply || '任务正在执行', state: state === 'completed' ? 'done' : state, runId: run.runId },
+    ...(run.collaboration?.agents || []).map(agent => ({ agent: agent.name || agent.agentId,
+      action: agent.status, detail: `${agent.tools?.length || 0} 条实际工具记录${agent.errorCode ? ' · ' + agent.errorCode : ''}`,
+      state: agent.status === 'completed' ? 'done' : agent.status, runId: agent.runId }))
+  ] : [{ agent: '康养管家', action: '尚未运行', detail: '当前授权范围内没有实际运行记录', state: 'not_run' }];
+  return { configuration: { configured: endpointConfigured(), model: assistantStatus().model },
+    serviceHealth: { state: health, checkedAt: lastAttempt?.providerResponseReceivedAt || null, basis: '最近实际模型请求；读取状态不会探测服务' },
+    state, run, agents: events, mode: endpointConfigured() ? '模型已配置' : '安全引导模式',
+    humanGate: '涉及健康风险的建议由工作人员最终确认' };
 }
 
 export async function getAssistantRun({ user, role: requestedRole, runId }) {
