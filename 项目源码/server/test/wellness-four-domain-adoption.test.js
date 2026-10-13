@@ -1,0 +1,77 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import {recordedProvider} from '../../scripts/bugfix-stage3b/recorded-provider.js';
+Object.assign(process.env,{DB_DRIVER:'sqlite',DB_PATH:':memory:',DEMO_SEED:'1',ENVIRONMENT_MODE:'unavailable',ENVIRONMENT_LIVE:'0',ASSISTANT_MODEL_SOURCE:'recorded_fixture',BUSINESS_CLOCK_NOW:'2030-01-01T00:00:00.000Z'});
+const model=await recordedProvider();Object.assign(process.env,{LLM_BASE_URL:model.url,LLM_API_KEY:'local-fixture-only',LLM_MODEL:'local-recorded-fixture'});
+const {app}=await import('../src/app.js');const {db,transaction,hashPassword,now}=await import('../src/db.js');
+await (await import('../src/demo-team.js')).initializeDemoTeam({database:db,transact:transaction,hashPassword,stamp:now()});
+await (await import('../../scripts/bugfix-stage2/catalog-fixture.js')).prepareSyntheticIndoorExercise();
+const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
+const base=`http://127.0.0.1:${server.address().port}/api`,tokens={};
+test.after(async()=>{await new Promise(resolve=>server.close(resolve));await model.close();await db.close()});
+async function call(role,url,method='GET',body,expected=200,key){const r=await fetch(base+url,{method,headers:{'Content-Type':'application/json',...(tokens[role]?{Authorization:`Bearer ${tokens[role]}`}:{}) ,...(key?{'Idempotency-Key':key}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});const data=await r.json();assert.equal(r.status,expected,`${url}: ${JSON.stringify(data)}`);return data;}
+let guestId,run,body,draft,revised,therapy,exercise;
+test('fixture graph persists four domains through native adoption without running another graph or writing bookings',async()=>{
+  for(const [role,username] of [['admin','admin_demo'],['clinician','staff_demo']])tokens[role]=(await call(null,'/auth/login','POST',{username,password:'staff2026',role:'staff'})).token;
+  const registered=await call(null,'/auth/register','POST',{name:'合成四域采纳客人',phone:'19900007411',password:'Synthetic-stage3b-only-123',confirmPassword:'Synthetic-stage3b-only-123'},201);guestId=registered.user.id;tokens.guest=registered.token;
+  await call('admin',`/dean/guests/${guestId}/stay`,'PATCH',{roomNo:'合成房间',checkIn:'2030-01-01',checkOut:'2030-01-04',stayPlan:'three_night'});
+  const clinician=(await call('admin','/dean/staff')).find(row=>row.username==='staff_demo');await call('admin',`/dean/guests/${guestId}/assignments`,'POST',{staffId:clinician.id},201);
+  const none={status:'none',items:[]};const intake=await call('guest','/me/health-intakes','POST',{baseProfileVersion:0,profile:{chronic:none,medications:none,allergies:none,dietaryRestrictions:none,mobility:{status:'independent',details:'可独立行动'},sleep:{status:'reported',details:'睡眠正常'},skin:{status:'reported',details:'皮肤完整'},audienceTags:none}},201);
+  await call('clinician',`/staff/health-intakes/${intake.pendingIntakes[0].id}/confirm`,'POST',{baseProfileVersion:0});
+  for(const project of ['stage2-indoor-exercise','project-sea-mud'])await call('guest',`/projects/${project}/slots?date=2030-01-02`);
+  const result=await call('guest','/assistant/chat','POST',{role:'guest',text:'请从理疗、营养、运动和心理陪伴四方面一起整理明天的室内建议',clientRequestId:'local-four-domain'});
+  run=await call('guest',`/assistant/runs/${result.runId}?role=guest`);assert.equal(run.executionMode,'recorded_fixture');assert.equal(run.collaboration.agents.length,4);assert.equal(run.modelCallCount,9);
+  body={action:'adopt_candidate',sourceRunId:run.runId,sessionId:run.sessionId,selectedCandidateIds:run.collaboration.finalAdoptedCandidateIds};
+  draft=await call('guest','/me/therapy-drafts','POST',body,201,'local-adoption');
+  assert.equal(draft.reviewStatus,'pending_review');assert.equal(draft.reviewThreadId,draft.draftId);assert.equal(draft.evidence.domainAgents.length,4);
+  assert.deepEqual(new Set(draft.evidence.selectedSuggestions.map(item=>item.domain)),new Set(['physio','nutrition','exercise','psychology']));
+  assert.ok(draft.items.some(item=>item.evidence.resource?.audioUrl&&item.type==='rest'));
+  exercise=draft.items.find(item=>item.type==='activity'&&item.candidateId==='stage2-indoor-exercise');therapy=draft.items.find(item=>item.type==='activity'&&item.candidateId==='project-sea-mud');assert.ok(exercise&&therapy);
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM reservations WHERE guest_id=?').get(guestId)).n,0);
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM agent_runs WHERE actor_id=?').get(guestId)).n,5);
+  assert.equal((await call('guest','/me/therapy-drafts','POST',body,200,'local-adoption')).draftId,draft.draftId);
+  assert.equal((await call('guest','/me/therapy-drafts','POST',{...body,sessionId:'as_'+crypto.randomUUID()},409,'local-adoption')).code,'WELLNESS_ADOPTION_KEY_CONFLICT');
+  await call('guest','/me/therapy-drafts','POST',{...body,selectedCandidateIds:['not-selected']},409,'local-invalid-selection');
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM wellness_drafts WHERE guest_id=?').get(guestId)).n,1);
+});
+test('clinical revision preserves source/version chain; obsolete versions cannot activate',async()=>{
+  const alternatives=await call('clinician',`/staff/therapy-drafts/${draft.draftId}/alternatives?itemId=${exercise.id}`);
+  const original=exercise.sourceIds.filter(source=>source.type==='project_slot').at(-1).id;
+  const choice=alternatives.alternatives.find(slot=>slot.projectName==='合成室内教练指导'&&slot.slotId!==original&&slot.localStart<'10:00');assert.ok(choice);
+  revised=await call('clinician',`/staff/therapy-drafts/${draft.draftId}/revisions`,'PUT',{version:1,edits:[{itemId:exercise.id,slotId:choice.slotId}],reason:'合成医护明确调整室内活动时段'},200,'local-revision');
+  assert.equal(revised.version,2);assert.equal(revised.supersedesDraftId,draft.draftId);assert.equal(revised.reviewThreadId,draft.reviewThreadId);assert.deepEqual(revised.evidence.selectedSuggestions,draft.evidence.selectedSuggestions);
+  assert.equal((await call('guest',`/me/therapy-drafts/${draft.draftId}`)).reviewStatus,'superseded');
+  await call('clinician',`/staff/therapy-drafts/${draft.draftId}/approve`,'POST',{version:1},409,'local-old-approve');
+  await call('guest',`/staff/therapy-drafts/${revised.draftId}/approve`,'POST',{version:2},403,'local-guest-approve');
+});
+test('later closed slot rolls back earlier booking in approval transaction; retry and replay never duplicate capacity',async()=>{
+  const item=revised.items.find(item=>item.candidateId==='project-sea-mud');const slot=item.sourceIds.filter(source=>source.type==='project_slot').at(-1).id;
+  const other=await call(null,'/auth/register','POST',{name:'合成容量占位客人',phone:'19900007412',password:'Synthetic-stage3b-only-123',confirmPassword:'Synthetic-stage3b-only-123'},201);tokens.other=other.token;
+  await call('admin',`/dean/guests/${other.user.id}/stay`,'PATCH',{roomNo:'合成房间',checkIn:'2030-01-01',checkOut:'2030-01-04',stayPlan:'three_night'});
+  const clinician=(await call('admin','/dean/staff')).find(row=>row.username==='staff_demo');await call('admin',`/dean/guests/${other.user.id}/assignments`,'POST',{staffId:clinician.id},201);
+  const none={status:'none',items:[]},intake=await call('other','/me/health-intakes','POST',{baseProfileVersion:0,profile:{chronic:none,medications:none,allergies:none,dietaryRestrictions:none,mobility:{status:'independent',details:'可独立行动'},sleep:{status:'reported',details:'睡眠正常'},skin:{status:'reported',details:'皮肤完整'},audienceTags:none}},201);
+  await call('clinician',`/staff/health-intakes/${intake.pendingIntakes[0].id}/confirm`,'POST',{baseProfileVersion:0});
+  await call('admin',`/admin/projects/project-sea-mud/slots/${slot}`,'PATCH',{capacity:1});const occupied=await call('other','/reservations','POST',{slotId:slot},201,'local-other-capacity');
+  await call('clinician',`/staff/therapy-drafts/${revised.draftId}/approve`,'POST',{version:2},409,'local-full-slot-approval');
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM reservations WHERE guest_id=?').get(guestId)).n,0);
+  assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM reservations WHERE slot_id=? AND status='confirmed'").get(slot)).n,1);
+  await call('other',`/reservations/${occupied.reservation.id}`,'DELETE');
+  await call('admin',`/admin/projects/project-sea-mud/slots/${slot}`,'PATCH',{closed:true});
+  await call('clinician',`/staff/therapy-drafts/${revised.draftId}/approve`,'POST',{version:2},409,'local-approval');
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM reservations WHERE guest_id=?').get(guestId)).n,0);
+  assert.equal((await call('guest',`/me/therapy-drafts/${revised.draftId}`)).reviewStatus,'pending_review');
+  assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM wellness_review_events WHERE guest_id=? AND action='approved_after_revision'").get(guestId)).n,0);
+  await call('admin',`/admin/projects/project-sea-mud/slots/${slot}`,'PATCH',{closed:false});
+  const approved=await call('clinician',`/staff/therapy-drafts/${revised.draftId}/approve`,'POST',{version:2},200,'local-approval');assert.equal(approved.reviewStatus,'active');assert.equal(approved.reservations.length,2);
+  const replay=await call('clinician',`/staff/therapy-drafts/${revised.draftId}/approve`,'POST',{version:2},200,'local-approval');assert.equal(replay.replayed,true);
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM reservations WHERE guest_id=?').get(guestId)).n,2);
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM agent_runs WHERE actor_id=?').get(guestId)).n,5);
+});
+
+test('expired source session cannot create a fresh adoption but its existing immutable draft remains readable',async()=>{
+  await db.prepare('UPDATE assistant_sessions SET expires_at=? WHERE id=?').run('2029-12-31T23:00:00.000Z',run.sessionId);
+  const rejected=await call('guest','/me/therapy-drafts','POST',body,409,'local-expired-source');assert.equal(rejected.code,'WELLNESS_ADOPTION_SOURCE_EXPIRED');
+  assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM wellness_drafts WHERE guest_id=?').get(guestId)).n,2);
+  assert.equal((await call('guest',`/me/therapy-drafts/${revised.draftId}`)).reviewStatus,'active');
+});

@@ -367,7 +367,7 @@ function GuestView({ section, me, notify, onSaved, go, activeResource, onSelectR
   if (section === 'profile') return <GuestProfile me={me} notify={notify} onSaved={onSaved}/>;
   if (section === 'health') return <GuestHealth me={me}/>;
   if (section === 'advice') return <GuestAdvice me={me}/>;
-  if (section === 'schedule') return <GuestSchedule me={me}/>;
+  if (section === 'schedule') return <GuestSchedule me={me} onSelectResource={onSelectResource}/>;
   if (section === 'projects') return <GuestProjects go={go}/>;
   if (section === 'meals') return <GuestMeals me={me} notify={notify}/>;
   if (section === 'my') return <GuestMy me={me} go={go}/>;
@@ -782,7 +782,7 @@ function ReplanEventCard({ item, onEvaluate, busy }) {
   </article>;
 }
 
-function GuestSchedule({ me }) {
+function GuestSchedule({ me, onSelectResource }) {
   const [timeline, setTimeline] = useState(null);
   const [checkins, setCheckins] = useState([]);
   const [replanEvents, setReplanEvents] = useState([]);
@@ -872,11 +872,13 @@ function GuestSchedule({ me }) {
     return <article className="stage21-draft-card" key={draft.draftId} data-draft-id={draft.draftId}>
       <header><div><span className="eyebrow">WELLNESS DRAFT · VERSION {draft.version}</span><h2>{draft.stayStart} 至 {draft.stayEnd}（离店日不排入）</h2><p>草案编号 {draft.draftId} · 来源运行 {draft.sourceRunId || '未记录'} · {draft.createdAt ? new Date(draft.createdAt).toLocaleString('zh-CN') : '—'}</p></div><span className={`stage21-status ${draft.reviewStatus === 'active' || draft.reviewStatus === 'auto_activated' ? 'active' : draft.reviewStatus === 'returned' ? 'returned' : 'pending'}`}>{draft.reviewStatus === 'active' ? '医护已通过 · 已激活' : draft.reviewStatus === 'auto_activated' ? '低风险自动激活' : draft.reviewStatus === 'returned' ? '已退回 · 请重新生成' : draft.reviewStatus === 'superseded' ? '已有更新版本' : '等待医护审核'}</span></header>
       <div className="stage21-draft-notice">{draft.reviewStatus === 'active' || draft.reviewStatus === 'auto_activated' ? '疗程已激活；真实项目预约会显示在下方日程。' : draft.reviewStatus === 'returned' ? `医护退回原因：${draft.reviewReason || '请联系医护核对'}。请生成新版本。` : draft.reviewStatus === 'superseded' ? '该版本保留供追溯；请查看更新版本。' : '只供本人和医护核对。待审核草案不会预约、点餐或占用时段名额。'}</div>
+      <AdoptedDomainSuggestions evidence={draft.evidence} onSelectResource={onSelectResource}/>
       <div className="stage21-days">{[...byDate.entries()].map(([date, dayItems]) => <section className="stage21-day" key={date}>
         <div className="stage21-day-head"><h3>{date}</h3><span>{dayItems.length} 项 · {dayItems.filter(item => item.type === 'gap').length} 项缺口</span></div>
         <div className="stage21-item-grid">{dayItems.map(item => <article className={`stage21-item ${item.status}`} key={item.id}>
           <div className="stage21-item-top"><span>{item.type === 'meal' ? ({breakfast:'早餐',lunch:'午餐',dinner:'晚餐'})[item.slotKey] || '餐食' : item.type === 'activity' ? ({morning:'上午活动',afternoon:'下午活动',evening:'晚间活动'})[item.slotKey] || '活动' : item.type === 'rest' ? ({morning:'上午安排',afternoon:'下午安排',evening:'晚间安排'})[item.slotKey] || '安排' : '资料缺口'}</span><strong>{item.localStart ? `${item.localStart}–${item.localEnd}` : item.status === 'gap' ? '未安排' : '时间待定'}</strong></div>
           <h4>{item.title}</h4>{item.location && <p className="stage21-item-location">{item.location}</p>}
+          {item.evidence?.resource?.audioUrl && <button type="button" className="outline-btn" onClick={() => onSelectResource?.(item.evidence.resource)}>打开陪伴资源</button>}
           <span className={`stage21-status ${item.status}`}>{({pending_review:'待本人确认',mandatory_review:'必须人工核对',sampled_review:'抽样人工核对',pending_confirmation:'环境待确认',proposed:'建议休息',gap:'信息缺口',excluded:'已排除'})[item.status] || item.status}</span>
           <p className="stage21-item-reason">{item.reason}</p>
           {item.ruleIds?.length > 0 && <p className="stage21-rule-list"><b>规则：</b>{item.ruleIds.join('、')}</p>}
@@ -2216,6 +2218,20 @@ function StaffDailySchedule({ jobType, notify }) {
   }) : <Empty text="当天没有已分配的服务时段。"/>}<small className="stage26-muted">{data?.privacyNote}</small></section></div>;
 }
 
+function AdoptedDomainSuggestions({ evidence, onSelectResource }) {
+  if (!evidence?.adoption || !evidence.selectedSuggestions?.length) return null;
+  const names = { physio:'理疗', nutrition:'营养', exercise:'运动', psychology:'心理陪伴' };
+  return <section className="surface" data-testid="adopted-domain-suggestions"><SectionHead title="本次采纳的领域建议"/>
+    <p>同源运行 {evidence.parentRunId} · 会话 {evidence.sessionId || evidence.adoption.sessionId}</p>
+    <p>餐食仅为计划，陪伴资源不需预约；活动以医护审核后关联的真实预约为准。</p>
+    {evidence.selectedSuggestions.map(suggestion => <article key={suggestion.candidateId} data-suggestion-domain={suggestion.domain}>
+      <strong>{names[suggestion.domain] || suggestion.domain} · {suggestion.title}</strong><p>{suggestion.reason}</p>
+      {suggestion.domain === 'psychology' && suggestion.details?.audioUrl && onSelectResource && <button type="button" className="outline-btn" onClick={() => onSelectResource({id:suggestion.details.resourceId,title:suggestion.title,audioUrl:suggestion.details.audioUrl,durationSeconds:suggestion.details.durationSeconds,type:'guided'})}>打开陪伴资源</button>}
+      <details><summary>领域来源</summary><p>候选 {suggestion.candidateId} · 专业运行 {suggestion.childRunId}</p>{suggestion.sourceIds.map((source,index) => <p key={`${source.type}:${source.id}:${index}`}>{source.label || source.type} · {source.type}:{source.id}</p>)}</details>
+    </article>)}
+  </section>;
+}
+
 function WellnessReviewWorkbench({ notify, initialDraftId = '', onInitialDraftOpened }) {
   const [mode, setMode] = useState('pending_review');
   const [guestId, setGuestId] = useState('');
@@ -2336,14 +2352,15 @@ function WellnessReviewWorkbench({ notify, initialDraftId = '', onInitialDraftOp
     <div className="wellness-review-layout">
       <section className="surface wellness-review-queue" aria-busy={loading}>
         <div className="wellness-review-list-head"><strong>{mode === 'pending_review' ? '待审核疗程' : '已处理疗程'}</strong><span>{items.length} 条</span></div>
-        {loading ? <QueryState text="正在读取授权范围内的审核记录…"/> : items.length ? items.map(item => <button type="button" key={item.draftId} className={`wellness-review-row ${selectedId === item.draftId ? 'selected' : ''}`} onClick={() => openDetail(item.draftId)}>
-          <span className="wellness-review-avatar">{initials(item.guestName)}</span><span className="wellness-review-row-copy"><strong>{item.guestName} <small>{item.roomNo || '未分配房间'}</small></strong><span>版本 {item.version} · {item.stayStart} 至 {item.stayEnd}</span><span>{item.summary || '暂无条目摘要'}</span><small>{item.generatedAt ? new Date(item.generatedAt).toLocaleString('zh-CN') : '生成时间未记录'} · {item.itemCount} 项</small></span><span className={`wellness-risk ${item.riskLevel}`}>{item.riskLevel === 'high' ? '强制复核' : item.riskLevel === 'sampled' ? '抽样' : '常规'}</span>
+        {loading ? <QueryState text="正在读取授权范围内的审核记录…"/> : items.length ? items.map(item => <button type="button" key={item.draftId} data-draft-id={item.draftId} className={`wellness-review-row ${selectedId === item.draftId ? 'selected' : ''}`} onClick={() => openDetail(item.draftId)}>
+          <span className="wellness-review-avatar">{initials(item.guestName)}</span><span className="wellness-review-row-copy"><strong>{item.guestName} <small>{item.roomNo || '未分配房间'}</small></strong><span>版本 {item.version} · {item.stayStart} 至 {item.stayEnd}</span><small>草案 {item.draftId} · 来源运行 {item.sourceRunId || '未记录'}</small><span>{item.summary || '暂无条目摘要'}</span><small>{item.generatedAt ? new Date(item.generatedAt).toLocaleString('zh-CN') : '生成时间未记录'} · {item.itemCount} 项</small></span><span className={`wellness-risk ${item.riskLevel}`}>{item.riskLevel === 'high' ? '强制复核' : item.riskLevel === 'sampled' ? '抽样' : '常规'}</span>
         </button>) : <div className="wellness-review-empty"><Empty text={mode === 'pending_review' ? '当前没有待审核疗程' : '没有符合筛选条件的已完成记录'}/></div>}
       </section>
       <section className="wellness-review-detail" data-testid="wellness-review-detail" data-draft-id={detail?.draftId || ''} aria-busy={detailLoading || Boolean(busy)}>
         {detailLoading ? <div className="surface"><QueryState text="正在读取疗程版本、证据与审核历史…"/></div> : detail ? <>
           <section className="surface wellness-review-detail-head"><div><span className="eyebrow">VERSION {detail.version} · {detail.draftId}</span><h2>{detail.guestName} · {detail.stayStart} 至 {detail.stayEnd}</h2><p>来源父运行 {detail.evidence?.parentRunId || detail.sourceRunId || '未记录'} · {detail.createdAt ? new Date(detail.createdAt).toLocaleString('zh-CN') : '生成时间未记录'}</p></div><span className={`wellness-review-status ${detail.reviewStatus}`}>{detail.reviewStatus === 'pending_review' ? '待审核' : detail.reviewStatus === 'active' ? '已激活' : detail.reviewStatus === 'auto_activated' ? '自动激活' : detail.reviewStatus === 'returned' ? '已退回' : detail.reviewStatus === 'corrected' ? '已纠正' : '已替代'}</span></section>
           {detail.reviewReason && <div className="wellness-review-reason"><b>最近审核原因：</b>{detail.reviewReason}</div>}
+          <AdoptedDomainSuggestions evidence={detail.evidence}/>
           <section className="surface"><div className="wellness-review-section-head"><SectionHead title="逐项证据"/><span>{detail.items?.length || 0} 项</span></div>
             {(detail.items || []).map(item => <article className="wellness-evidence-item" key={item.id}>
               <div className="wellness-evidence-title"><div><span>{item.type === 'activity' ? '活动' : item.type === 'meal' ? '餐食建议' : item.type === 'gap' ? '资料缺口' : '休息'}</span><h3>{item.title}</h3></div><b>{item.date} {item.localStart ? `${item.localStart}–${item.localEnd}` : ''}</b></div>
@@ -3321,7 +3338,10 @@ function AssistantWidget({ role = 'public', user = null, guestId = '', onAuthExp
     const selectedCandidateIds = Array.isArray(collaboration?.finalAdoptedCandidateIds)
       ? collaboration.finalAdoptedCandidateIds : collaboration?.selectedCandidateIds;
     if (!sessionId || !parentRunId || !Array.isArray(selectedCandidateIds) || !selectedCandidateIds.length) return;
-    const key = `assistant-adopt:${parentRunId}:${selectedCandidateIds.join(',')}`;
+    const encoded = new TextEncoder().encode([...selectedCandidateIds].sort().join('\n'));
+    const digest = await crypto.subtle.digest('SHA-256', encoded);
+    const suffix = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2,'0')).join('').slice(0,48);
+    const key = `adopt:${parentRunId}:${suffix}`;
     setAdviceSaving(true);
     setAdvicePublishNotice('正在保存已选方案…');
     try {

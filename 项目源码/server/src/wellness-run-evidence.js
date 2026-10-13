@@ -268,10 +268,15 @@ export function inspectWellnessCollaboration(run, { expectedExerciseDate } = {})
 
   const agentList = Array.isArray(collaboration.agents) ? collaboration.agents : [];
   const agents = new Map(agentList.map(agent => [agent.agentId, agent]));
-  for (const [agentId, tools] of [
+  const requiredAgents = [
     ['domain.nutrition', ['get_nutrition_context', 'get_nutrition_knowledge']],
     ['domain.exercise', ['get_exercise_context', 'get_exercise_knowledge']]
-  ]) {
+  ];
+  if (agents.has('domain.physio') || agents.has('domain.psychology')) {
+    requiredAgents.push(['domain.physio', ['get_physio_context', 'get_therapy_knowledge']],
+      ['domain.psychology', ['get_psychology_context', 'get_companionship_knowledge']]);
+  }
+  for (const [agentId, tools] of requiredAgents) {
     const agent = agents.get(agentId);
     if (!agent) return invalid('required_domain_agent_missing', { agentId });
     if (agent.status !== 'completed') return invalid('domain_agent_not_completed', { agentId,
@@ -296,8 +301,8 @@ export function inspectWellnessCollaboration(run, { expectedExerciseDate } = {})
   const candidates = (collaboration.candidates || []).filter(candidate => candidate.status === 'adopted'
     && selectedIds.has(candidate.candidateId));
   const belongsToValidRun = candidate => {
-    const agentId = candidate.domain === 'nutrition' ? 'domain.nutrition'
-      : candidate.domain === 'exercise' ? 'domain.exercise' : '';
+    const agentId = ['nutrition', 'exercise', 'physio', 'psychology'].includes(candidate.domain)
+      ? `domain.${candidate.domain}` : '';
     return Boolean(agentId && agents.get(agentId)?.candidateIds.includes(candidate.candidateId));
   };
   const safe = candidates.filter(belongsToValidRun);

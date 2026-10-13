@@ -28,6 +28,19 @@ const guestLock = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
 
 function hash(value) { return crypto.createHash('sha256').update(value).digest('hex'); }
 
+export function wellnessAdoptionFingerprint(input) {
+  return hash(JSON.stringify({ sourceRunId: input.sourceRunId, sessionId: input.sessionId,
+    selectedCandidateIds: [...new Set(input.selectedCandidateIds)].sort() }));
+}
+
+function checkAdoptionReplay(row, input) {
+  const previous = json(row.evidence_json, {}).adoption;
+  if (!previous || !Array.isArray(previous.selectedCandidateIds)
+    || wellnessAdoptionFingerprint(previous) !== wellnessAdoptionFingerprint(input)) {
+    throw new AppError(409, 'WELLNESS_ADOPTION_KEY_CONFLICT', '同一采纳标识不能用于不同来源、会话或候选');
+  }
+}
+
 function dateShift(date, days) {
   const value = new Date(`${date}T12:00:00Z`);
   value.setUTCDate(value.getUTCDate() + days);
@@ -77,10 +90,12 @@ function decodeDraft(row, items = []) {
     reviewReason: row.review_reason || '',
     reviewedAt: row.reviewed_at || null,
     supersedesDraftId: row.supersedes_draft_id || null,
+    reviewThreadId: row.review_thread_id || row.id,
     active: row.status === 'active',
     reviewPolicy: { mode: row.review_policy, samplePercent: Number(row.review_sample_percent || 0) },
     evidence,
     parentRunId: evidence.parentRunId || row.source_run_id || null,
+    sessionId: evidence.sessionId || evidence.adoption?.sessionId || null,
     selectedCandidateIds: Array.isArray(evidence.coordinator?.selectedCandidateIds)
       ? evidence.coordinator.selectedCandidateIds : [],
     createdAt: row.created_at,
@@ -223,7 +238,7 @@ function candidateIdsByMeal(candidates) {
   return map;
 }
 
-async function activityCandidates(candidates) {
+async function activityCandidates(candidates, preserveSelected = false) {
   const rank = activityTag => activityTag === 'swimming_training' ? 0
     : activityTag === 'walking' ? 1 : activityTag === 'group_exercise' ? 2 : 3;
   const projects = [];
@@ -231,8 +246,9 @@ async function activityCandidates(candidates) {
     const project = await getProject(candidate.details.projectId);
     if (project) projects.push({ candidate, project });
   }
-  return projects.sort((left, right) => rank(left.project.activityTag) - rank(right.project.activityTag)
-    || left.candidate.candidateId.localeCompare(right.candidate.candidateId)).slice(0, MAX_CANDIDATE_PROJECTS);
+  const ranked = projects.sort((left, right) => rank(left.project.activityTag) - rank(right.project.activityTag)
+    || left.candidate.candidateId.localeCompare(right.candidate.candidateId));
+  return preserveSelected ? ranked : ranked.slice(0, MAX_CANDIDATE_PROJECTS);
 }
 
 function matchedRules(availability) {
@@ -322,14 +338,14 @@ function existingMenuByMeal(menu) {
   return result;
 }
 
-async function mealItemsForDate({ guestId, date, nutritionDate, nutritionCandidates, agent, healthRisk, policy }) {
+async function mealItemsForDate({ guestId, date, nutritionDate, nutritionCandidates, agent, healthRisk, policy, adoption = false }) {
   const result = [];
   let menu = null;
   try { menu = await getGuestMenu(guestId, date); }
   catch { menu = null; }
   const actual = existingMenuByMeal(menu);
   for (const meal of MEALS) {
-    const published = actual.get(meal.key);
+    const published = adoption ? null : actual.get(meal.key);
     if (published) {
       const source = [{ type: 'meal_menu', id: String(menu.menu.id), label: `${date} 已发布餐单` },
         { type: 'dish', id: String(published.dish.id), label: published.dish.name }];
@@ -534,31 +550,77 @@ async function activityItemsForDate({ guestId, date, candidates, agent, sourceDa
 }
 
 async function buildDraftItems({ guestId, profile, startDate, dayCount, candidates, agents, dateByAgent, exerciseInventory,
-  parentRunId, policy }) {
+  parentRunId, policy, adoption = false }) {
   const pendingIntakes = await db.prepare(`SELECT structured_json FROM health_intakes
     WHERE guest_id=? AND status='pending' ORDER BY revision DESC LIMIT 50`).all(guestId);
   const healthRisk = hardHealthState(profile, pendingIntakes);
   const nutritionAgent = agents.get('domain.nutrition');
   const exerciseAgent = agents.get('domain.exercise');
   const nutritionByMeal = candidateIdsByMeal(candidates);
-  const activities = await activityCandidates(candidates);
+  const activities = await activityCandidates(candidates, adoption);
   const items = [];
   for (let offset = 0; offset < dayCount; offset += 1) {
     const date = dateShift(startDate, offset);
     items.push(...await mealItemsForDate({ guestId, date,
       nutritionDate: dateByAgent['domain.nutrition'], nutritionCandidates: nutritionByMeal,
-      agent: nutritionAgent, healthRisk, policy }));
-    items.push(...await activityItemsForDate({ guestId, date, candidates: activities,
+      agent: nutritionAgent, healthRisk, policy, adoption }));
+    items.push(...await activityItemsForDate({ guestId, date, candidates: adoption && date !== dateByAgent['domain.exercise'] ? [] : activities,
       agent: exerciseAgent, sourceDate: dateByAgent['domain.exercise'], inventoryEvidence: exerciseInventory,
       parentRunId, healthRisk, policy }));
   }
+  if (adoption) items.push(...await adoptedDomainItems({ guestId, date: dateByAgent['domain.exercise'], candidates, agents, items }));
   return items;
+}
+
+async function adoptedDomainItems({ guestId, date, candidates, agents, items }) {
+  const result = [];
+  const used = items.filter(item => item.date === date && item.type === 'activity')
+    .map(item => ({ start: localMinutes(item.localStart), end: localMinutes(item.localEnd) }));
+  for (const candidate of candidates.filter(item => ['physio', 'psychology'].includes(item.domain))) {
+    const agent = agents.get(`domain.${candidate.domain}`);
+    const sources = sourceRefs(candidate, agent.runId);
+    const slotKey = `${candidate.domain}:${hash(candidate.candidateId).slice(0, 12)}`;
+    const evidence = { domain: candidate.domain, childRunId: agent.runId, sourceCandidateId: candidate.candidateId,
+      readOnlySuggestion: true, ...(candidate.domain === 'psychology' ? { resource: {
+        id: candidate.details?.resourceId, title: candidate.title, audioUrl: candidate.details?.audioUrl,
+        durationSeconds: candidate.details?.durationSeconds, type: 'guided'
+      } } : {}) };
+    if (candidate.domain === 'psychology') {
+      result.push(makeItem({ date, slotKey, type: 'rest', candidateId: candidate.candidateId, title: candidate.title,
+        status: 'proposed', reason: '已采纳的心理陪伴资源，可打开现有播放器；不是课程预约或医疗处方。',
+        sourceIds: sources, evidence }));
+      continue;
+    }
+    const project = await getProject(candidate.details?.projectId || candidate.candidateId);
+    const rows = project ? await db.prepare(`SELECT s.*,p.name AS project_name,p.location,p.is_demo AS project_is_demo,
+      p.active AS project_active,(SELECT COUNT(*) FROM reservations r WHERE r.slot_id=s.id AND r.status='confirmed') AS booked
+      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.project_id=? AND s.business_date=? ORDER BY s.starts_at`)
+      .all(project.id, date) : [];
+    let selected;
+    for (const row of rows) {
+      const checked = await evaluateExistingDraftSlot({ project, row, guestId });
+      const start = localMinutes(checked.slot.localStart), end = localMinutes(checked.slot.localEnd);
+      if (!checked.available || start === null || end === null || overlapsUsed(start, end, used)) continue;
+      selected = checked;used.push({start,end});break;
+    }
+    result.push(makeItem({ date, slotKey, type: selected ? 'activity' : 'gap', candidateId: candidate.candidateId,
+      title: candidate.title, status: selected ? 'mandatory_review' : 'gap',
+      reason: selected ? '已采纳理疗建议及真实可用时段，须负责医护审核后才预约。'
+        : '保留本次理疗建议与来源；缺少该日期可用且不冲突的真实时段，不生成预约。',
+      localStart: selected?.slot.localStart, localEnd: selected?.slot.localEnd, location: project?.location,
+      sourceIds: [...sources, ...(selected ? [{type:'project_slot',id:selected.slot.id,label:`${date} ${selected.slot.localStart} 理疗时段`}] : [])],
+      environmentSnapshotId: selected?.environment?.environmentSnapshotId || null,
+      evidence: { ...evidence, ...(selected ? { selectedSlotId: selected.slot.id, availabilitySource: 'activity_slots',
+        rules: ruleEvidence(selected), availabilityStatus: selected.status } : {}) } }));
+  }
+  return result;
 }
 
 function draftEvidence(run, collaboration, agents, dateByAgent, candidates, policy, planningCandidates = candidates,
   emptyCandidateDomains = {}) {
   return {
     parentRunId: run.runId,
+    sessionId: run.sessionId,
     executionMode: run.executionMode,
     model: run.model || null,
     provider: run.provider || null,
@@ -568,7 +630,11 @@ function draftEvidence(run, collaboration, agents, dateByAgent, candidates, poli
       validation: collaboration.selectionValidation,
       selectedCandidateIds: collaboration.finalAdoptedCandidateIds
     },
-    domainAgents: [...agents.values()].filter(agent => ['domain.nutrition', 'domain.exercise'].includes(agent.agentId)).map(agent => ({
+    selectedSuggestions: candidates.map(candidate => ({ candidateId: candidate.candidateId, domain: candidate.domain,
+      title: candidate.title, status: candidate.status, reason: candidate.reason,
+      childRunId: agents.get(`domain.${candidate.domain}`)?.runId || null,
+      sourceIds: candidate.sourceIds || [], details: candidate.details || {} })),
+    domainAgents: [...agents.values()].map(agent => ({
       runId: agent.runId, agentId: agent.agentId, model: agent.model, provider: agent.provider,
       executionMode: agent.executionMode, status: agent.status, candidateIds: agent.candidateIds,
       tools: agent.tools, sources: agent.sources.map(source => ({ type: source.type, id: String(source.id), label: source.label || source.type })),
@@ -692,9 +758,18 @@ export async function adoptWellnessDraft({ user, body, requestKey }) {
   }
   const input = validateAdoptionBody(body);
   const existing = await db.prepare('SELECT * FROM wellness_drafts WHERE guest_id=? AND request_key=?').get(user.id, requestKey);
-  if (existing) return { ...(await getWellnessDraft(user.id, existing.id)), deduplicated: true };
+  if (existing) {
+    checkAdoptionReplay(existing, input);
+    return { ...(await getWellnessDraft(user.id, existing.id)), deduplicated: true };
+  }
 
   const run = await getAssistantRun({ user, role: 'guest', runId: input.sourceRunId });
+  const sourceSession = await db.prepare('SELECT status,expires_at FROM assistant_sessions WHERE id=?').get(run.sessionId);
+  const expiry = sourceSession?.expires_at instanceof Date ? sourceSession.expires_at.getTime()
+    : Date.parse(String(sourceSession?.expires_at || '').replace(' ', 'T'));
+  if (!sourceSession || sourceSession.status !== 'active' || !Number.isFinite(expiry) || expiry <= Date.parse(now())) {
+    throw new AppError(409, 'WELLNESS_ADOPTION_SOURCE_EXPIRED', '来源会话已过期，请先重新评估');
+  }
   const runSelection = validateWellnessAdoptionSelection({ sessionId: input.sessionId, runSessionId: run.sessionId,
     runStatus: run.status, selectedCandidateIds: input.selectedCandidateIds,
     candidateIds: run.collaboration?.candidates?.map(candidate => candidate.candidateId),
@@ -722,7 +797,9 @@ export async function adoptWellnessDraft({ user, body, requestKey }) {
     throw new AppError(409, 'WELLNESS_ADOPTION_SOURCE_INVALID', '来源运行缺少可核对的协作证据', { evidenceRejection: validated.rejection });
   }
   const selectedIds = new Set(runSelection.selectedCandidateIds);
-  const candidates = (collaboration.candidates || []).filter(candidate => selectedIds.has(candidate.candidateId));
+  const candidates = validated.candidates.filter(candidate => selectedIds.has(candidate.candidateId))
+    .map(candidate => ({ ...candidate, coordinatorSelected: true }));
+  if (candidates.length !== selectedIds.size) throw new AppError(409, 'WELLNESS_ADOPTION_SOURCE_INVALID', '候选缺少对应专业智能体来源');
   if (!candidates.length) throw new AppError(409, 'WELLNESS_ADOPTION_CANDIDATE_REQUIRED', '没有可采纳的候选');
 
   const profile = await guestProfile(user.id);
@@ -732,13 +809,16 @@ export async function adoptWellnessDraft({ user, body, requestKey }) {
   if (!isDateOnly(startDate) || !isDateOnly(endDate) || endDate <= startDate) {
     throw new AppError(409, 'WELLNESS_STAY_INVALID', '请先由工作人员维护有效入住日期');
   }
+  if (Object.values(dateByAgent).some(date => date < systemBusinessClock.dateKey() || date < startDate || date >= endDate)) {
+    throw new AppError(409, 'WELLNESS_ADOPTION_DATE_STALE', '来源建议日期已过期或不在当前入住区间，请重新评估');
+  }
   const dayCount = Math.min(dateDistance(startDate, endDate), MAX_STAY_DAYS);
   if (dayCount < 1) throw new AppError(409, 'WELLNESS_STAY_INVALID', '入住区间没有可规划日期');
   const policy = loadReviewPolicy();
   const selectedPlanning = validated.planningCandidates.filter(candidate => selectedIds.has(candidate.candidateId));
   const items = await buildDraftItems({ guestId: user.id, profile, startDate, dayCount,
     candidates, agents: validated.agents, dateByAgent, exerciseInventory: validated.exerciseInventory,
-    parentRunId: run.runId, policy });
+    parentRunId: run.runId, policy, adoption: true });
   const evidence = {
     ...draftEvidence(run, collaboration, validated.agents, dateByAgent, candidates, policy,
       selectedPlanning, validated.emptyCandidateDomains),
@@ -751,7 +831,7 @@ export async function adoptWellnessDraft({ user, body, requestKey }) {
   await transaction(async () => {
     await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${guestLock()}`).get(user.id);
     const previous = await db.prepare('SELECT * FROM wellness_drafts WHERE guest_id=? AND request_key=?').get(user.id, requestKey);
-    if (previous) { createdRow = previous; return; }
+    if (previous) { checkAdoptionReplay(previous, input); createdRow = previous; return; }
     const latest = await db.prepare('SELECT COALESCE(MAX(version),0) AS version,MAX(created_at) AS latest_created_at FROM wellness_drafts WHERE guest_id=?').get(user.id);
     const version = Number(latest?.version || 0) + 1;
     const wallClockMs = Date.parse(now());

@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {loadApprovedLlmConfig} from '../resources/load-approved-llm-config.js';
+assert.equal(process.env.DB_DRIVER,'sqlite');
+assert.ok(process.env.DB_PATH?.startsWith('/tmp/haiyu-resource-'));
+assert.equal(process.env.DEMO_SEED,'0');
+const config = await loadApprovedLlmConfig();
+if (!config.configured) throw new Error('APPROVED_MODEL_CONFIG_UNAVAILABLE');
+Object.assign(process.env,config.env);
+const {app} = await import('../../server/src/app.js');
+const {db} = await import('../../server/src/db.js');
+await (await import('../bugfix-stage2/catalog-fixture.js')).prepareSyntheticIndoorExercise();
+const server = app.listen(Number(process.env.PORT),'127.0.0.1',()=>console.log('STAGE3B_READY'));
+let closing=false;
+const close=()=>{if(closing)return;closing=true;server.close(async()=>{await db.close();process.exit(0)})};
+process.once('SIGTERM',close);process.once('SIGINT',close);
