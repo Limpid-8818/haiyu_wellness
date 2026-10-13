@@ -36,7 +36,8 @@ import {
 } from './booking.js';
 import {
   createGuestMealOrder, generateGuestMenu, getGuestMealOrders, getGuestMenu, listDishes,
-  listDietitianMealOrders, replaceMenuItem, updateDietitianOrderStatus
+  listDietitianMealOrders, replaceMenuItem, updateDietitianOrderStatus,
+  getMealRestrictionReview, requestMealRestrictionReview, resolveMealRestrictionReview, reviewDietitianOrder, reviewGuestMenu
 } from './meals.js';
 import {
   createMoodRecord, evaluateMoodFollowups, getMoodResource, getMoodResourceFile, getMoodSummary,
@@ -313,6 +314,35 @@ routes.delete('/api/reservations/:id', auth, async (req, res) => {
 routes.get('/api/schedule', auth, async (req, res) => {
   const guest = await authorizeQueryGuest(req);
   res.json(await listGuestSchedule(guest.id));
+});
+routes.get('/api/meals/restriction-review', auth, async (req, res) => {
+  if (req.user.role !== 'guest') throw new AppError(403, 'GUEST_REQUIRED', '仅客人可查看本人核对');
+  res.json(await getMealRestrictionReview(req.user.id));
+});
+routes.post('/api/meals/restriction-review', auth, async (req, res) => {
+  if (req.user.role !== 'guest') throw new AppError(403, 'GUEST_REQUIRED', '仅客人可转交本人限制');
+  res.json(await requestMealRestrictionReview({ user: req.user, guestId: req.user.id }));
+});
+routes.get('/api/staff/guests/:id/meal-restriction-review', auth, staffOnly, async (req, res) => {
+  await authorizeGuestAccess(req.user, req.params.id);
+  res.json(await getMealRestrictionReview(req.params.id));
+});
+routes.post('/api/staff/guests/:id/meal-restriction-review', auth, staffOnly, async (req, res) => {
+  if (!['clinician', 'dietitian'].includes(jobTypeFor(req.user))) throw new AppError(403, 'CAPABILITY_FORBIDDEN', '仅医护或配餐员可转交');
+  res.json(await requestMealRestrictionReview({ user: req.user, guestId: req.params.id }));
+});
+routes.post('/api/staff/meal-restriction-reviews/:id/resolve', auth, clinicianOnly, async (req, res) => {
+  if (Object.keys(req.body || {}).some(key => !['decisions', 'note'].includes(key))) throw new AppError(400, 'MEAL_REVIEW_INPUT_INVALID', '核对只接受逐项决定和依据');
+  res.json(await resolveMealRestrictionReview({ user: req.user, reviewId: req.params.id, decisions: req.body?.decisions, note: req.body?.note }));
+});
+routes.post('/api/meals/menus/:id/review', auth, async (req, res) => {
+  if (req.user.role !== 'guest') throw new AppError(403, 'GUEST_REQUIRED', '仅客人可核对本人餐位');
+  if (Object.keys(req.body || {}).some(key => key !== 'version')) throw new AppError(400, 'MEAL_REVIEW_INPUT_INVALID', '请提交当前餐单版本');
+  res.json(await reviewGuestMenu({ guestId: req.user.id, menuId: req.params.id, version: req.body?.version }));
+});
+routes.post('/api/staff/meals/orders/:id/review', auth, dietitianOnly, async (req, res) => {
+  if (Object.keys(req.body || {}).some(key => key !== 'note')) throw new AppError(400, 'MEAL_REVIEW_INPUT_INVALID', '请提交复核说明');
+  res.json(await reviewDietitianOrder({ user: req.user, orderId: req.params.id, note: req.body?.note }));
 });
 routes.get('/api/meals/dishes', auth, async (req, res) => {
   if (req.user.role !== 'guest') throw new AppError(403, 'GUEST_REQUIRED', '仅客人可查看个人餐单菜品');
@@ -1322,17 +1352,19 @@ routes.get('/api/staff/guests', auth, staffOnly, async (req, res) => {
   if (!scope.length) return res.json([]);
   const placeholders = scope.map(() => '?').join(',');
   const rows = await db.prepare(`SELECT u.id,u.name,u.phone,gp.room_no AS roomNo,gp.check_in AS checkIn,gp.check_out AS checkOut,
-    gp.chronic_json AS chronicJson,gp.allergies_json AS allergiesJson
+    gp.chronic_json AS chronicJson,gp.allergies_json AS allergiesJson,gp.health_profile_json AS formalJson
     FROM users u LEFT JOIN guest_profiles gp ON gp.user_id=u.id
     WHERE u.role='guest' AND u.status='active' AND u.id IN (${placeholders})
       AND (u.name LIKE ? OR COALESCE(gp.room_no,'') LIKE ?) ORDER BY u.name`).all(...scope, q, q);
-  res.json(rows.map(row => ({
-    ...row,
-    chronic: jsonArray(row.chronicJson || '[]'),
-    allergies: jsonArray(row.allergiesJson || '[]'),
-    chronicJson: undefined,
-    allergiesJson: undefined
-  })));
+  res.json(rows.map(row => {
+    const formal = normalizeHealthProfile(json(row.formalJson, {}));
+    return { ...row,
+      chronic: formal.chronic.status === 'reported' ? formal.chronic.items : [],
+      allergies: formal.allergies.status === 'reported' ? formal.allergies.items : [],
+      chronicStatus: formal.chronic.status, allergiesStatus: formal.allergies.status,
+      chronicJson: undefined, allergiesJson: undefined, formalJson: undefined
+    };
+  }));
 });
 routes.get('/api/staff/guests/:id', auth, staffOnly, async (req, res) => {
   await authorizeGuestAccess(req.user, req.params.id);
