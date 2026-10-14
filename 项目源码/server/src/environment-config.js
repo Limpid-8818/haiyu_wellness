@@ -62,6 +62,10 @@ export function liveEnvironmentConfig(env = process.env) {
   if (!['open-meteo', 'qweather'].includes(tideProvider)) missing.push('ENVIRONMENT_TIDE_PROVIDER (open-meteo or qweather)');
   const latitude = Number(env.ENVIRONMENT_LATITUDE);
   const longitude = Number(env.ENVIRONMENT_LONGITUDE);
+  const coordinatePresent = key => typeof env[key] === 'number' || (typeof env[key] === 'string' && env[key].trim() !== '');
+  let validTimeZone = false;
+  try { if (env.ENVIRONMENT_TIME_ZONE) { new Intl.DateTimeFormat('en-CA', { timeZone: env.ENVIRONMENT_TIME_ZONE }); validTimeZone = true; } } catch {}
+  if (env.ENVIRONMENT_TIME_ZONE && !validTimeZone) missing.push('ENVIRONMENT_TIME_ZONE (invalid time zone)');
   if (env.ENVIRONMENT_LATITUDE && (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)) missing.push('ENVIRONMENT_LATITUDE (must be -90..90)');
   if (env.ENVIRONMENT_LONGITUDE && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)) missing.push('ENVIRONMENT_LONGITUDE (must be -180..180)');
   const coordinatesStatus = env.ENVIRONMENT_COORDINATES_STATUS === 'region-representative'
@@ -69,12 +73,13 @@ export function liveEnvironmentConfig(env = process.env) {
   const institutionLocationConfigured = coordinatesStatus === 'institution-configured'
     && env.ENVIRONMENT_INSTITUTION_LOCATION_CONFIGURED !== '0';
   const locationReady = Boolean(env.ENVIRONMENT_LOCATION_ID && env.ENVIRONMENT_LOCATION_NAME
-    && env.ENVIRONMENT_TIME_ZONE && Number.isFinite(latitude) && latitude >= -90 && latitude <= 90
-    && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180);
+    && validTimeZone && coordinatePresent('ENVIRONMENT_LATITUDE') && Number.isFinite(latitude) && latitude >= -90 && latitude <= 90
+    && coordinatePresent('ENVIRONMENT_LONGITUDE') && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180);
   const missingLocation = ['ENVIRONMENT_LOCATION_ID', 'ENVIRONMENT_LOCATION_NAME', 'ENVIRONMENT_TIME_ZONE']
     .filter(key => !String(env[key] ?? '').trim());
-  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) missingLocation.push('ENVIRONMENT_LATITUDE');
-  if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) missingLocation.push('ENVIRONMENT_LONGITUDE');
+  if (!coordinatePresent('ENVIRONMENT_LATITUDE') || !Number.isFinite(latitude) || latitude < -90 || latitude > 90) missingLocation.push('ENVIRONMENT_LATITUDE');
+  if (!coordinatePresent('ENVIRONMENT_LONGITUDE') || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) missingLocation.push('ENVIRONMENT_LONGITUDE');
+  if (!validTimeZone) missingLocation.push('ENVIRONMENT_TIME_ZONE');
   const missingByDomain = {
     weather: locationReady ? [] : missingLocation,
     tide: tideProvider === 'qweather'

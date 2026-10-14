@@ -10,6 +10,7 @@ import { normalizeHealthProfile } from './health-profile.js';
 import { systemBusinessClock } from './clock.js';
 import { isDateOnly } from './staffing.js';
 import { inspectWellnessCollaboration } from './wellness-run-evidence.js';
+import { draftEnvironmentHistory, captureDraftEnvironmentHistory } from './environment-history.js';
 
 const MAX_STAY_DAYS = 7;
 const MAX_CANDIDATE_PROJECTS = 3;
@@ -698,6 +699,7 @@ export async function createWellnessDraft({ user, body, requestKey }) {
     exerciseInventory: graph.exerciseInventory, parentRunId: graph.run.runId, policy });
   const evidence = { ...draftEvidence(graph.run, graph.collaboration, graph.agents, graph.dateByAgent,
     graph.candidates, policy, graph.planningCandidates, graph.emptyCandidateDomains),
+    environmentSnapshots: await captureDraftEnvironmentHistory(items),
     ...(regeneration ? { regeneration } : {}) };
   const draftId = id('wellness_draft');
   let createdRow;
@@ -822,6 +824,7 @@ export async function adoptWellnessDraft({ user, body, requestKey }) {
   const evidence = {
     ...draftEvidence(run, collaboration, validated.agents, dateByAgent, candidates, policy,
       selectedPlanning, validated.emptyCandidateDomains),
+    environmentSnapshots: await captureDraftEnvironmentHistory(items),
     adoption: { sourceRunId: run.runId, sessionId: run.sessionId, selectedCandidateIds: input.selectedCandidateIds,
       candidateId: input.candidateId || input.selectedCandidateIds[0], mode: 'existing_completed_parent_run' }
   };
@@ -955,7 +958,8 @@ export async function getWellnessDraft(guestId, draftId) {
   const items = await db.prepare(`SELECT * FROM wellness_draft_items WHERE draft_id=?
     ORDER BY business_date,CASE slot_key WHEN 'breakfast' THEN 1 WHEN 'morning' THEN 2 WHEN 'lunch' THEN 3
       WHEN 'afternoon' THEN 4 WHEN 'dinner' THEN 5 ELSE 6 END,local_start`).all(draftId);
-  return decodeDraft(row, items.map(decodeItem));
+  const draft = decodeDraft(row, items.map(decodeItem));
+  return { ...draft, environmentHistory: await draftEnvironmentHistory(draft) };
 }
 
 export async function listWellnessDrafts(guestId, { stayStart = null, stayEnd = null } = {}) {

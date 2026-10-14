@@ -11,6 +11,7 @@ import { effectiveHealthConstraints, normalizeHealthProfile } from './health-pro
 import { evaluateProjectRules } from './rules-engine.js';
 import { proposeGuestAction } from './assistant-actions.js';
 import { searchOperationsCapacity, searchStaffReviewContext } from './stage26-operations.js';
+import { readCurrentEnvironmentSnapshot } from './environment.js';
 
 const allRoles = ['public', 'guest', 'staff', 'dean'];
 const privateRoles = ['guest', 'staff', 'dean'];
@@ -170,20 +171,10 @@ const tools = [
     parameters: { type: 'object', properties: { date: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' } }, additionalProperties: false },
     execute: async ({ date }) => {
       const targetDate = date || shanghaiDate();
-      const rows = await db.prepare(`SELECT snapshot_key AS snapshotKey,domain,status,source_name AS sourceName,observed_at AS observedAt,
-          expires_at AS expiresAt,payload_json AS payloadJson
-        FROM environment_snapshots WHERE target_date=? ORDER BY domain,updated_at DESC`).all(targetDate);
-      const domains = {};
-      for (const row of rows) {
-        if (domains[row.domain]) continue;
-        let payload = {};
-        try { payload = typeof row.payloadJson === 'string' ? JSON.parse(row.payloadJson) : row.payloadJson; } catch { payload = {}; }
-        domains[row.domain] = { status: row.status, sourceName: row.sourceName, observedAt: row.observedAt,
-          expiresAt: row.expiresAt, payload };
-      }
-      return { data: { targetDate, status: Object.keys(domains).length === 3 ? 'available' : 'incomplete', domains,
+      const snapshot = await readCurrentEnvironmentSnapshot(targetDate);
+      return { data: { ...snapshot, domains: Object.fromEntries(Object.entries(snapshot.domains).map(([domain,record])=>[domain,{...record,payload:record}])),
           safetyBoundary: '环境快照仅供参考；缺失、过期或演示数据不能作为安全或可参加结论。' },
-        sources: rows.slice(0, 3).map(row => ({ type: 'environment_snapshot', id: row.snapshotKey, label: `${row.domain} 环境快照 ${targetDate}` })) };
+        sources: snapshot.sources };
     }
   },
   {

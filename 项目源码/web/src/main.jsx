@@ -793,6 +793,18 @@ function ReplanEventCard({ item, onEvaluate, busy }) {
   </article>;
 }
 
+function EnvironmentHistoryNote({ history }) {
+  if (!history) return null;
+  return <section className="stage21-draft-notice" data-testid="environment-history">
+    <strong>生成时环境 · 历史快照</strong><p>{history.notice}</p>
+    <p>生成时间：{mealLocalTime(history.generatedAt)}（上海时间）；旧版来源/规则理由保留。</p>
+    {history.generated?.map((old,index)=><p key={old.snapshotId||index}>原地点：{old.location?.name || old.location?.id || '当时地点未记录'} · 原状态：{({available:'当时资料可用',unavailable:'当时来源不可用',stale:'当时资料已过期',demo:'当时为合成资料'})[old.status] || '见原规则理由，未记录的不推测'} · 原快照 {old.snapshotId || '未记录'}</p>)}
+    <strong>{history.changed ? '当前地点或来源已不同，请重新评估' : '当前来源对照（不更新旧版）'}</strong>
+    {history.current?.map(now=><p key={now.targetDate}>{now.targetDate} · {now.location?.name || '当前地点未配置'} · {({available:'当前选中点可用',demo:'当前合成示例',stale:'当前资料过期',unavailable:'当前资料不可用'})[now.status] || '当前资料待核对'} · 当前来源另列，不是原草案结论。</p>)}
+    <p>需要重新评估时，客人使用上方“生成新版本草案”，医护使用待审版本的“保存新待审版本”；读取此说明不会生成、批准或预约。</p>
+  </section>;
+}
+
 function GuestSchedule({ me, onSelectResource }) {
   const [timeline, setTimeline] = useState(null);
   const [checkins, setCheckins] = useState([]);
@@ -883,7 +895,7 @@ function GuestSchedule({ me, onSelectResource }) {
     return <article className="stage21-draft-card" key={draft.draftId} data-draft-id={draft.draftId}>
       <header><div><span className="eyebrow">WELLNESS DRAFT · VERSION {draft.version}</span><h2>{draft.stayStart} 至 {draft.stayEnd}（离店日不排入）</h2><p>草案编号 {draft.draftId} · 来源运行 {draft.sourceRunId || '未记录'} · {draft.createdAt ? new Date(draft.createdAt).toLocaleString('zh-CN') : '—'}</p></div><span className={`stage21-status ${draft.reviewStatus === 'active' || draft.reviewStatus === 'auto_activated' ? 'active' : draft.reviewStatus === 'returned' ? 'returned' : 'pending'}`}>{draft.reviewStatus === 'active' ? '医护已通过 · 已激活' : draft.reviewStatus === 'auto_activated' ? '低风险自动激活' : draft.reviewStatus === 'returned' ? '已退回 · 请重新生成' : draft.reviewStatus === 'superseded' ? '已有更新版本' : '等待医护审核'}</span></header>
       <div className="stage21-draft-notice">{draft.reviewStatus === 'active' || draft.reviewStatus === 'auto_activated' ? '疗程已激活；真实项目预约会显示在下方日程。' : draft.reviewStatus === 'returned' ? `医护退回原因：${draft.reviewReason || '请联系医护核对'}。请生成新版本。` : draft.reviewStatus === 'superseded' ? '该版本保留供追溯；请查看更新版本。' : '只供本人和医护核对。待审核草案不会预约、点餐或占用时段名额。'}</div>
-      <AdoptedDomainSuggestions evidence={draft.evidence} onSelectResource={onSelectResource}/>
+      <EnvironmentHistoryNote history={draft.environmentHistory}/><AdoptedDomainSuggestions evidence={draft.evidence} onSelectResource={onSelectResource}/>
       <div className="stage21-days">{[...byDate.entries()].map(([date, dayItems]) => <section className="stage21-day" key={date}>
         <div className="stage21-day-head"><h3>{date}</h3><span>{dayItems.length} 项 · {dayItems.filter(item => item.type === 'gap').length} 项缺口</span></div>
         <div className="stage21-item-grid">{dayItems.map(item => <article className={`stage21-item ${item.status}`} key={item.id}>
@@ -1319,13 +1331,14 @@ function GuestDailyBrief({ me, go }) {
               <section><div className="stage25-section-title"><strong>医护建议</strong><button type="button" onClick={() => openTarget('advice')}>查看来源 →</button></div>
                 {brief.advice?.length ? brief.advice.slice(0, 3).map(item => <article className="stage25-advice-row" key={item.id} data-source-id={item.id}><strong>{item.title}</strong><p>{item.content}</p><small>{item.authorName || '工作人员'} · 来源 ID {item.id}</small></article>) : <p className="stage25-muted">当前没有已发布的医护建议。</p>}
               </section>
-              <section><div className="stage25-section-title"><strong>环境来源</strong></div>
-                <ul className="stage25-source-list">{brief.environment?.map(item => <li key={item.domain} data-source-id={item.sourceId || ''}>
+              <section><div className="stage25-section-title"><strong>当前选用环境资料</strong></div>
+                <ul className="stage25-source-list">{(briefState.currentEnvironment || brief.environment)?.map(item => <li key={item.domain} data-source-id={item.sourceId || ''}>
                   <span>{item.domain === 'weather' ? '天气' : item.domain === 'tide' ? '潮汐' : '海况'}</span>
                   <div><strong>{item.available ? item.summary : item.missingNote}</strong>{item.available && <small>{item.sourceName} · 来源 {item.sourceId}</small>}</div>
                 </li>)}</ul>
               </section>
             </div>
+            {briefState.generatedBrief && <details className="stage25-missing" data-testid="brief-environment-history"><summary>生成时环境（历史快照，保持原件）</summary><p>生成时间 {mealLocalTime(briefState.generatedAt)} · 当前对照地点 {briefState.environmentContext?.currentLocation?.name || '未配置'}；旧来源与当前不同不会回写旧简报。</p><ul>{briefState.generatedBrief.environment?.map(item=><li key={item.domain}>{({weather:'天气',tide:'潮汐',marine:'海况'})[item.domain]}：原来源 {item.sourceId || '当时缺失'} · 原摘要 {String(item.summary || item.missingNote || '当时资料未记录').replaceAll('unknown','当时分级未设置').replaceAll('global mean sea level','全球平均海平面')}</li>)}</ul></details>}
             {brief.careItems?.length > 0 && <section className="stage25-care-list" data-testid="stage25-care-items"><div className="stage25-section-title"><strong>关怀与安排变动</strong><button type="button" onClick={() => openTarget('mood')}>查看心情记录 →</button></div>
               {brief.careItems.map(item => <article key={`${item.sourceType}:${item.sourceId}`} data-source-id={item.sourceId}>
                 <div><strong>{item.title}</strong><p>{item.message}</p><small>{item.sourceLabel} · 来源 ID {item.sourceId}</small></div>
@@ -2371,7 +2384,7 @@ function WellnessReviewWorkbench({ notify, initialDraftId = '', onInitialDraftOp
         {detailLoading ? <div className="surface"><QueryState text="正在读取疗程版本、证据与审核历史…"/></div> : detail ? <>
           <section className="surface wellness-review-detail-head"><div><span className="eyebrow">VERSION {detail.version} · {detail.draftId}</span><h2>{detail.guestName} · {detail.stayStart} 至 {detail.stayEnd}</h2><p>来源父运行 {detail.evidence?.parentRunId || detail.sourceRunId || '未记录'} · {detail.createdAt ? new Date(detail.createdAt).toLocaleString('zh-CN') : '生成时间未记录'}</p></div><span className={`wellness-review-status ${detail.reviewStatus}`}>{detail.reviewStatus === 'pending_review' ? '待审核' : detail.reviewStatus === 'active' ? '已激活' : detail.reviewStatus === 'auto_activated' ? '自动激活' : detail.reviewStatus === 'returned' ? '已退回' : detail.reviewStatus === 'corrected' ? '已纠正' : '已替代'}</span></section>
           {detail.reviewReason && <div className="wellness-review-reason"><b>最近审核原因：</b>{detail.reviewReason}</div>}
-          <AdoptedDomainSuggestions evidence={detail.evidence}/>
+          <EnvironmentHistoryNote history={detail.environmentHistory}/><AdoptedDomainSuggestions evidence={detail.evidence}/>
           <section className="surface"><div className="wellness-review-section-head"><SectionHead title="逐项证据"/><span>{detail.items?.length || 0} 项</span></div>
             {(detail.items || []).map(item => <article className="wellness-evidence-item" key={item.id}>
               <div className="wellness-evidence-title"><div><span>{item.type === 'activity' ? '活动' : item.type === 'meal' ? '餐食建议' : item.type === 'gap' ? '资料缺口' : '休息'}</span><h3>{item.title}</h3></div><b>{item.date} {item.localStart ? `${item.localStart}–${item.localEnd}` : ''}</b></div>
