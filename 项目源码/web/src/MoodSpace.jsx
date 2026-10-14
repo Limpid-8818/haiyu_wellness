@@ -1,3 +1,5 @@
+import {businessText} from '../../shared/release-presentation.js';
+import {SourceDetails} from './SourceDetails.jsx';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const MOOD_OPTIONS = [
@@ -87,12 +89,12 @@ export function MoodSpace({ requestApi, activeResource, onSelectResource }) {
         saved = await requestApi(`/me/moods/${todayRecord.id}`, {
           method: 'PUT', body: JSON.stringify({ score, note })
         });
-        setNotice(`已更新今天的记录 #${saved.id}；仍是同一条记录。`);
+        setNotice(`已更新今天的记录；仍是同一条记录。`);
       } else {
         saved = await requestApi('/me/moods', {
           method: 'POST', body: JSON.stringify({ score, note })
         });
-        setNotice(`已保存今天的记录 #${saved.id}。`);
+        setNotice(`已保存今天的记录。`);
       }
       setEditing(false);
       setRefreshKey(value => value + 1);
@@ -118,7 +120,7 @@ export function MoodSpace({ requestApi, activeResource, onSelectResource }) {
     setSaving(true);
     requestApi('/me/moods', { method: 'POST', body: JSON.stringify({ score: option.score, note: '' }) })
       .then(saved => {
-        setNotice(`已保存今天的心情“${saved.label}”，记录编号 #${saved.id}。`);
+        setNotice(`已保存今天的心情“${saved.label}”。`);
         setRefreshKey(value => value + 1);
       })
       .catch(saveError => {
@@ -135,7 +137,7 @@ export function MoodSpace({ requestApi, activeResource, onSelectResource }) {
     setScore(todayRecord.score);
     setNote(todayRecord.note || '');
     setEditing(true);
-    setNotice(`正在编辑今日记录 #${todayRecord.id}。保存会更新这条记录，不会新增。`);
+    setNotice(`正在编辑今日记录。保存会更新这条记录，不会新增。`);
   }
 
   return <div className="mood-page" aria-busy={loading || saving}>
@@ -148,7 +150,7 @@ export function MoodSpace({ requestApi, activeResource, onSelectResource }) {
     {loading ? <section className="surface mood-loading" role="status">正在读取心情记录和陪伴资源…</section> : <>
       <section className="surface mood-checkin">
         <div className="mood-section-heading"><div><span className="eyebrow">TODAY CHECK-IN</span><h2>此刻的心情怎么样？</h2><p>选择最接近的一档即可。它只是自我记录，不是测评。</p></div>
-          {todayRecord && <span className="mood-record-badge">今日记录 #{todayRecord.id}</span>}
+          {todayRecord && <span className="mood-record-badge">今天已记录</span>}
         </div>
         <div className="mood-quick-options" role="group" aria-label="选择心情档位">
           {MOOD_OPTIONS.map(option => <button type="button" key={option.score}
@@ -158,10 +160,10 @@ export function MoodSpace({ requestApi, activeResource, onSelectResource }) {
             <span className="mood-option-face" aria-hidden="true">{option.face}</span><strong>{option.label}</strong><small>{option.score}/5</small>
           </button>)}
         </div>
-        {todayRecord && !editing && <div className="mood-today-saved"><div><strong>今天已记录：{todayRecord.label}</strong><span>{todayRecord.note || '没有填写备注'} · 记录编号 #{todayRecord.id}</span></div><button type="button" className="outline-btn" onClick={startEdit}>编辑今日记录</button></div>}
+        {todayRecord && !editing && <div className="mood-today-saved"><div><strong>今天已记录：{todayRecord.label}</strong><span>{todayRecord.note || '没有填写备注'}</span></div><button type="button" className="outline-btn" onClick={startEdit}>编辑今日记录</button></div>}
         {editing && <form className="mood-edit-form" onSubmit={saveMood}>
-          <label className="mood-note-label" htmlFor="mood-note">想留下一句备注吗？<textarea id="mood-note" rows="3" maxLength={500} value={note} onChange={event => setNote(event.target.value)} placeholder="可以写下此刻的感受，也可以留空。"/></label>
-          <div className="mood-form-actions"><span>{todayRecord ? `将修改同一条记录 #${todayRecord.id}` : '快捷选择与详细备注会保存到同一条今日记录'}</span><div><button type="button" className="outline-btn" onClick={() => { setEditing(false); setNotice(''); }} disabled={saving}>取消</button><button type="submit" className="primary-btn" disabled={saving}>{saving ? '保存中…' : todayRecord ? '保存修改' : '保存今天的心情'}</button></div></div>
+          <label className="mood-note-label" htmlFor="mood-note">想留下一句备注吗？<textarea id="mood-note" aria-label="想留下一句备注吗？" rows="3" maxLength={500} value={note} onChange={event => setNote(event.target.value)} placeholder="可以写下此刻的感受，也可以留空。"/></label>
+          <div className="mood-form-actions"><span>{todayRecord ? '将修改今天的同一条记录' : '快捷选择与详细备注会保存到同一条今日记录'}</span><div><button type="button" className="outline-btn" onClick={() => { setEditing(false); setNotice(''); }} disabled={saving}>取消</button><button type="submit" className="primary-btn" disabled={saving}>{saving ? '保存中…' : todayRecord ? '保存修改' : '保存今天的心情'}</button></div></div>
         </form>}
         {notice && <div className="mood-notice" role="status" aria-live="polite">{notice}</div>}
       </section>
@@ -186,15 +188,15 @@ export function MoodSpace({ requestApi, activeResource, onSelectResource }) {
             <div className="mood-selected-score"><strong>{selectedPoint.score}/5</strong><span>{MOOD_OPTIONS.find(item => item.score === selectedPoint.score)?.label}</span></div>
             <div><small>日期</small><strong>{selectedPoint.date}</strong></div>
             <div><small>备注</small><strong>{selectedPoint.note || '没有填写备注'}</strong></div>
-            <div><small>记录编号</small><strong>#{selectedPoint.recordId}</strong></div>
+            <SourceDetails data={selectedPoint}/>
           </article> : <div className="mood-insufficient" role="status">所选日期没有心情记录。</div>}
           {selectedReplanEvent && <article className="mood-replan-event" data-testid="mood-replan-event" aria-live="polite">
             <div><span className="eyebrow">RECORDED REPLANNING EVENT</span><strong>同日来源事件</strong></div>
-            <p>心情记录 #{selectedReplanEvent.sourceId} · 来源版本 {selectedReplanEvent.sourceVersion} · {selectedReplanEvent.businessDate}</p>
-            <p>候选疗程版本：{selectedReplanEvent.candidateVersion ? `第 ${selectedReplanEvent.candidateVersion} 版（${selectedReplanEvent.candidateDraftId}）` : '尚未生成'}</p>
+            <p>心情变化记录 · 来源版本 {selectedReplanEvent.sourceVersion} · {selectedReplanEvent.businessDate}</p>
+            <p>候选疗程版本：{selectedReplanEvent.candidateVersion ? `第 ${selectedReplanEvent.candidateVersion} 版` : '尚未生成'}</p><SourceDetails data={selectedReplanEvent}/>
             <p>审核状态：{selectedReplanEvent.candidateReviewStatus === 'pending_review' ? '待医护审核'
               : selectedReplanEvent.candidateReviewStatus === 'active' || selectedReplanEvent.candidateReviewStatus === 'auto_activated' ? '已激活'
-                : selectedReplanEvent.candidateReviewStatus || '已记录'}。</p>
+                : businessText(selectedReplanEvent.candidateReviewStatus) || '已记录'}。</p>
             <small>这里只表示同一日期存在两条可追溯记录，不表示心情变化导致了疗程调整。</small>
           </article>}
         </> : <div className="mood-loading" role="status">正在生成趋势…</div>}
@@ -202,7 +204,7 @@ export function MoodSpace({ requestApi, activeResource, onSelectResource }) {
 
       <section className="mood-focus-list" aria-label="持续负面关注事项">
         {focusItems.filter(item => item.status === 'open').map(item => <article className="mood-focus-item" key={item.id}>
-          <span className="mood-focus-icon" aria-hidden="true">♡</span><div><strong>待人工关注</strong><p>{item.startDate} 至 {item.endDate} 有连续低分记录（演示规则），相关记录编号：{item.sourceRecordIds.map(id => `#${id}`).join('、')}。</p><small>演示规则不构成诊断；如需要，请联系现场工作人员。</small></div>
+          <span className="mood-focus-icon" aria-hidden="true">♡</span><div><strong>待人工关注</strong><p>{item.startDate} 至 {item.endDate} 有连续低分记录（演示规则）。</p><small>演示规则不构成诊断；如需要，请联系现场工作人员。</small><SourceDetails data={item}/></div>
         </article>)}
         {focusItems.some(item => item.status === 'improved') && <div className="mood-improved-note" role="status">已为先前关注事项记录后续心情变化。记录只描述自填分值。</div>}
       </section>
