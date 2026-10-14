@@ -1,4 +1,6 @@
-## 最新状态：阶段27-R5源端独立复核完成（2026-10-11）
+> 当前状态入口；下文进阶教案与旧验收记录按历史日期保留：[当前版本与验收状态](docs/当前版本与验收状态_20261014.md)。阶段6核心整改已合入main；V03 Source新live终验、截图P3和109全验仍待补。
+
+## 历史状态：阶段27-R5源端独立复核完成（2026-10-11）
 
 源端最新R5结论（2026-10-11）：Q27.7/Q27.8业务通过；Q27.9源05:09行级证据通过，05:11阶段汇总退出2、NOT_FINAL_ACCEPTED。映射33 PASS/76 BLOCKED，功能103 UNVERIFIED/6受限子场景。源资源门PASS_WITH_ACCEPTED_HISTORY_EXCEPTION；外层cwd执行违规保留，原546,982 B前缀完整、两条新增实例已追溯和清理，资源门无待审项。详见[逐项清单与串行计划](docs/阶段27剩余需求与后续最小阶段清单_20261011.md)及[第38轮报告](wangshanchong/第38轮报告.md)。 行级证据与依赖排序教案见[109项清单](docs/阶段27剩余需求与后续最小阶段清单_20261011.md)。
 
@@ -18,19 +20,19 @@ Worker离线复核 `PASS_OFFLINE_VERIFICATION_ONLY`：Q27.5预约确认网页与
 
 # 海屿康养社区进阶项目全栈落地闯关大纲
 
-## 当前验收状态：R1整改PASS，历史记录决策仍BLOCKED（2026-10-10）
+## 历史验收状态：R1整改PASS，历史记录决策仍BLOCKED（2026-10-10）
 
 源实际无过滤器复跑19项资源测试通过，当前全资源残留0；原bcfded86 guardian退出记录仍缺失且未获新例外，尚未派发R2。不重复启动实例恢复过去，不自动豁免。完整证据见[阶段27-R1独验](/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/docs/阶段27R1独立验收_20261010.md)与[第34轮](/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/wangshanchong/第34轮报告.md)。阶段27业务未完成，地区已由用户确认为大连开发区。以下执行/暂停文字按历史保留，当前以本节及AGENTS最新状态为准。
 
 ---
 
-## 当前状态：已恢复，仅执行27-R1资源整改（2026-10-10）
+## 历史状态：已恢复，仅执行27-R1资源整改（2026-10-10）
 
 用户已明确“继续”。阶段27仍未通过，现由原独立Luna Max任务仅处理退出记录缺口与资源封装；待Sol独验通过再安排剩余回归。大连开发区为用户暂定环境地点，坐标/潮汐站/授权待核实。完整dirty dfa3及旧失败/报告/PNG保留，旧历史例外不扩大、不Git写。详见[恢复分段计划](/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/docs/阶段27恢复与分段返工计划_20261010.md)。下文旧暂停/执行文字为历史。
 
 ---
 
-## 当前状态：阶段27未通过，开发暂停（2026-10-10）
+## 历史状态：阶段27未通过，开发暂停（2026-10-10）
 
 源Sol本次独立范围/原始证据及全资源复核结论FAIL；当前物理残留0、空间采样稳定，但新增1项guardian标准退出记录缺口，旧限定历史例外不扩大。基础逐项证据、真实模型端到端及真实环境仍未验收齐全，网页旅程时段与需求矩阵证据也有不一致。Luna已停止；本次收尾后不派发任务、返工或补验，等待用户明确恢复。完整成果在/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness，未执行Git写操作。详见[阶段27最终复核](/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/docs/阶段27验收复核_20261010.md)与[第33轮报告](/Users/wangshanchong/.codex/worktrees/dfa3/haiyu_wellness/wangshanchong/第33轮报告.md)。下文此前准备/执行状态为历史，课程描述不表示功能已通过验收。
 

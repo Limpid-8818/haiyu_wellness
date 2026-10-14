@@ -1,3 +1,77 @@
+# 当前唯一状态：阶段6核心整改优先交付main，遗留明确登记（2026-10-14）
+
+人类最新“无特别重要问题先合并、BUG写剩余、提交推送”授权已执行阶段6产品4a1123ec6275f658de9b415dd07146b8e4ca6872→main正常merge cb0811bdbe8b7461f74504a685f385f36b978ff0。U01/U07/U08/U09/D01只核心已验范围合入；U01全站异常未全验，V03 Source自己的新live完整终验未跑，V04/P3截图重复绘制条根因未知，v06只读DOM显示快照边界明列。整体NOT_FINAL_ACCEPTED/109未全验/CI延期/旧FAIL历史例外保持，不假补Source真人PASS。
+
+只原App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local、GPT-6.1 Sol/High完成第100整合/针对性main98tests与build/两根资源/普通push实际SHA核对；Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local第101仅核交付。最终remote SHA以报告100及integration-final-packet实收为准。Source95独立offline、Source97核worker96真核心、Source99先交付依据保留。新测试可移植纯预算fixture/缺历史拒绝，老验收工具SHA不改、raw/Key/库/依赖/PNG不Git。
+
+当前入口docs/当前版本与验收状态_20261014.md与待修复BUG列表.md。本次不继续source live/freecapture或任何worker图（已4graph/20HTTP/21600Token，Source0），不派新阶段/App/worktree/internal agents/依赖复制/MySQL/scheduler/CI修复。准确退出→句柄→自身temp/socket/link与audit自身另退出才回Source一次停，不轮询。旧阶段1—5完成状态及以下历史正文完整保留。
+
+---
+
+# 最新人类优先交付：6有效整改先合main、遗留写BUG并普通push（2026-10-14）
+
+人类明确“没有什么特别重要的问题就先进行合并然后在bug列表中指出哪里还有问题，提交后推送”。Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local第99轮按此接收合并输入：Source95亲跑offline完整3case/277检查、97核worker96真实核心6live运行/11205新Token与源链，98工具包135引用核一致；没有已知必须先修的功能阻塞。Source自己新live仍未跑、原截图异常根因未定，用户本次先交付，**不把未跑记PASS**。全6资源60实例1504事件/auditor另5身份2组/guardian0全清。
+
+只原App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local GPT-6.1 Sol/High按docs/阶段6优先合并遗留登记与推送安排_20261014.md第100轮有效产品commit/main正常merge、必要新增测试可移植整理、BUG原核心范围与V03待Source终验/P3截图问题明列、build/资源/普通push核SHA。Source101核整合交付，不再新模型/免费capture或后续任务。原Key/env/provider/用户库/MySQL/scheduler/CI0、无新App/worktree/internalagent/依赖复制，旧FAIL/代码/原证据和main1—5完成保全，资源门精确退出/句柄/temp/socket/link/audit自身保持。109未全验/NOT_FINAL_ACCEPTED/历史例外不变，用户最新先合并优先于旧等待完整终验再整合安排，一次回Source停。
+
+---
+
+# 当前有效状态：6 worker真实核心候选已核，截图证据阻塞只工具补验（2026-10-14）
+
+原6 App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local第96轮新live2图10HTTP/11205Token、279检查116业务HTTP26表链候选通过，完整login截图底部重复条BLOCKED_CAPTURE_EVIDENCE保持。Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local第97轮亲核37317B包/120引用+156冻旧+Source95的40原件，6completed/live/is_live1 parent/child与真实usage/工具；Source真人模型0未独验，不把worker候选当完成。全6资源49实例1185事件PASS/audit自己5身份2组/guardian0另退。
+
+仅原GPT-6.1 Sol/High任务按docs/阶段6截图证据补验与Source真实验收准备_20261014.md新小v06做零模型capture-only完整resize序列复现/可靠捕获对照，最多两次免费诊断/验证、不图像编辑。worker已4图20HTTP21600Token，不再任何真graph/不回退账；Source99入口真实最多2图20HTTP且先免费截图确认，newworker98/Source99。不得为截屏改业务/生产门，v05原core/PNG/FAIL保，candidateGit0/六BUG未关，Source99独立live/视觉/资源接受后才整合push；无新App/阶段/internal agent/worktree/依赖复制/用户服务/CI，资源精确退出/句柄/temp/socket/link/audit自身保持。一次回源停不轮询，109未全验/NOT_FINAL_ACCEPTED/历史例外不变。
+
+---
+
+# 当前有效状态：6完整offline工具已Source95双门通过，仅原任务最后受控live复测（2026-10-14）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local新guest/88测试build0、277断言116HTTP25PNG/20AX14控件/26表同链完整3case实际TOOL_REHEARSAL_PASS，仍recorded_fixture/true0，不等于六BUG真业务通过。全阶段40实例971事件资源PASS，audit自己4身份2组guardian0另退/Sourcelink删除。156原worker引用前后与66冻旧保持。部分headed PNG底部重复顶栏条但AX只一个，免费DOM/绘制探针先核，不以图像编辑掩盖。
+
+只原6 App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local GPT-6.1 Sol/High按docs/阶段6最后受控真实反馈复测安排_20261014.md新v05；worker96/Source97，免费probe0后唯一新live完整。旧true2graph10HTTP10395Token保持，明确新最多baseline+feedback2图，worker累计cap4图/30HTTP（已10+新20），Source2图20，总阶段≤50HTTP，产品50/16384/12/90及cost不改。仅API内存必要Key白名单、无recorded/hooks冒live，供应商/用户库/CI0，原6scope与资源OS60/受管45/准确退出/句柄/temp/socket/link/audit自身保持，candidateGit0/BUG未关。Source97独立live双门后才本阶段merge/原BUG完成/push，无新App/阶段/internalagent/worktree/依赖复制，旧FAIL/109未验/NOT_FINAL_ACCEPTED/历史例外保持，一次回Source停不轮询。
+
+---
+
+# 当前有效状态：6 v03离线字段定位FAIL已Source93核，仍只无真实模型演练（2026-10-14）
+
+原6 App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local第92轮TOOL_REHEARSAL_FAIL保持，Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local亲核48660B包/66新+63冻旧、受控反馈textarea及busy/窗口条件，具体失败后AX缺证不将名称机制猜测当事实。整个6资源26实例/526事件PASS，audit自己5身份/2组/guardian0另退。原true2graph/10HTTP/10395Token保留、新live/provider0，Source真实0，六BUG未通过。
+
+只同GPT-6.1 Sol/High任务按docs/阶段6稳定表单与离线工具返修安排_20261014.md新v04先实际DOM探针空/填值/保存/重渲染/修改状态，必要稳定aria标签作为发布可访问性修复，再同新guest完整offline3case/剩余项/三尺寸/全SQL。录制模式明确，Key/env/trueLLM/供应商0，旧graph3/HTTP20不增、不开始第三真图。newworker94/Source95；所有旧FAIL/v01—v03原件保，Git0/BUG未关。精确资源OS60/受管45/退出→句柄→temp/socket/链接/audit自身保持；无新App/worktree/internal agents/依赖复制/用户服务/CI。一次回源停不轮询，Source95offline独验后另发有限真实复测，109未全验/NOT_FINAL_ACCEPTED/历史例外保持。
+
+---
+
+# 当前有效状态：6 v02角色定位FAIL已Source91独核，仅无真实模型工具演练（2026-10-14）
+
+原6 App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local第90轮FAIL保持，Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local亲核43014B包/63新+57冻旧、main.jsx真实role=tab与错误button定位，无纠正POST/反馈图。整个6资源18实例/351事件PASS，audit自己5身份/2组/guardian0另退。累计worker2graph/10真实HTTP/10395Token保持，Source真实图0，不把84tests/基线/部分SQL记业务PASS。
+
+只同GPT-6.1 Sol/High任务按docs/阶段6无真实模型工具演练安排_20261014.md新小v03做完整offline实际React/API三case/DOM角色/SQL/三尺寸工具演练；私密.env/真实LLM/供应商0，fixture明确recorded，不能伪live或关闭V03/六BUG。worker92/Source93，旧v01/v02/FAIL原件保持，Git0。Source93独验工具资源后才另行明确真实补验与graph累计授权，现不开始第三真图/不清零10消费。无新App/业务阶段/internal agents/worktree/复制依赖/用户服务/CI，资源OS60/受管45/准确退出→句柄→temp/socket/自有链接/audit自身保持。一次回源停、不轮询，109未全验/NOT_FINAL_ACCEPTED/历史例外保持。
+
+---
+
+# 当前有效状态：6首完整尝试工具FAIL已Source89复核，仅原任务版本化返修（2026-10-14）
+
+原6 App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local第88轮BUSINESS_FAIL/TOOL_FAIL保留：结束前完成409是脚本clock错误，错误better-sqlite3/表名导致SQL缺证。Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local亲核18658B包/57引用、真实生产结束门与node:sqlite/schema；整个6资源7实例/171事件PASS，audit自己3身份/2组/guardian0另退出，Source新业务/模型0。六BUG仍未通过，原86/88/PNG/缺证/旧消费不覆盖。
+
+只同GPT-6.1 Sol/High任务按docs/阶段6工具返修与唯一新尝试安排_20261014.md在scripts/bugfix-stage6-v02静态校准全部剩余工具，静态0后唯一新完整attempt；newworker90/Source91。预算明确旧1图5HTTP保留+新最多baseline/feedback2图，worker阶段总最多3图但HTTP20不变/剩15，Source2图20不变，每图50/16384/12/90及cost不增。真实通知/版本链按实际baseline不硬编码v2，不假SQL业务；候选产品仅6scope必要修正，不放宽结束/模型/临床/环境门。资源OS60/受管45/精确退出→句柄→temp/socket/链接/audit自身保持；无新任务/worktree/安装复制/内部agent/供应商/用户库/CI。candidateGit0，一次回源停，Source91独验后再整合push；109未全验/NOT_FINAL_ACCEPTED/旧FAIL例外保持。
+
+---
+
+# 当前有效状态：6静态模型依赖已独核，仅原任务受控续办（2026-10-14）
+
+原6 App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local第86轮BLOCKED_STATIC_MODEL_DEPENDENCY保留；Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local亲核10477B包/24引用、生产反馈→新草案模型链及纯fallback拒绝probe exit0。产品/业务/resource0，不能记六BUG通过。人类既有.env密钥测试及必要增调用授权持续有效，Source87据此明确新补充`docs/阶段6受控反馈模型验证补充合同_20261014.md`：只原GPT-6.1 Sol/High任务继续，必要baseline+feedback每caller最多2live graph/总模型HTTP≤20，现有50/16384/12/90及cost不改。仅受管API进程内存白名单取现有必要LLM字段，禁止Key输出/复制与其他秘密；供应商/用户库/MySQL/scheduler/CI0，不降V03或fixture假PASS。
+
+原六BUG/3case/78回归/build及全部资源门保持，报告86原件保持、新worker88/Source89。首次完整业务attempt0不消费旧对象，准确退出→句柄→自身temp/socket/链接和audit自身另退出；不新App/worktree/internal agent/依赖复制/kill用户服务。候选worker Git0，一次回源停，Source89独验后另行本阶段merge/BUG完成/push，6未通过/109未全验/NOT_FINAL_ACCEPTED/旧FAIL例外保持。Source派发最多一次就绪结束不轮询。以下原6默认模型0是依赖确认前的历史合同，现按此限定补充执行。
+
+---
+
+# 当前唯一阶段：独立App阶段6网页发布体验与核心回归已派（2026-10-14）
+
+阶段5产品d25744f经5d92f8b合入并push，Source85独核124引用/23冻结和旧21/新6资源全退通过，公开收据ef72cc4最新本地远端一致。仅新6 App01a13810-f5fc-73d0-9306-36fed3a8b3ca/local、GPT-6.1 Sol/High，同目录fork停止5/sync complete，复用28d6 tracked项目源码与main diff0，不新worktree/依赖复制/internal agents。只U01/U07/U08/U09/D01/V03，见docs/阶段6网页发布体验与核心回归执行计划_20261014.md及实际收据；worker86/Source87。
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local只规划独验。只网页自然扩展/桌面排列，不移动App/固定电话宽；中文正文和折叠技术证据/签到窗口/通知归类/工程入口与准确演示标识、统一当前文档、正常及限制变化跨角色基础回归。默认私密.env/LLM/供应商/用户库/MySQL/scheduler/CI0，必要模型依赖先静态BLOCKED回源，不造业务ID/真实trace。未独验前worker Git0/BUG仅候选，通过后另发同阶段commit/merge原BUG完成/普通push核SHA；无新业务阶段，109未全验/NOT_FINAL_ACCEPTED/旧FAIL例外保持。准确退出→句柄→自身temp/socket/链接资源双门/audit自身另退出，才可收尾；任务一次回Source停，Source最多一次就绪即结束不轮询。旧5禁产品实现指令仅历史，不覆盖本6合同。
+
+---
+
 # 最新有效状态：5已验合入远端，Source85整合复核通过，准备6（2026-10-14）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local独核第84轮147551B包/124引用和23生产测试辅助文件冻结/product/main完全一致，产品d25744f经5d92f8b合入，main/远端87a3537一致且干净。六BUG F09/F10/U02/U03/U04/U06完成，V01/F07/F08保持；3020/5180只读50/16384/12/90/live。旧阶段5资源21、新整合worker4+Source2共6实例两根PASS，auditor另核4+3准确身份全部退出，资源/结构/退出缺口0。详第85轮，源公开文稿将普通commit/push。
