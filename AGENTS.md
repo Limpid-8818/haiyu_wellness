@@ -1,3 +1,11 @@
+# 当前有效状态：阶段5已合入并普通push，待Source85核整合（2026-10-14）
+
+阶段5产品d25744f8ab05cc9a7ef3d3f3483daff611cd81cf经main merge5d92f8bc23f7e12b6a8ddd53fa7ce427c877fad6合入；23冻结生产测试辅助文件一致，六BUG原条目已完成。公开文稿14d438779601ed6e972c80dc36268f4cf7b1df13已普通push exit0，本地main/tracking/实际ls-remote三方一致、main核时干净。main78/78/build0，旧21与新4实例双根资源PASS，两个auditor另核6准确身份/4组空、guardian真实exit0；用户3020/5180只读status50/16384/12/90秒/live保持。
+
+本次仅追加真实push收据再普通commit/push，最终文稿SHA见第84轮integration-final-packet/一次回源，不自引用报告最终SHA。Source85独核整合/最终远端/全部资源后才衔接6，6未派，109未全验/NOT_FINAL_ACCEPTED/旧FAIL与例外/CI延后保持；不新provider/model/私密.env/用户库/MySQL/scheduler/internal agents/新worktree或安装复制，不碰用户进程。只本次授权收尾，主动回Source一次停，不轮询。下方旧时点全文保留。
+
+---
+
 # 当前有效状态：阶段5已验产品合入main，第84轮整合推送收尾（2026-10-14）
 
 F09/F10/U02/U03/U04/U06经Source83新guest/78项/3原生case/公开1组及资源双门通过；已验23生产测试辅助文件逐份冻结一致，产品d25744f8ab05cc9a7ef3d3f3483daff611cd81cf经main正常merge5d92f8bc23f7e12b6a8ddd53fa7ce427c877fad6合入。main78/78/build0，六BUG原条目已完成；V01/F07/F08及main较新的历史文稿保全，旧FAIL/例外/109未全验/NOT_FINAL_ACCEPTED/CI延期不改。
