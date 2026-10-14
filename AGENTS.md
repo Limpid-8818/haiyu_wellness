@@ -1,3 +1,27 @@
+# 当前有效状态：阶段5已验产品合入main，第84轮整合推送收尾（2026-10-14）
+
+F09/F10/U02/U03/U04/U06经Source83新guest/78项/3原生case/公开1组及资源双门通过；已验23生产测试辅助文件逐份冻结一致，产品d25744f8ab05cc9a7ef3d3f3483daff611cd81cf经main正常merge5d92f8bc23f7e12b6a8ddd53fa7ce427c877fad6合入。main78/78/build0，六BUG原条目已完成；V01/F07/F08及main较新的历史文稿保全，旧FAIL/例外/109未全验/NOT_FINAL_ACCEPTED/CI延期不改。
+
+仅原worker01a137d6-4a10-72d1-b1c6-268507dafce6/local、GPT-6.1 Sol/High完成84公开文稿/双根资源/普通push核SHA，最终以integration84封包及一次回源为准。旧28d6阶段5共21实例和新main4实例均资源PASS，两auditor自身另准确退出；不新LLM/公开环境请求/私密.env/用户库/MySQL/scheduler/CI/internal agents/新worktree或依赖安装复制，不重启/杀用户服务。Source85独核本部分整合/远端/资源后才能衔接6；6未派。完成一次主动回Source停，不轮询。以下原文按旧时点完整保留。
+
+---
+
+# 当前有效状态：阶段5 Source83双门通过，仅原任务整合（2026-10-14）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local亲自新guest guest_29edfa29完整复跑78/78/build0、新公开Weather+Marine1组200、3case/163断言/17PNG与历史哈希不变。197冻结引用/13产品前后保持，worker16+Source5共21实例精确资源PASS、退出缺口0，审计自身4身份另退出且Source链接删除。见第83轮。仅F09/F10/U02/U03/U04/U06候选已验；main/origin仍0e1aff77、产品尚未合入5。
+
+只原5 App01a137d6-4a10-72d1-b1c6-268507dafce6/local、GPT-6.1 Sol/High另行84整合commit/main merge/六BUG原条目已完成/普通push核SHA，保留main最新V01/F07/F08及Source文稿，Source85独核后再派6。6未派/109未全验/NOT_FINAL_ACCEPTED/旧FAIL与例外/CI延后保持。不新真模型/公开环境请求/私密.env/用户库/MySQL/scheduler/internal agents/新worktree或安装复制。先准确退出→句柄→自身temp/socket/链接清理及audit自身另退出，才可衔接。一次主动回源停，不轮询。
+
+---
+
+# 当前唯一阶段：独立App阶段5环境当前性已派（2026-10-14）
+
+4已验产品7b0091f经208a92d合入并push，Source81独核94引用/11产品和原12/新6资源全退通过，公开收据0e1aff7最新本地远端一致；F07/F08完成，V01完成记录保留。唯一新5 App01a137d6-4a10-72d1-b1c6-268507dafce6/local、GPT-6.1 Sol/High，同目录fork停止4/sync complete，复用28d6全部tracked产品与main实际diff0，不新worktree/依赖复制。仅F09/F10/U02/U03/U04/U06按docs/阶段5环境当前性与历史说明执行计划_20261014.md，实际收据同docs；worker82/Source83。
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local只规划独验。本5公共环境参数白名单、不读LLM/Auth/DB等秘密、不真人模型/新Key/用户库/MySQL/scheduler/CI/internal agents；异常fixture与最多worker2组/Source1组真实公开Weather+Marine请求分开，不假台站/满干潮/机构批准阈值，不自动下海或篡改旧草案。业务资源双门通过前worker Git0，通过后逐部分commit/merge/BUG完成/普通push核SHA才派6；6未派。精准退出→句柄→自身temp/链接清理，audit自身另核，旧FAIL/例外/109未验/NOT_FINAL_ACCEPTED保持。任务一次主动回源停，Source派发最多一次就绪即结束不轮询。以下旧时点保留，旧4不读.env总禁令不用于本5公共白名单授权。
+
+---
+
 # 最新有效状态：4已验合入远端并Source81复核通过，准备5（2026-10-14）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local实际核第80轮32085B包/94整件引用和11产品冻结/product/HEAD/main全部一致，product7b0091f/main merge208a92d，main/远端0984452一致且检查时干净；F07/F08本阶段完成，V01已完成不变。Source亲测3020/5180 status50/16384/12/90/live；旧4资源12、新整合worker4+Source2=6实例双根精确退出PASS、残留/退出缺口0、audit自己另关闭。详第81轮，公开收据将正常commit/push。
