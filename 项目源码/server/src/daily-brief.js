@@ -1,5 +1,7 @@
 import { db, id, json } from './db.js';
 import { systemBusinessClock } from './clock.js';
+import { readCurrentEnvironmentSnapshot } from './environment.js';
+import { briefEnvironment } from './environment-resolution.js';
 import { createNotificationOnce, syncCareSignals } from './wellness-notifications.js';
 
 const DAILY_BRIEF_HOUR = 7;
@@ -14,27 +16,6 @@ function dateDistance(start, end) {
 function decodeJson(value, fallback) {
   if (typeof value === 'string') return json(value, fallback);
   return value ?? fallback;
-}
-
-function environmentSummary(domain, payload) {
-  if (domain === 'weather' && payload?.current) {
-    const current = payload.current;
-    const parts = [];
-    if (current.temperatureC != null && current.temperatureC !== '' && Number.isFinite(Number(current.temperatureC))) parts.push(`${current.temperatureC}°C`);
-    if (current.uvLevel) parts.push(`紫外线标记 ${current.uvLevel}`);
-    return parts.length ? `保存的天气快照：${parts.join(' · ')}` : '已保存天气快照';
-  }
-  if (domain === 'tide' && Array.isArray(payload?.events)) {
-    const events = payload.events.slice(0, 4).map(event => `${String(event.localTime || event.time || '').slice(11, 16)} ${event.type === 'high' ? '高潮' : event.type === 'low' ? '低潮' : '潮汐记录'}${event.heightM != null && event.heightM !== '' && Number.isFinite(Number(event.heightM)) ? ` ${event.heightM}m` : ''}`);
-    const datum = payload.verticalDatum ? `基准 ${payload.verticalDatum}` : '垂直基准未知';
-    return `保存的潮汐快照：${events.filter(Boolean).join('、') || '有记录'}；${datum}`;
-  }
-  if (domain === 'marine' && Array.isArray(payload?.hourly)) {
-    const first = payload.hourly[0];
-    const height = first?.waveHeightM == null || first?.waveHeightM === '' ? NaN : Number(first.waveHeightM);
-    return Number.isFinite(height) ? `保存的海况快照：首条波高记录 ${height}m` : '已保存海况快照';
-  }
-  return '已保存环境快照；详细内容以来源记录为准';
 }
 
 export async function buildDailyBriefSnapshot(guestId, businessDate) {
@@ -81,19 +62,8 @@ export async function buildDailyBriefSnapshot(guestId, businessDate) {
       a.updated_at AS updatedAt,u.name AS authorName
     FROM medical_advice a JOIN users u ON u.id=a.author_id
     WHERE a.guest_id=? AND a.status='active' ORDER BY a.updated_at DESC,a.id DESC LIMIT 20`).all(guestId);
-  const snapshots = await db.prepare(`SELECT snapshot_key AS sourceId,domain,status,source_name AS sourceName,
-      observed_at AS observedAt,payload_json AS payloadJson
-    FROM environment_snapshots WHERE target_date=? ORDER BY updated_at DESC,snapshot_key`).all(businessDate);
-  const environmentByDomain = new Map();
-  for (const row of snapshots) if (!environmentByDomain.has(row.domain)) environmentByDomain.set(row.domain, row);
-  const environment = ['weather', 'tide', 'marine'].map(domain => {
-    const row = environmentByDomain.get(domain);
-    if (!row) return { domain, available: false, sourceId: null, sourceName: '', summary: '', missingNote: `${domain === 'weather' ? '天气' : domain === 'tide' ? '潮汐' : '海况'}快照缺失` };
-    const payload = decodeJson(row.payloadJson, {});
-    return { domain, available: true, status: row.status, sourceId: row.sourceId,
-      sourceName: row.sourceName, observedAt: row.observedAt, summary: environmentSummary(domain, payload), missingNote: '' };
-  });
-
+  const environmentSnapshot = await readCurrentEnvironmentSnapshot(businessDate);
+  const environment = briefEnvironment(environmentSnapshot);
   const moodFocus = await db.prepare(`SELECT id,streak_start AS streakStart,streak_end AS streakEnd
     FROM mood_focus_items WHERE guest_id=? AND status='open' ORDER BY streak_end DESC,id DESC LIMIT 20`).all(guestId);
   const revisions = await db.prepare(`SELECT id,draft_id AS draftId,reason,from_version AS fromVersion,to_version AS toVersion,
@@ -111,7 +81,7 @@ export async function buildDailyBriefSnapshot(guestId, businessDate) {
     ...activities.map(item => ({ type: 'reservation', id: item.reservationId, label: item.projectName })),
     ...meals.filter(item => item.targetId).map(item => ({ type: item.targetType, id: item.targetId, label: item.label })),
     ...advice.map(item => ({ type: 'medical_advice', id: String(item.id), label: item.title })),
-    ...environment.filter(item => item.available).map(item => ({ type: 'environment_snapshot', id: item.sourceId, label: item.sourceName })),
+    ...environment.filter(item => item.sourceId).map(item => ({ type: 'environment_snapshot', domain:item.domain, id: item.sourceId, label: item.sourceName,status:item.status })),
     ...careItems.map(item => ({ type: item.sourceType, id: item.sourceId, label: item.title }))
   ];
   const missing = [];
@@ -131,58 +101,47 @@ export async function buildDailyBriefSnapshot(guestId, businessDate) {
   };
 }
 
-async function saveDailyBrief(guestId, businessDate, at) {
-  const snapshot = await buildDailyBriefSnapshot(guestId, businessDate);
-  if (!snapshot) return null;
-  const existing = await db.prepare(`SELECT id,generated_at AS generatedAt FROM daily_briefs
-    WHERE guest_id=? AND business_date=?`).get(guestId, businessDate);
-  let row = existing;
-  if (existing) {
-    await db.prepare('UPDATE daily_briefs SET brief_json=?,updated_at=? WHERE guest_id=? AND business_date=?')
-      .run(JSON.stringify(snapshot), at, guestId, businessDate);
-  } else {
-    const briefId = id('daily_brief');
-    try {
-      await db.prepare(`INSERT INTO daily_briefs(id,guest_id,business_date,brief_json,generated_at,updated_at)
-        VALUES(?,?,?,?,?,?)`).run(briefId, guestId, businessDate, JSON.stringify(snapshot), at, at);
-      row = { id: briefId, generatedAt: at };
-    } catch (error) {
-      const duplicate = error?.code === 'ER_DUP_ENTRY' || error?.errno === 1062
-        || String(error?.code || '').startsWith('SQLITE_CONSTRAINT')
-        || /UNIQUE constraint failed/i.test(String(error?.message || ''));
-      if (!duplicate) throw error;
-      row = await db.prepare(`SELECT id,generated_at AS generatedAt FROM daily_briefs
-        WHERE guest_id=? AND business_date=?`).get(guestId, businessDate);
-      await db.prepare('UPDATE daily_briefs SET brief_json=?,updated_at=? WHERE guest_id=? AND business_date=?')
-        .run(JSON.stringify(snapshot), at, guestId, businessDate);
-    }
-  }
-  if (!row) throw new Error('daily brief write did not produce a persisted row');
-  await createNotificationOnce({ guestId, sourceType: 'daily_brief', sourceId: businessDate,
-    message: `${businessDate} 的每日简报已更新，可查看活动、餐食和来源。`,
-    targetType: 'daily_brief', targetId: row.id, targetUrl: 'caretaker', notificationType: 'brief', createdAt: row.generatedAt });
-  return { status: 'ready', id: row.id, guestId, businessDate, generatedAt: row.generatedAt,
-    updatedAt: at, brief: snapshot };
+async function briefView(row, guestId, businessDate, { historical = false } = {}) {
+  const generated = decodeJson(row.briefJson ?? row.brief_json, {});
+  const current = historical ? generated : await buildDailyBriefSnapshot(guestId, businessDate);
+  const currentDate = systemBusinessClock.dateKey();
+  const currentEnvironmentSnapshot = await readCurrentEnvironmentSnapshot(historical ? currentDate : businessDate);
+  return { status:'ready', id:row.id, guestId,businessDate,
+    generatedAt:row.generatedAt ?? row.generated_at, updatedAt:row.updatedAt ?? row.updated_at,
+    brief:current, generatedBrief:generated, historical,
+    currentEnvironment:briefEnvironment(currentEnvironmentSnapshot),
+    environmentContext:{generatedAt:row.generatedAt ?? row.generated_at, generatedEnvironment:generated.environment || [],
+      currentSnapshotId:currentEnvironmentSnapshot.snapshotId,currentLocation:currentEnvironmentSnapshot.location,
+      currentSourceMode:currentEnvironmentSnapshot.sourceMode,currentStatus:currentEnvironmentSnapshot.status,
+      note:'生成时简报与来源保持原件；当前环境是另一次只读对照，不会更新原简报或批准活动。'} };
 }
 
-export async function getGuestDailyBrief(guestId, businessDate = systemBusinessClock.dateKey(), instant = systemBusinessClock.instant()) {
-  const today = systemBusinessClock.dateKey(instant);
-  const hour = systemBusinessClock.parts(instant).hour;
-  if (businessDate === today && hour < DAILY_BRIEF_HOUR) {
-    const existing = await db.prepare(`SELECT id,generated_at AS generatedAt,updated_at AS updatedAt,brief_json AS briefJson
-      FROM daily_briefs WHERE guest_id=? AND business_date=?`).get(guestId, businessDate);
-    return existing ? { status: 'ready', id: existing.id, guestId, businessDate,
-      generatedAt: existing.generatedAt, updatedAt: existing.updatedAt, brief: decodeJson(existing.briefJson, {}) }
-      : { status: 'not_ready', guestId, businessDate, availableAt: '07:00', timeZone: 'Asia/Shanghai' };
+async function saveDailyBrief(guestId,businessDate,at) {
+  let row=await db.prepare('SELECT * FROM daily_briefs WHERE guest_id=? AND business_date=?').get(guestId,businessDate);
+  if(!row){
+    const snapshot=await buildDailyBriefSnapshot(guestId,businessDate);if(!snapshot)return null;
+    const briefId=id('daily_brief');
+    try{await db.prepare('INSERT INTO daily_briefs(id,guest_id,business_date,brief_json,generated_at,updated_at) VALUES(?,?,?,?,?,?)')
+      .run(briefId,guestId,businessDate,JSON.stringify(snapshot),at,at);}
+    catch(error){const duplicate=error?.code==='ER_DUP_ENTRY'||error?.errno===1062||String(error?.code||'').startsWith('SQLITE_CONSTRAINT')||/UNIQUE constraint failed/i.test(String(error?.message||''));if(!duplicate)throw error;}
+    row=await db.prepare('SELECT * FROM daily_briefs WHERE guest_id=? AND business_date=?').get(guestId,businessDate);
+    if(!row)throw new Error('daily brief creation has no persisted row');
+    await createNotificationOnce({guestId,sourceType:'daily_brief',sourceId:businessDate,
+      message:`${businessDate} 的每日简报已生成，可查看安排与来源。`,targetType:'daily_brief',targetId:row.id,
+      targetUrl:'caretaker',notificationType:'brief',createdAt:row.generated_at});
   }
-  if (businessDate !== today) {
-    const existing = await db.prepare(`SELECT id,generated_at AS generatedAt,updated_at AS updatedAt,brief_json AS briefJson
-      FROM daily_briefs WHERE guest_id=? AND business_date=?`).get(guestId, businessDate);
-    return existing ? { status: 'ready', id: existing.id, guestId, businessDate,
-      generatedAt: existing.generatedAt, updatedAt: existing.updatedAt, brief: decodeJson(existing.briefJson, {}) }
-      : { status: 'not_generated', guestId, businessDate };
+  return briefView(row,guestId,businessDate);
+}
+
+export async function getGuestDailyBrief(guestId,businessDate=systemBusinessClock.dateKey(),instant=systemBusinessClock.instant()) {
+  const today=systemBusinessClock.dateKey(instant),hour=systemBusinessClock.parts(instant).hour;
+  if(businessDate!==today||hour<DAILY_BRIEF_HOUR){
+    const row=await db.prepare('SELECT * FROM daily_briefs WHERE guest_id=? AND business_date=?').get(guestId,businessDate);
+    if(row)return briefView(row,guestId,businessDate,{historical:true});
+    return businessDate===today?{status:'not_ready',guestId,businessDate,availableAt:'07:00',timeZone:'Asia/Shanghai'}
+      :{status:'not_generated',guestId,businessDate};
   }
-  return await saveDailyBrief(guestId, businessDate, instant.toISOString());
+  return saveDailyBrief(guestId,businessDate,instant.toISOString());
 }
 
 export async function runStage25Tick(instant = systemBusinessClock.instant(), clock = systemBusinessClock) {

@@ -10,6 +10,7 @@ import {
   alignMarineAndTide, EnvironmentProviderError, fetchOpenMeteoMarine,
   fetchOpenMeteoWeather, fetchQWeatherTide, makeDemoEnvironment
 } from './environment-providers.js';
+import { environmentInstant, environmentQueryMatches, resolveEnvironmentRecords } from './environment-resolution.js';
 
 const DOMAIN_TTL_MS = Object.freeze({ weather: 30 * 60_000, marine: 30 * 60_000, tide: 2 * 60 * 60_000 });
 const VALID_DOMAINS = new Set(Object.keys(DOMAIN_TTL_MS));
@@ -34,11 +35,12 @@ function snapshotKey({ locationId, stationId = '', targetDate, domain }) {
 }
 
 function fromRow(row) {
+  const payload = json(row.payload_json, {}) || {};
   return {
-    ...(json(row.payload_json, {}) || {}),
+    ...payload,
     snapshotKey: row.snapshot_key,
     domain: row.domain,
-    status: row.status,
+    status: payload.status || row.status,
     sourceName: row.source_name,
     sourceUrl: row.source_url,
     observedAt: readTimestamp(row.observed_at),
@@ -47,8 +49,30 @@ function fromRow(row) {
 }
 
 async function readSnapshot(key) {
-  const row = await db.prepare('SELECT * FROM environment_snapshots WHERE snapshot_key=?').get(key);
-  return row ? fromRow(row) : null;
+  const rows = await db.prepare('SELECT * FROM environment_snapshots WHERE snapshot_key=? OR snapshot_key LIKE ? ORDER BY updated_at DESC,snapshot_key DESC').all(key, key + ':%');
+  const context = environmentContext(rows[0]?.target_date ? String(rows[0].target_date).slice(0,10) : '');
+  for (const row of rows) {
+    const payload = json(row.payload_json, null);
+    if (environmentQueryMatches(payload, context)) return fromRow(row);
+  }
+  return null;
+}
+
+export function environmentContext(targetDate, { instant = now(), mockScenario } = {}) {
+  const mode = getEnvironmentMode(), config = mode === 'live' ? liveEnvironmentConfig() : null;
+  const mock = mode === 'demo' ? makeEnvironmentMockSnapshot(targetDate, instant, mockScenario).mock : null;
+  return { targetDate, instant, mode, tideProvider: config?.tideProvider || 'open-meteo',
+    mockScenario: mock?.scenario, mock,
+    location: mode === 'demo' ? DEMO_ENVIRONMENT_LOCATION : config?.location || {
+      id:'institution-location-unconfigured', name:'机构地点未配置', latitude:null,longitude:null,timeZone:null,institutionLocationConfigured:false },
+    missingConfig: config?.missing || [],
+    ...(process.env.ENVIRONMENT_OFFLINE_FIXTURE === '1' ? {providerFixture:{mode:'offline_fixture',label:'离线环境夹具 · 未访问外部供应商'}} : {}) };
+}
+
+export async function readCurrentEnvironmentSnapshot(targetDate, options = {}) {
+  const context = environmentContext(targetDate, options);
+  const rows = await db.prepare('SELECT * FROM environment_snapshots WHERE target_date=? ORDER BY updated_at DESC,snapshot_key DESC').all(targetDate);
+  return resolveEnvironmentRecords(rows, context);
 }
 
 export async function saveEnvironmentSnapshot({
@@ -59,22 +83,32 @@ export async function saveEnvironmentSnapshot({
     || !VALID_DOMAINS.has(domain) || !data || !['available', 'demo'].includes(status)) {
     throw new TypeError('environment snapshot metadata is invalid');
   }
-  const key = snapshotKey({ locationId, stationId, targetDate, domain });
+  const lookupKey = snapshotKey({ locationId, stationId, targetDate, domain });
   const sourceName = String(data.sourceName || '未知来源');
   const sourceUrl = String(data.sourceUrl || '');
   const savedAt = now();
   const expiry = expiresAt || new Date(Date.parse(savedAt) + DOMAIN_TTL_MS[domain]).toISOString();
   const payload = { ...data };
+  const context = environmentContext(targetDate);
+  payload.sourceMode ||= context.mode;
+  payload.queryLocation ||= { ...context.location, id:locationId, tideProvider:context.tideProvider, mockScenario:context.mockScenario };
   delete payload.snapshotKey;
   delete payload.cache;
   delete payload.freshness;
-  const payloadJson = JSON.stringify(payload);
-  const payloadHash = crypto.createHash('sha256').update(payloadJson).digest('hex');
+  delete payload.recordSequence;
+  const contentHash = crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
+  // Versions are append-only: a later refresh never rewrites a referenced source.
+  const key = `${lookupKey}:${crypto.createHash('sha256').update(JSON.stringify([contentHash,status,expiry,observedAt])).digest('hex').slice(0,24)}`;
   const existingMeta = await db.prepare('SELECT payload_hash,status FROM environment_snapshots WHERE snapshot_key=?').get(key);
-  const existing = existingMeta ? await readSnapshot(key) : null;
-  if (existingMeta?.status === status && existingMeta.payload_hash === payloadHash) {
+  const existing = Boolean(existingMeta);
+  if (existingMeta?.status === status) {
     return { inserted: false, duplicate: true, snapshotKey: key };
   }
+
+  const prior = await db.prepare('SELECT COUNT(*) AS n FROM environment_snapshots WHERE location_id=? AND target_date=? AND domain=?').get(locationId,targetDate,domain);
+  payload.recordSequence = Number(prior.n) + 1;
+  const payloadJson = JSON.stringify(payload);
+  const payloadHash = crypto.createHash('sha256').update(payloadJson).digest('hex');
 
   const values = [key, locationId, stationId, targetDate, domain, status, sourceName, sourceUrl,
     sqlTimestamp(observedAt), sqlTimestamp(expiry), payloadHash, payloadJson,
@@ -82,17 +116,11 @@ export async function saveEnvironmentSnapshot({
   const sqliteSql = `INSERT INTO environment_snapshots
     (snapshot_key,location_id,station_id,target_date,domain,status,source_name,source_url,observed_at,expires_at,payload_hash,payload_json,created_at,updated_at)
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    ON CONFLICT(snapshot_key) DO UPDATE SET location_id=excluded.location_id,station_id=excluded.station_id,
-    target_date=excluded.target_date,domain=excluded.domain,status=excluded.status,source_name=excluded.source_name,
-    source_url=excluded.source_url,observed_at=excluded.observed_at,expires_at=excluded.expires_at,
-    payload_hash=excluded.payload_hash,payload_json=excluded.payload_json,updated_at=excluded.updated_at`;
+    ON CONFLICT(snapshot_key) DO NOTHING`;
   const mysqlSql = `INSERT INTO environment_snapshots
     (snapshot_key,location_id,station_id,target_date,domain,status,source_name,source_url,observed_at,expires_at,payload_hash,payload_json,created_at,updated_at)
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    ON DUPLICATE KEY UPDATE location_id=VALUES(location_id),station_id=VALUES(station_id),target_date=VALUES(target_date),
-    domain=VALUES(domain),status=VALUES(status),source_name=VALUES(source_name),source_url=VALUES(source_url),
-    observed_at=VALUES(observed_at),expires_at=VALUES(expires_at),payload_hash=VALUES(payload_hash),
-    payload_json=VALUES(payload_json),updated_at=VALUES(updated_at)`;
+    ON DUPLICATE KEY UPDATE snapshot_key=VALUES(snapshot_key)`;
   await db.prepare(driver === 'mysql' ? mysqlSql : sqliteSql).run(...values);
   return { inserted: !existing, duplicate: Boolean(existing), snapshotKey: key };
 }
@@ -117,18 +145,26 @@ function unavailableRecord(domain, errorCode, missingConfig = []) {
   };
 }
 
-export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false, mockScenario } = {}) {
+const inFlight = new Map();
+export async function getEnvironmentSnapshot(targetDate, options = {}) {
+  const cfg = liveEnvironmentConfig();
+  const key = JSON.stringify([targetDate,getEnvironmentMode(),cfg.location,cfg.tideProvider,cfg.weatherBaseUrl,cfg.marineBaseUrl,options.forceRefresh,options.mockScenario,process.env.ENVIRONMENT_MOCK_SCENARIO]);
+  if (inFlight.has(key)) return inFlight.get(key);
+  const operation = loadEnvironmentSnapshot(targetDate, options).finally(()=>inFlight.delete(key));
+  inFlight.set(key,operation);return operation;
+}
+async function loadEnvironmentSnapshot(targetDate, { forceRefresh = false, mockScenario } = {}) {
   const mode = getEnvironmentMode();
   if (mode === 'demo') {
     const snapshot = makeEnvironmentMockSnapshot(targetDate, now(), mockScenario);
-    if (snapshot.status === 'demo') {
+    {
       for (const domain of ['weather', 'tide', 'marine']) await saveEnvironmentSnapshot({
         locationId: snapshot.location.id,
         stationId: `mock:${snapshot.mock.scenario}:${snapshot.mock.timeStep}`,
-        targetDate, domain, data: snapshot[domain], expiresAt: snapshot[domain].expiresAt
+        targetDate, domain, data: { ...snapshot[domain],sourceMode:'demo',queryLocation:{...snapshot.location,mockScenario:snapshot.mock.scenario,tideProvider:'open-meteo'} }, status:'demo', expiresAt: snapshot[domain].expiresAt
       });
     }
-    return snapshot;
+    return { ...snapshot, ...(await readCurrentEnvironmentSnapshot(targetDate,{mockScenario})) };
   }
   const liveConfig = mode === 'live' ? liveEnvironmentConfig() : null;
   const location = mode === 'demo' ? DEMO_ENVIRONMENT_LOCATION : liveConfig?.location || {
@@ -165,11 +201,11 @@ export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false,
         { missingConfig: domainMissing });
       if (domain === 'weather') return fetchOpenMeteoWeather({
         latitude: location.latitude, longitude: location.longitude, date: targetDate,
-        timeZone: location.timeZone, baseUrl: liveConfig.weatherBaseUrl
+        timeZone: location.timeZone, baseUrl: liveConfig.weatherBaseUrl, clock
       });
       if (domain === 'marine') return fetchOpenMeteoMarine({
         latitude: location.latitude, longitude: location.longitude, date: targetDate,
-        timeZone: location.timeZone, baseUrl: liveConfig.marineBaseUrl
+        timeZone: location.timeZone, baseUrl: liveConfig.marineBaseUrl, clock
       });
       if (liveConfig.tideProvider === 'open-meteo') {
         throw new EnvironmentProviderError('TIDE_MODEL_DEPENDENCY_UNAVAILABLE', '含潮汐的模式海面高度需要同一Marine响应中的sea_level_height_msl字段');
@@ -181,15 +217,20 @@ export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false,
     }, { forceRefresh });
     record = { ...record, domain };
     if (record.freshness === 'unavailable' && domainMissing.length) record.missingConfig = domainMissing;
+    if (mode === 'live' && ['stale','unavailable'].includes(record.status)) {
+      const saved = await saveEnvironmentSnapshot({locationId:location.id,stationId,targetDate,domain,
+        data:{...record,retrievedAt:record.retrievedAt || now(),failureAt:now()},status:'available',
+        expiresAt:record.expiresAt || now()});
+      record.snapshotKey = saved.snapshotKey;
+    }
     domains[domain] = record;
   }
 
   if (mode === 'live' && liveConfig?.tideProvider === 'open-meteo') {
     const marine = domains.marine;
     const seaLevelAvailable = ['available', 'demo'].includes(marine?.status)
-      && marine?.variableStatus?.modeledSeaLevelIncludingTides === 'available'
       && Array.isArray(marine.hourly) && marine.hourly.length > 0
-      && marine.hourly.every(item => Number.isFinite(item.modelSeaLevelHeightMsl));
+      && marine.hourly.some(item => Number.isFinite(item.modelSeaLevelHeightMsl));
     const modeledTide = {
       domain: 'tide', status: seaLevelAvailable ? 'available' : marine?.status === 'stale' ? 'stale' : 'unavailable',
       freshness: seaLevelAvailable ? marine.freshness || 'fresh' : marine?.status === 'stale' ? 'stale' : 'unavailable',
@@ -205,6 +246,7 @@ export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false,
       observedAt: null,
       expiresAt: marine?.expiresAt || null,
       timezone: marine?.timezone || location.timeZone || null,
+      utcOffsetSeconds: marine?.utcOffsetSeconds ?? null,
       unit: marine?.units?.modelSeaLevel || 'm',
       units: { height: marine?.units?.modelSeaLevel || 'm' },
       verticalDatum: 'global mean sea level',
@@ -221,10 +263,10 @@ export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false,
     };
     domains.tide = modeledTide;
     if (seaLevelAvailable) {
-      await saveEnvironmentSnapshot({ locationId: location.id, targetDate, domain: 'tide', data: modeledTide,
+      const saved = await saveEnvironmentSnapshot({ locationId: location.id, targetDate, domain: 'tide', data: modeledTide,
         status: 'available', expiresAt: modeledTide.expiresAt,
         observedAt: modeledTide.retrievedAt });
-      const tideKey = snapshotKey({ locationId: location.id, targetDate, domain: 'tide' });
+      const tideKey = saved.snapshotKey;
       domains.tide = { ...modeledTide, snapshotKey: tideKey };
     }
   }
@@ -249,7 +291,7 @@ export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false,
   });
   const snapshotId = `environment:${location.id}:${targetDate}:${[weather, tide, marine].map(item => item.retrievedAt || item.updatedAt || item.status).join(':')}`;
   const expiries = [weather.expiresAt, tide.expiresAt, marine.expiresAt].filter(Boolean).sort();
-  return {
+  const result = {
     snapshotId,
     targetDate,
     timeZone: location.timeZone || null,
@@ -280,10 +322,11 @@ export async function getEnvironmentSnapshot(targetDate, { forceRefresh = false,
       '环境快照不代表临床、海事或航海安全结论；缺失或过期数据不放行下海项目。'
     ]
   };
+  return { ...result, ...(await readCurrentEnvironmentSnapshot(targetDate)) };
 }
 
 export async function readEnvironmentSnapshotCount({ locationId, targetDate, domain, stationId = '' }) {
   const key = snapshotKey({ locationId, stationId, targetDate, domain });
-  const row = await db.prepare('SELECT COUNT(*) AS count FROM environment_snapshots WHERE snapshot_key=?').get(key);
+  const row = await db.prepare('SELECT COUNT(*) AS count FROM environment_snapshots WHERE snapshot_key=? OR snapshot_key LIKE ?').get(key, key + ':%');
   return Number(row?.count || 0);
 }

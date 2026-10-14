@@ -8,11 +8,11 @@ function businessDateKey() {
 }
 
 function showValue(value, unit = '') {
-  return value === null || value === undefined || !Number.isFinite(Number(value)) ? '暂无数据' : String(value) + unit;
+  return !(typeof value === 'number' || (typeof value === 'string' && value.trim())) || !Number.isFinite(Number(value)) ? '暂无数据' : String(value) + unit;
 }
 
 function TideCurve({ hourly = [], events = [], modeled = false }) {
-  const points = hourly.map((item, index) => ({ item, index, value: Number(item.heightM) }))
+  const points = hourly.map((item, index) => ({ item, index, value: (typeof item.heightM === 'number' || (typeof item.heightM === 'string' && item.heightM.trim())) ? Number(item.heightM) : NaN }))
     .filter(point => Number.isFinite(point.value));
   if (points.length < 2) return <p className="environment-muted">暂无足够的逐时{modeled ? '预测海面高度' : '潮位'}数据，不能绘制曲线。</p>;
   const min = Math.min(...points.map(point => point.value));
@@ -86,16 +86,17 @@ export default function EnvironmentPanel({ projectId = '' }) {
   const weather = data && data.weather;
   const tide = data && data.tide;
   const marine = data && data.marine;
-  const currentWeather = weather && weather.current;
-  const currentMarine = marine && (marine.hourly || []).find(item => item.time === currentWeather?.time);
+  const currentWeather = weather?.available ? weather.selectedPoint : null;
+  const currentMarine = marine?.available ? marine.selectedPoint : null;
+  const currentTide = tide?.available ? tide.selectedPoint : null;
   const modeledSeaLevelAvailable = tide?.mode === 'modeled-sea-level-including-tides'
-    && ['available', 'demo'].includes(tide.status) && Number.isFinite(currentMarine?.modelSeaLevelHeightMsl);
+    && tide.available && Number.isFinite(currentTide?.heightM);
   const gridCoordinateLabel = record => {
     const point = record?.providerCoordinates;
     return point && Number.isFinite(Number(point.latitude)) && Number.isFinite(Number(point.longitude))
       ? `网格中心 WGS84 ${Number(point.latitude).toFixed(4)}, ${Number(point.longitude).toFixed(4)}` : '供应商网格坐标不可用';
   };
-  const uvLabels = { low: '低', moderate: '中等', high: '高', strong: '强', unknown: '未知', missing: '缺失' };
+  const uvLabels = { low: '低', moderate: '中等', high: '高', strong: '强', unknown: '机构分级未设置', missing: '指数缺失' };
   const availability = data && data.availability;
   const unavailable = !data || data.status === 'unavailable' || data.status === 'stale';
   const snapshotId = data && data.snapshotId || '';
@@ -128,17 +129,18 @@ export default function EnvironmentPanel({ projectId = '' }) {
             <p>天气、潮汐或海况缺失/过期时，不会把下海项目判为安全。请等待有效来源数据或现场核验。</p>
             {data && data.missingConfig && data.missingConfig.length > 0 && <small>尚缺配置：{data.missingConfig.join('、')}</small>}
           </div>}
+          <p className="environment-muted" data-testid="environment-timepoint">{(currentWeather?.time || currentMarine?.time || currentTide?.time || '该小时数据点缺失').replace('T',' ')} · {data.timeZone || '时区不可核实'} · {currentWeather?.label || currentMarine?.label || currentTide?.label || '未用第一条记录补值'}</p>
           <div className="environment-metrics">
             <div><span>气温</span><strong>{showValue(currentWeather && currentWeather.temperatureC, ' °C')}</strong><small>{(weather && weather.sourceName) || '天气来源不可用'}</small></div>
             <div><span>风速</span><strong>{showValue(currentWeather && currentWeather.windSpeedKmh, ' km/h')}</strong><small>来源字段缺失时保持“暂无数据”</small></div>
-            <div><span>紫外线</span><strong>{currentWeather && currentWeather.uvIndex != null ? String(currentWeather.uvIndex) + ' · ' + (uvLabels[currentWeather.uvLevel] || '未知') : '暂无数据'}</strong><small>强度分级使用演示阈值；不是机构标准</small></div>
+            <div><span>紫外线</span><strong>{(currentWeather && currentWeather.uvIndex != null ? '指数 ' + String(currentWeather.uvIndex) : '指数缺失') + ' · ' + (data.sourceMode === 'demo' ? '合成示例分级' : '机构分级未设置')}</strong><small>指数与等级是不同字段；无指数会明确缺失，0仍是有效数值</small></div>
             <div><span>有效波高</span><strong>{showValue(currentMarine?.waveHeightM, ` ${marine?.units?.waveHeight || 'm'}`)}</strong><small>{(marine && marine.sourceName) || '海况来源不可用'}</small></div>
-            <div><span>{tide?.mode === 'modeled-sea-level-including-tides' ? '含潮汐的模式海面高度（预测）' : '模型海面高度'}</span><strong>{showValue(modeledSeaLevelAvailable ? currentMarine?.modelSeaLevelHeightMsl : null, ` ${marine?.units?.modelSeaLevel || 'm'}`)}</strong><small>全球平均海平面基准；含潮汐与其他海面变化，不是官方站点实测潮位</small></div>
+            <div><span>{tide?.mode === 'modeled-sea-level-including-tides' ? '含潮汐的模式海面高度（预测）' : '模型海面高度'}</span><strong>{showValue(modeledSeaLevelAvailable ? currentTide?.heightM : null, ` ${marine?.units?.modelSeaLevel || 'm'}`)}</strong><small>全球平均海平面基准；含潮汐与其他海面变化，不是官方站点实测潮位</small></div>
           </div>
           <div className="environment-source-row">
-            <span>天气：{weather && weather.sourceUrl ? <a href={weather.sourceUrl} target="_blank" rel="noreferrer">{weather.sourceName}</a> : (weather && weather.sourceName) || '来源不可用'} · {weather && weather.observedAt ? '观测时间 ' + weather.observedAt : '读取时间 ' + ((weather && weather.retrievedAt) || '未知')} · {gridCoordinateLabel(weather)} · 单位 {weather?.units?.temperature || '°C'}、{weather?.units?.windSpeed || 'km/h'}</span>
-            <span>{tide?.mode === 'modeled-sea-level-including-tides' ? '含潮汐的模式海面高度：' : '站点潮汐：'}{tide && tide.sourceUrl ? <a href={tide.sourceUrl} target="_blank" rel="noreferrer">{tide.sourceName}</a> : (tide && tide.sourceName) || '来源不可用'} · 获取时间 {(tide && tide.retrievedAt) || '未知'} · 有效至 {(tide && tide.expiresAt) || '未知'} · {gridCoordinateLabel(tide)} · 基准 {(tide && tide.verticalDatum) || '未说明'}</span>
-            <span>海况：{marine && marine.sourceUrl ? <a href={marine.sourceUrl} target="_blank" rel="noreferrer">{marine.sourceName}</a> : (marine && marine.sourceName) || '来源不可用'} · 获取时间 {(marine && marine.retrievedAt) || '未知'} · {gridCoordinateLabel(marine)} · 波高与含潮汐的预测海面高度分列</span>
+            <span>天气：{weather && weather.sourceUrl ? <a href={weather.sourceUrl} target="_blank" rel="noreferrer">{weather.sourceName}</a> : (weather && weather.sourceName) || '来源不可用'} · {'采集时间 ' + (weather?.retrievedAt || '无法核实') + ' · 数据时刻 ' + (currentWeather?.instant || '缺失') + '（小时预报，非台站观测）'} · {gridCoordinateLabel(weather)} · 单位 {weather?.units?.temperature || '°C'}、{weather?.units?.windSpeed || 'km/h'}</span>
+            <span>{tide?.mode === 'modeled-sea-level-including-tides' ? '含潮汐的模式海面高度：' : '站点潮汐：'}{tide && tide.sourceUrl ? <a href={tide.sourceUrl} target="_blank" rel="noreferrer">{tide.sourceName}</a> : (tide && tide.sourceName) || '来源不可用'} · 获取时间 {(tide && tide.retrievedAt) || '未知'} · 有效至 {(tide && tide.expiresAt) || '未知'} · {gridCoordinateLabel(tide)} · 数据时刻 {currentTide?.instant || '缺失'} · 基准 {tide?.verticalDatum === 'global mean sea level' ? '全球平均海平面' : '未说明'}</span>
+            <span>海况：{marine && marine.sourceUrl ? <a href={marine.sourceUrl} target="_blank" rel="noreferrer">{marine.sourceName}</a> : (marine && marine.sourceName) || '来源不可用'} · 获取时间 {(marine && marine.retrievedAt) || '未知'} · {gridCoordinateLabel(marine)} · 数据时刻 {currentMarine?.instant || '缺失'} · 波高与含潮汐的预测海面高度分列</span>
           </div>
           <div className="environment-events">
             <div><strong>{tide?.mode === 'modeled-sea-level-including-tides' ? '站点高潮 / 低潮时刻' : '高潮 / 低潮'}</strong>{tide?.mode === 'modeled-sea-level-including-tides'
@@ -163,6 +165,7 @@ export default function EnvironmentPanel({ projectId = '' }) {
               : <span>{(availability && availability.reason) || '缺少环境资料，暂无可确认窗口。'}</span>}
             <small>{(availability && availability.reason) || '缺失、过期或合成演示数据不能用于真实安全放行。'}</small>
           </div>}
+          <div className="environment-source-row" data-testid="environment-domain-states">{['weather','tide','marine'].map(domain => <span key={domain} data-domain={domain} data-source-id={data[domain]?.snapshotKey || ''}>{({weather:'天气',tide:'潮汐',marine:'海况'})[domain]}：{data[domain]?.available ? data[domain]?.status === 'demo' ? '合成示例资料' : '选中点可用' : data[domain]?.missingNote || '资料缺失'} · 有效至 {data[domain]?.expiresAt || '无法核实'}</span>)}</div>
           <p className="environment-disclaimer">{(data.limitations || ['环境信息用于演示，不代表实时海况或专业安全判断。']).join(' ')}</p>
         </div>}
   </section>;

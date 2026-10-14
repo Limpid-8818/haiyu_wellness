@@ -11,8 +11,9 @@ export function createCachedLoader({ read, write, clock = () => new Date(), ttlM
   return async function loadCached(key, loader, { forceRefresh = false } = {}) {
     const now = dateValue(clock());
     const cached = await read(key);
+    const expiry = cached?.expiresAt ? Date.parse(cached.expiresAt) : Number.NaN;
     if (!forceRefresh && cached && ['available', 'demo'].includes(cached.status)
-      && dateValue(cached.expiresAt).getTime() > now.getTime()) {
+      && Number.isFinite(expiry) && expiry > now.getTime()) {
       return { ...cached, freshness: 'fresh', cache: 'hit' };
     }
 
@@ -28,10 +29,11 @@ export function createCachedLoader({ read, write, clock = () => new Date(), ttlM
         retrievedAt: payload.retrievedAt || loadedAt.toISOString(),
         expiresAt: new Date(loadedAt.getTime() + ttlMs).toISOString()
       };
-      await write(key, snapshot);
+      const saved = await write(key, snapshot);
+      if (saved?.snapshotKey) snapshot.snapshotKey = saved.snapshotKey;
       return { ...snapshot, freshness: 'fresh', cache: cached ? 'refreshed' : 'miss' };
     } catch (error) {
-      if (cached) return {
+      if (cached && ['available','demo','stale'].includes(cached.status)) return {
         ...cached,
         status: 'stale',
         freshness: 'stale',

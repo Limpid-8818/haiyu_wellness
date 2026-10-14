@@ -12,14 +12,15 @@ export class EnvironmentProviderError extends Error {
 }
 
 function numberOrNull(value) {
-  if (value === null || value === undefined || value === '') return null;
+  if (!(typeof value === 'number' || (typeof value === 'string' && value.trim() !== ''))) return null;
   const result = Number(value);
   return Number.isFinite(result) ? result : null;
 }
 
 function validDate(date) {
-  return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
-    && new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date;
+  if(typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date))return false;
+  const value=new Date(`${date}T00:00:00Z`);
+  return Number.isFinite(value.getTime())&&value.toISOString().slice(0,10)===date;
 }
 
 function validCoordinates(latitude, longitude) {
@@ -38,7 +39,7 @@ function providerGridCoordinates(body) {
 
 function parseLocalHour(time) {
   const match = String(time ?? '').match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
-  return match ? `${match[1]}T${match[2]}` : null;
+  return match && validDate(match[1]) && Number(match[2].slice(0, 2)) < 24 && Number(match[2].slice(3)) < 60 ? `${match[1]}T${match[2]}` : null;
 }
 
 function localDateTimeAsUtcMilliseconds(value) {
@@ -79,12 +80,12 @@ function timeZoneOffsetSecondsForLocalTime(value, timeZone) {
 
 function providerUtcOffsetSeconds(value, { timeZone, utcOffsetSeconds } = {}) {
   if (!value || /(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$/u.test(String(value).trim())) {
-    const explicitOffset = Number(utcOffsetSeconds);
-    return utcOffsetSeconds !== null && utcOffsetSeconds !== undefined && utcOffsetSeconds !== ''
+    const explicitOffset = numberOrNull(utcOffsetSeconds);
+    return explicitOffset !== null
       && Number.isInteger(explicitOffset) && Math.abs(explicitOffset) <= 14 * 60 * 60 ? explicitOffset : null;
   }
   const hasSuppliedOffset = utcOffsetSeconds !== null && utcOffsetSeconds !== undefined && utcOffsetSeconds !== '';
-  const suppliedOffset = hasSuppliedOffset ? Number(utcOffsetSeconds) : Number.NaN;
+  const suppliedOffset = hasSuppliedOffset ? numberOrNull(utcOffsetSeconds) : Number.NaN;
   return hasSuppliedOffset && Number.isInteger(suppliedOffset) && Math.abs(suppliedOffset) <= 14 * 60 * 60
     ? suppliedOffset : timeZoneOffsetSecondsForLocalTime(value, timeZone);
 }
@@ -173,7 +174,7 @@ export async function fetchOpenMeteoWeather({
   const current = body?.current || {};
   const currentTime = parseLocalHour(current.time);
   const currentHourKey = currentTime ? `${currentTime.slice(0, 13)}:00` : null;
-  const currentHour = hourly.find(item => item.time === currentHourKey) || hourly[0] || null;
+  const currentHour = hourly.find(item => item.time === currentHourKey) || null;
   const retrievedAt = clock().toISOString();
   const timezone = body.timezone || timeZone;
   const utcOffsetSeconds = providerUtcOffsetSeconds(current.time, { timeZone: timezone, utcOffsetSeconds: body.utc_offset_seconds });
@@ -182,6 +183,7 @@ export async function fetchOpenMeteoWeather({
     sourceName: ENVIRONMENT_SOURCES.weather.name,
     sourceUrl: ENVIRONMENT_SOURCES.weather.url,
     providerCoordinates: providerGridCoordinates(body),
+    providerResponseHash: crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex'),
     retrievedAt,
     observedAt: normalizeProviderInstant(current.time, { timeZone: timezone, utcOffsetSeconds: body.utc_offset_seconds }),
     observedLocalTime: current.time || null,
@@ -283,6 +285,7 @@ export async function fetchOpenMeteoMarine({
     providerResponseHash: crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex'),
     retrievedAt: clock().toISOString(),
     timezone: body.timezone || timeZone,
+    utcOffsetSeconds: providerUtcOffsetSeconds(times[0], { timeZone: body.timezone || timeZone, utcOffsetSeconds: body.utc_offset_seconds }),
     units: { waveHeight: body.hourly_units?.wave_height || 'm', modelSeaLevel: body.hourly_units?.sea_level_height_msl || 'm' },
     seaLevelReference: 'global mean sea level; modeled sea level includes tides and other sea-level changes; not an official local tide-station observation',
     variableStatus: { waveHeight: waveValuesComplete ? 'available' : 'unavailable',
@@ -369,4 +372,4 @@ export function makeDemoEnvironment(date, retrievedAt = new Date().toISOString()
   };
 }
 
-export { parseLocalHour, validDate };
+export { parseLocalHour, validDate, normalizeProviderInstant, numberOrNull };
