@@ -1,3 +1,11 @@
+# 最新有效状态：5已验合入远端，Source85整合复核通过，准备6（2026-10-14）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local独核第84轮147551B包/124引用和23生产测试辅助文件冻结/product/main完全一致，产品d25744f经5d92f8b合入，main/远端87a3537一致且干净。六BUG F09/F10/U02/U03/U04/U06完成，V01/F07/F08保持；3020/5180只读50/16384/12/90/live。旧阶段5资源21、新整合worker4+Source2共6实例两根PASS，auditor另核4+3准确身份全部退出，资源/结构/退出缺口0。详第85轮，源公开文稿将普通commit/push。
+
+下一仅准备6 U01/U07/U08/U09/D01/V03，6尚未派；28d6 tracked项目源码与main diff0可同目录App fork停止5继承已验成果，不新worktree/复制依赖或internal agents，模型GPT-6.1 Sol/High。Source只规划独验，不真实模型/公开环境请求/私密.env/用户库/MySQL/scheduler/CI。旧FAIL/例外/109未验/NOT_FINAL_ACCEPTED保持，准确资源全退出后才衔接；派发最多一次必要就绪即结束，不轮询。以下旧时点完整保留。
+
+---
+
 # 当前有效状态：阶段5已合入并普通push，待Source85核整合（2026-10-14）
 
 阶段5产品d25744f8ab05cc9a7ef3d3f3483daff611cd81cf经main merge5d92f8bc23f7e12b6a8ddd53fa7ce427c877fad6合入；23冻结生产测试辅助文件一致，六BUG原条目已完成。公开文稿14d438779601ed6e972c80dc36268f4cf7b1df13已普通push exit0，本地main/tracking/实际ls-remote三方一致、main核时干净。main78/78/build0，旧21与新4实例双根资源PASS，两个auditor另核6准确身份/4组空、guardian真实exit0；用户3020/5180只读status50/16384/12/90秒/live保持。
