@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './environment.css';
+import {businessTime} from '../../shared/release-presentation.js';
+import {SourceDetails} from './SourceDetails.jsx';
 
 function businessDateKey() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -127,7 +129,7 @@ export default function EnvironmentPanel({ projectId = '' }) {
           {unavailable && <div className="environment-state environment-state-warning" role="status">
             <strong>{data && data.status === 'stale' ? '当前快照已过期' : '暂无可用环境数据'}</strong>
             <p>天气、潮汐或海况缺失/过期时，不会把下海项目判为安全。请等待有效来源数据或现场核验。</p>
-            {data && data.missingConfig && data.missingConfig.length > 0 && <small>尚缺配置：{data.missingConfig.join('、')}</small>}
+            {data && data.missingConfig && data.missingConfig.length > 0 && <><small>所需环境资料尚未配置，请联系机构核对。</small><SourceDetails data={{missingConfig:data.missingConfig}}/></>}
           </div>}
           <p className="environment-muted" data-testid="environment-timepoint">{(currentWeather?.time || currentMarine?.time || currentTide?.time || '该小时数据点缺失').replace('T',' ')} · {data.timeZone || '时区不可核实'} · {currentWeather?.label || currentMarine?.label || currentTide?.label || '未用第一条记录补值'}</p>
           <div className="environment-metrics">
@@ -137,18 +139,18 @@ export default function EnvironmentPanel({ projectId = '' }) {
             <div><span>有效波高</span><strong>{showValue(currentMarine?.waveHeightM, ` ${marine?.units?.waveHeight || 'm'}`)}</strong><small>{(marine && marine.sourceName) || '海况来源不可用'}</small></div>
             <div><span>{tide?.mode === 'modeled-sea-level-including-tides' ? '含潮汐的模式海面高度（预测）' : '模型海面高度'}</span><strong>{showValue(modeledSeaLevelAvailable ? currentTide?.heightM : null, ` ${marine?.units?.modelSeaLevel || 'm'}`)}</strong><small>全球平均海平面基准；含潮汐与其他海面变化，不是官方站点实测潮位</small></div>
           </div>
-          <div className="environment-source-row">
+          <SourceDetails summary="查看供应商来源与原始时间"><div className="environment-source-row">
             <span>天气：{weather && weather.sourceUrl ? <a href={weather.sourceUrl} target="_blank" rel="noreferrer">{weather.sourceName}</a> : (weather && weather.sourceName) || '来源不可用'} · {'采集时间 ' + (weather?.retrievedAt || '无法核实') + ' · 数据时刻 ' + (currentWeather?.instant || '缺失') + '（小时预报，非台站观测）'} · {gridCoordinateLabel(weather)} · 单位 {weather?.units?.temperature || '°C'}、{weather?.units?.windSpeed || 'km/h'}</span>
             <span>{tide?.mode === 'modeled-sea-level-including-tides' ? '含潮汐的模式海面高度：' : '站点潮汐：'}{tide && tide.sourceUrl ? <a href={tide.sourceUrl} target="_blank" rel="noreferrer">{tide.sourceName}</a> : (tide && tide.sourceName) || '来源不可用'} · 获取时间 {(tide && tide.retrievedAt) || '未知'} · 有效至 {(tide && tide.expiresAt) || '未知'} · {gridCoordinateLabel(tide)} · 数据时刻 {currentTide?.instant || '缺失'} · 基准 {tide?.verticalDatum === 'global mean sea level' ? '全球平均海平面' : '未说明'}</span>
             <span>海况：{marine && marine.sourceUrl ? <a href={marine.sourceUrl} target="_blank" rel="noreferrer">{marine.sourceName}</a> : (marine && marine.sourceName) || '来源不可用'} · 获取时间 {(marine && marine.retrievedAt) || '未知'} · {gridCoordinateLabel(marine)} · 数据时刻 {currentMarine?.instant || '缺失'} · 波高与含潮汐的预测海面高度分列</span>
           </div>
-          <div className="environment-events">
+          </SourceDetails><div className="environment-events">
             <div><strong>{tide?.mode === 'modeled-sea-level-including-tides' ? '站点高潮 / 低潮时刻' : '高潮 / 低潮'}</strong>{tide?.mode === 'modeled-sea-level-including-tides'
               ? <span>当前模式不提供站点精确潮汐时刻</span>
               : tide && ['available', 'demo', 'stale'].includes(tide.status) && tide.events && tide.events.length
               ? tide.events.filter(event => ['high', 'low'].includes(event.type)).map((event, index) => <span key={event.time + '-' + index}>{event.type === 'high' ? '高潮' : '低潮'} {String(event.time).slice(11, 16)} · {showValue(event.heightM, ' m')}</span>)
               : <span>暂无潮汐时刻</span>}</div>
-            <div><strong>环境快照</strong><span title={snapshotId}>统一编号 {snapshotLabel || '未知'}</span><span>有效至 {data.expiresAt || '无有效期'}</span></div>
+            <div><strong>资料有效期</strong><span>{businessTime(data.expiresAt)}</span><SourceDetails data={{snapshotId,sources:data.sources}}/></div>
           </div>
           <details className="environment-tide-details">
             <summary>{tide?.mode === 'modeled-sea-level-including-tides' ? '展开含潮汐的模式海面高度预测曲线' : '展开潮汐曲线（纵轴基准未知）'}</summary>
@@ -165,7 +167,7 @@ export default function EnvironmentPanel({ projectId = '' }) {
               : <span>{(availability && availability.reason) || '缺少环境资料，暂无可确认窗口。'}</span>}
             <small>{(availability && availability.reason) || '缺失、过期或合成演示数据不能用于真实安全放行。'}</small>
           </div>}
-          <div className="environment-source-row" data-testid="environment-domain-states">{['weather','tide','marine'].map(domain => <span key={domain} data-domain={domain} data-source-id={data[domain]?.snapshotKey || ''}>{({weather:'天气',tide:'潮汐',marine:'海况'})[domain]}：{data[domain]?.available ? data[domain]?.status === 'demo' ? '合成示例资料' : '选中点可用' : data[domain]?.missingNote || '资料缺失'} · 有效至 {data[domain]?.expiresAt || '无法核实'}</span>)}</div>
+          <div className="environment-source-row" data-testid="environment-domain-states">{['weather','tide','marine'].map(domain => <span key={domain} data-domain={domain} data-source-id={data[domain]?.snapshotKey || ''}>{({weather:'天气',tide:'潮汐',marine:'海况'})[domain]}：{data[domain]?.available ? data[domain]?.status === 'demo' ? '合成示例资料' : '选中点可用' : data[domain]?.missingNote || '资料缺失'} · 有效至 {businessTime(data[domain]?.expiresAt)}</span>)}</div>
           <p className="environment-disclaimer">{(data.limitations || ['环境信息用于演示，不代表实时海况或专业安全判断。']).join(' ')}</p>
         </div>}
   </section>;

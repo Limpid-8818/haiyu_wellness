@@ -17,6 +17,9 @@ import './stage25.css';
 import './stage26.css';
 import './health-metrics.css';
 import './mood.css';
+import './release.css';
+import { checkinAvailability,businessText,businessTime,notificationCategory} from '../../shared/release-presentation.js';
+import {SourceDetails,BusinessReason} from './SourceDetails.jsx';
 import EnvironmentPanel from './EnvironmentPanel.jsx';
 import { MoodPlayerDock, MoodSpace } from './MoodSpace.jsx';
 
@@ -67,7 +70,7 @@ async function request(path, options = {}) {
   return data;
 }
 
-const fmtDate = (value) => value ? new Date(value).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }) : '—';
+const fmtDate = (value) => value ? new Date(value).toLocaleDateString('zh-CN', { timeZone:'Asia/Shanghai', month: 'long', day: 'numeric' }) : '—';
 const initials = (name = '') => name.slice(0, 1);
 const asText = (value) => typeof value === 'string' ? value : value == null ? '' : String(value);
 
@@ -122,7 +125,7 @@ function normalizeGuestList(rows) {
 }
 
 function Brand({ compact = false }) {
-  return <div className={`brand ${compact ? 'compact' : ''}`}><span className="brand-mark">屿</span><div><strong>海屿康养社区</strong>{!compact && <small>Seaside Wellness Community</small>}</div></div>;
+  return <div className={`brand ${compact ? 'compact' : ''}`}><span className="brand-mark">屿</span><div><strong>海屿康养社区</strong>{!compact && <small>本地网页演示</small>}</div></div>;
 }
 
 function PublicHeader({ onHome }) {
@@ -166,7 +169,7 @@ function Home({ onEnter }) {
   return <div className="public-shell"><PublicHeader onHome={() => window.scrollTo({ top: 0, behavior: 'smooth' })}/><main>
     <section className="hero"><div className="hero-copy"><div className="eyebrow">面向每一个人的滨海康养服务</div><h1>把日子过得<br/><em>更从容一点</em></h1><p>海屿康养社区连接客人、医护与服务团队，让健康信息有边界地流动，让每一次照护都更贴近真实需要。</p><div className="hero-actions"><button type="button" className="primary-btn" onClick={() => onEnter('guest')}>我是客人 <span>→</span></button><button type="button" className="secondary-btn" onClick={() => onEnter('staff')}>我是工作人员 <span>→</span></button><button type="button" className="secondary-btn" onClick={() => onEnter('dean')}>院长管理入口 <span>→</span></button></div><div className="hero-note"><span>✦</span> 个人信息仅在授权工作区内展示</div></div><div className="hero-art"><div className="sun"/><div className="wave wave-a"/><div className="wave wave-b"/><button type="button" className="hero-card" onClick={() => setWeatherIndex(index => (index + 1) % weatherOptions.length)} aria-label="切换演示天气"><span className="mini-label">今日海风 · 演示数据　↻ 点击切换</span><strong>{weather.icon} {weather.label}</strong><span className="mini-muted">{weather.hint}</span></button></div></section>
     <section className="trust-strip"><div><strong>清晰的角色边界</strong><span>客人和工作人员各自拥有独立空间</span></div><div><strong>可追溯的健康记录</strong><span>每条医嘱都记录来源与时间</span></div><div><strong>温和而专业的服务</strong><span>让照护回到人与人的连接</span></div></section>
-    <section className="news-section" id="news"><div className="section-heading"><div><div className="eyebrow">COMMUNITY JOURNAL</div><h2>社区动态</h2></div><button type="button" className="link-btn" onClick={() => document.getElementById('news-grid')?.scrollIntoView({ behavior: 'smooth' })}>查看全部 <span>↗</span></button></div><div className="featured-news">{featured ? <><div className="featured-image"><span>{featured.category}</span><div className="feature-symbol">{featured.category === '健康管理' ? '◒' : featured.category === '滨海活动' ? '≈' : '✣'}</div></div><div className="featured-copy"><div className="news-meta"><span className="tag">置顶</span><span>{featured.category}</span><span>{fmtDate(featured.publishedAt)}</span></div><h3>{featured.title}</h3><p>{featured.summary}</p><button type="button" className="read-btn" onClick={() => setSelected(featured)}>阅读全文 <span>→</span></button></div></> : <div className="news-empty">{newsState}</div>}</div><div className="news-grid" id="news-grid">{news.slice(1).map(item => <article className="news-card" key={item.id} role="button" tabIndex="0" onClick={() => setSelected(item)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelected(item); } }}><div className="card-top"><span className="category-dot"/>{item.category}<time>{fmtDate(item.publishedAt)}</time></div><h3>{item.title}</h3><p>{item.summary}</p><span className="card-arrow">↗</span></article>)}</div></section>
+    <section className="news-section" id="news"><div className="section-heading"><div><div className="eyebrow">COMMUNITY JOURNAL</div><h2>社区动态</h2></div><button type="button" className="link-btn" onClick={() => document.getElementById('news-grid')?.scrollIntoView({ behavior: 'smooth' })}>查看全部 <span>↗</span></button></div><div className="featured-news">{featured ? <><div className="featured-image"><span>{featured.category}</span><div className="feature-symbol">{featured.category === '健康管理' ? '◒' : featured.category === '滨海活动' ? '≈' : '✣'}</div></div><div className="featured-copy"><div className="news-meta"><span className="tag">置顶</span><span>{featured.category}</span><span>{fmtDate(featured.publishedAt)}</span></div><h3>{featured.title}</h3><p>{featured.summary}</p><button type="button" className="read-btn" onClick={() => setSelected(featured)}>阅读全文 <span>→</span></button></div></> : <div className="news-empty">{newsState}</div>}</div><div className="news-grid" id="news-grid">{news.slice(1).map(item => <article className="news-card" key={item.id} role="button" tabIndex="0" onClick={() => setSelected(item)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelected(item); } }}><div className="card-top"><span className="category-dot"/>{item.category}<time>{fmtDate(item.publishedAt)}</time></div><h3>{item.title}</h3><p>{businessText(item.summary)}</p><span className="card-arrow">↗</span></article>)}</div></section>
     <section className="entry-section"><div className="entry-copy"><div className="eyebrow">YOUR SPACE</div><h2>从这里，进入<br/><em>属于你的空间</em></h2><p>不同的身份，不同的工作台。选择身份后，我们会把你需要的内容放在最顺手的位置。</p></div><div className="entry-cards"><button type="button" onClick={() => onEnter('guest')}><span className="entry-icon blue">⌂</span><span><strong>我是客人</strong><small>查看我的资料、健康与医嘱</small></span><b>→</b></button><button type="button" onClick={() => onEnter('staff')}><span className="entry-icon orange">✚</span><span><strong>我是工作人员</strong><small>管理负责客人并提供专业建议</small></span><b>→</b></button><button type="button" onClick={() => onEnter('dean')}><span className="entry-icon orange">♜</span><span><strong>院长管理入口</strong><small>查看团队记录并留下管理意见</small></span><b>→</b></button></div></section>
     <section className="about-section" id="about"><div className="about-number">01</div><div><div className="eyebrow">ABOUT HAIYU</div><h2>让信息更有边界，<br/>让照护更有温度。</h2></div><p>海屿不是把所有信息堆在一起的管理后台，而是一座有公共客厅、个人房间和专业工作台的社区。首页属于所有人，档案只属于被授权的人。</p></section>
   </main><footer><Brand compact/><span>© 2026 海屿康养社区 · 面向康养服务场景的数字化平台</span><span>隐私政策　服务说明</span></footer>{selected && <NewsModal item={selected} onClose={() => setSelected(null)}/>}<AssistantWidget role="public"/></div>;
@@ -350,7 +353,7 @@ function AppShell({ user, onLogout }) {
   const selectedNavId = user.role === 'guest' ? guestNavId : section;
   const assistantKey = `${assistantRole}:${user.id || user.username}:${['staff', 'dean'].includes(assistantRole) ? assistantGuestId || 'none' : 'none'}`;
 
-  return <div className="app-shell"><aside className="app-sidebar"><Brand compact/><div className="workspace-label">{user.role === 'guest' ? '客人空间' : user.role === 'dean' ? '院长空间' : `${STAFF_JOB_LABELS[user.jobType] || '工作人员'}工作区`}</div><nav className="side-nav" aria-label="工作区导航">{nav.map(item => <button type="button" key={item.id} className={selectedNavId === item.id ? 'active' : ''} onClick={() => setSection(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}</button>)}</nav><div className="side-bottom"><div className="privacy-note"><span>◈</span><div><strong>隐私保护中</strong><small>仅展示你有权限查看的信息</small></div></div><button type="button" className="logout-btn" onClick={onLogout}>退出登录</button></div></aside><div className="app-main"><header className="app-header"><div className="breadcrumb">海屿康养社区　/　<span>{nav.find((item) => item.id === selectedNavId)?.label || staffSectionLabel(section, user)}</span></div><div className="user-menu"><div className="avatar">{initials(user.name)}</div><div><strong>{user.name}</strong><small>{user.role === 'guest' ? '康养客人' : user.role === 'dean' ? '院长' : `${STAFF_JOB_LABELS[user.jobType] || '工作人员'} · ${user.role}`}</small></div><button type="button" onClick={onLogout}>退出</button></div></header><main className="workspace">{meLoading ? <Loading/> : meError ? <ErrorState text={meError} onRetry={loadMe}/> : user.role === 'guest' ? <GuestView section={section} me={me} notify={notify} onSaved={(data) => setMe(normalizeGuestSummary(data))} go={setSection} activeResource={activeMoodResource} onSelectResource={setActiveMoodResource}/> : <StaffView section={section} me={me} notify={notify} onGuestChange={handleGuestChange} go={setSection} reviewDraftId={reviewDraftRequest} onReviewDraftOpened={clearReviewDraftRequest} operationsSource={operationsSourceRequest}/>}</main></div>{toast && <div className="toast" role="status" aria-live="polite">✓ {toast}</div>}{user.role === 'guest' && <MoodPlayerDock resource={activeMoodResource} requestApi={request}/>}<AssistantWidget key={assistantKey} role={assistantRole} user={user} guestId={assistantGuestId} onAuthExpired={handleAuthExpired} onSelectResource={setActiveMoodResource} onNavigate={setSection} onOpenReviewSource={openReviewSource} onOpenOperationsSource={openOperationsSource}/></div>;
+  return <div className="app-shell"><aside className="app-sidebar"><Brand compact/><div className="workspace-label">{user.role === 'guest' ? '客人空间' : user.role === 'dean' ? '院长空间' : `${STAFF_JOB_LABELS[user.jobType] || '工作人员'}工作区`}</div><nav className="side-nav" aria-label="工作区导航">{nav.map(item => <button type="button" key={item.id} className={selectedNavId === item.id ? 'active' : ''} onClick={() => setSection(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}</button>)}</nav><div className="side-bottom"><div className="privacy-note"><span>◈</span><div><strong>隐私保护中</strong><small>仅展示你有权限查看的信息</small></div></div><button type="button" className="logout-btn" onClick={onLogout}>退出登录</button></div></aside><div className="app-main"><header className="app-header"><div className="breadcrumb">海屿康养社区　/　<span>{nav.find((item) => item.id === selectedNavId)?.label || staffSectionLabel(section, user)}</span></div><div className="user-menu"><div className="avatar">{initials(user.name)}</div><div><strong>{user.name}</strong><small>{user.role === 'guest' ? '康养客人' : user.role === 'dean' ? '院长' : `${STAFF_JOB_LABELS[user.jobType] || '工作人员'}`}</small></div><button type="button" onClick={onLogout}>退出</button></div></header><main className="workspace"><p className="release-boundary" data-testid="release-boundary">本地网页演示 · 菜品、供货、排期和容量为合成示例。已接入的公开环境预报使用地区代表点，机构精确地点未核实；资料不代表安全批准。</p>{meLoading ? <Loading/> : meError ? <ErrorState text={meError} onRetry={loadMe}/> : user.role === 'guest' ? <GuestView section={section} me={me} notify={notify} onSaved={(data) => setMe(normalizeGuestSummary(data))} go={setSection} activeResource={activeMoodResource} onSelectResource={setActiveMoodResource}/> : <StaffView section={section} me={me} notify={notify} onGuestChange={handleGuestChange} go={setSection} reviewDraftId={reviewDraftRequest} onReviewDraftOpened={clearReviewDraftRequest} operationsSource={operationsSourceRequest}/>}</main>{user.role === 'guest' && <MoodPlayerDock resource={activeMoodResource} requestApi={request}/>}</div>{toast && <div className="toast" role="status" aria-live="polite">✓ {toast}</div>}<AssistantWidget key={assistantKey} role={assistantRole} user={user} guestId={assistantGuestId} onAuthExpired={handleAuthExpired} onSelectResource={setActiveMoodResource} onNavigate={setSection} onOpenReviewSource={openReviewSource} onOpenOperationsSource={openOperationsSource}/></div>;
 }
 
 function staffSectionLabel(section, user) {
@@ -373,18 +376,17 @@ function GuestView({ section, me, notify, onSaved, go, activeResource, onSelectR
   if (section === 'my') return <GuestMy me={me} go={go}/>;
   if (section === 'reservations') return <GuestReservations go={go}/>;
   if (section === 'mood') return <MoodSpace requestApi={request} activeResource={activeResource} onSelectResource={onSelectResource}/>;
-  if (section === 'accessibility') return <GuestAccessibility go={go}/>;
+
   return <GuestOverview me={me} go={go}/>;
 }
 
 function GuestMy({ me, go }) {
   const entries = [
-    { id: 'profile', title: '我的档案', description: '查看与更新你可以编辑的联系资料。', detail: '已连接现有个人资料页。' },
-    { id: 'reservations', title: '我的预约', description: '查看预约编号、服务时间和取消记录。', detail: '预约记录来自服务端。' },
-    { id: 'mood', title: '心情与陪伴', description: '记录今天的心情、查看近 7/30 日变化并播放本地演示资源。', detail: '每天一条记录 · 可按日期查看来源编号' },
-    { id: 'health', title: '健康记录', description: `现有健康记录 ${me.health?.length || 0} 条。`, detail: '已连接现有健康信息页。' },
-    { id: 'advice', title: '我的医嘱', description: `现有医嘱 ${me.advice?.length || 0} 条。`, detail: '已连接现有医嘱页。' },
-    { id: 'accessibility', title: '适老化控件样本', description: '查看文字、按钮、状态反馈与危险操作确认示例。', detail: '这是交互样本页，不会修改业务档案。' }
+    { id: 'profile', title: '我的档案', description: '查看与更新你可以编辑的联系资料。', detail: '联系资料可修改，正式健康档案由负责医护核实。' },
+    { id: 'reservations', title: '我的预约', description: '查看服务时间、已确认预约和取消记录。', detail: '预约记录来自服务端。' },
+    { id: 'mood', title: '心情与陪伴', description: '记录今天的心情、查看近 7/30 日变化并播放本地演示资源。', detail: '每天一条记录，保留修改历史。' },
+    { id: 'health', title: '健康记录', description: `现有健康记录 ${me.health?.length || 0} 条。`, detail: '新增或撤回自己的指标记录。' },
+    { id: 'advice', title: '我的医嘱', description: `现有医嘱 ${me.advice?.length || 0} 条。`, detail: '按负责医护的建议执行；如有疑问请联系医护。' }
   ];
   return <><PageTitle eyebrow="PERSONAL SPACE" title="我的" desc="个人档案入口与当前可查看的数据。"/><div className="guest-my-grid">{entries.map(entry => <button className="surface guest-my-entry" type="button" key={entry.id} onClick={() => go(entry.id)}><span className="guest-my-entry-icon" aria-hidden="true">{entry.id === 'health' ? '⌁' : entry.id === 'mood' ? '♡' : entry.id === 'accessibility' ? 'Aa' : entry.id === 'advice' ? '✚' : entry.id === 'reservations' ? '▦' : '◯'}</span><span className="guest-my-entry-copy"><strong>{entry.title}</strong><span>{entry.description}</span></span><span className="guest-my-entry-detail">{entry.detail}</span><span className="guest-my-entry-arrow" aria-hidden="true">→</span></button>)}</div></>;
 }
@@ -477,7 +479,7 @@ function MealRestrictionReview({ guestId, canResolve = false, notify, onChanged 
     {data?.unrecognized.length > 0 && <p>原始限制保留：{data.unrecognized.map(item => item.value).join('、')}。核实前暂停相关选择；仅医护可决定食物与非食物分类。</p>}
     <p>负责医护：{data?.responsibleClinicians.map(item => item.name).join('、') || '尚未分工，请联系机构管理员安排医护'}</p>
     {data?.review ? <><p role="status">处理状态：{data.review.status === 'resolved' ? '已人工核对' : '待医护核对'} · 转交负责人：{data.review.assignedName}</p>
-      {data.review.status === 'resolved' ? <p>核对人：{data.review.reviewerName} · {data.review.note} · {mealLocalTime(data.review.reviewedAt)}。健康自述原文与历史保持。</p> : canResolve && <div className="meal-swap-form">{data.review.restrictions.map((item, index) => <div key={index}><label>“{item.value}”的分类<select value={choices[index]?.classification || ''} onChange={event => setChoices(current => current.map((choice, n) => n === index ? { ...choice, classification: event.target.value } : choice))}><option value="">请选择人工核对结果</option><option value="food">食物限制</option><option value="non_food">非食物描述（原文保留）</option></select></label>{choices[index]?.classification === 'food' && <label>对应食材或饮食标签<input value={choices[index]?.foodValue || ''} onChange={event => setChoices(current => current.map((choice, n) => n === index ? { ...choice, foodValue: event.target.value } : choice))} placeholder="例如：鸡蛋、海鲜、花生、清真"/></label>}</div>)}<label>人工核对依据<textarea value={note} maxLength={1000} onChange={event => setNote(event.target.value)} placeholder="记录与客人核对的结果和来源，不推测未知项"/></label><button type="button" className="primary-btn" disabled={busy || !note.trim() || choices.some(choice => !choice.classification || (choice.classification === 'food' && !choice.foodValue.trim()))} onClick={() => submit(true)}>保存医护分类核对</button></div>}</> : data?.unrecognized.length > 0 && <button type="button" className="outline-btn" disabled={busy || !data.responsibleClinicians.length} onClick={() => submit(false)}>转交负责医护核对</button>}
+      {data.review.status === 'resolved' ? <p>核对人：{data.review.reviewerName} · {data.review.note} · {mealLocalTime(data.review.reviewedAt)}。健康自述原文与历史保持。</p> : canResolve && <div className="meal-swap-form">{data.review.restrictions.map((item, index) => <div key={index}><label>“{item.value}”的分类<select value={choices[index]?.classification || ''} onChange={event => setChoices(current => current.map((choice, n) => n === index ? { ...choice, classification: event.target.value } : choice))}><option value="">请选择人工核对结果</option><option value="food">食物限制</option><option value="non_food">非食物描述（原文保留）</option></select></label>{choices[index]?.classification === 'food' && <label>对应食材或饮食标签<input value={choices[index]?.foodValue || ''} onChange={event => setChoices(current => current.map((choice, n) => n === index ? { ...choice, foodValue: event.target.value } : choice))} placeholder="例如：鸡蛋、海鲜、花生、清真"/></label>}</div>)}<label>人工核对依据<textarea aria-label="人工核对依据" value={note} maxLength={1000} onChange={event => setNote(event.target.value)} placeholder="记录与客人核对的结果和来源，不推测未知项"/></label><button type="button" className="primary-btn" disabled={busy || !note.trim() || choices.some(choice => !choice.classification || (choice.classification === 'food' && !choice.foodValue.trim()))} onClick={() => submit(true)}>保存医护分类核对</button></div>}</> : data?.unrecognized.length > 0 && <button type="button" className="outline-btn" disabled={busy || !data.responsibleClinicians.length} onClick={() => submit(false)}>转交负责医护核对</button>}
     {data?.history.length > 0 && <details><summary>查看核对历史与原始限制</summary>{data.history.map(item => <div key={item.id}><p>{item.restrictions.map(entry => entry.value).join('、')} · {item.status === 'resolved' ? '已核对' : '待核对'} · {item.reviewerName || item.assignedName} · {item.note}</p>{item.decisions.map((decision, index) => <p key={index}>“{decision.value}” → {decision.classification === 'non_food' ? '非食物描述' : `食物限制：${decision.foodValue}`}</p>)}</div>)}</details>}
   </section>;
 }
@@ -564,7 +566,7 @@ function GuestMeals({ me, notify }) {
           <div className="meal-items">{mealItems.map(item => <article className="meal-item" key={item.id} data-meal-item-id={item.id}>
             <div className="meal-item-heading"><strong>{SLOT_LABELS[item.slot]}</strong><span>{item.dish ? '演示可供' : '待配餐员补充'}</span></div>
             {item.dish ? <><h3>{item.dish.name}</h3><p><b>明确食材：</b>{item.dish.ingredients?.join('、') || '未提供'}</p><p><b>明确过敏原：</b>{mealFoodLabels(item.dish.allergens).join('、') || '未列出'}</p><p><b>演示标签：</b>{item.dish.nutritionLabels?.join('；') || '无'}</p><p className="meal-selection-reason"><b>选择/替换原因：</b>{item.selectionReason || '历史餐位未记录选择理由；不重新生成或覆盖人工选择。'}</p>{item.currentlyRestricted && <p className="meal-missing" role="status">此菜品与当前限制或供应状态不符，已暂停点餐，请联系配餐员。</p>}</> : <p className="meal-missing" role="status">{item.selectionReason || '没有符合当前限制的菜品，未填入替代菜。'}</p>}
-            {editingId === item.id ? <div className="meal-swap-form"><label>替换菜品<select value={swap.dishId} onChange={event => setSwap({ ...swap, dishId: event.target.value })}><option value="">请选择符合当前限制的菜品</option>{(item.eligibleReplacements || []).map(dish => <option value={dish.id} key={dish.id}>{dish.name} · 演示供货</option>)}</select></label><small>替代项已按当前供应、餐次、餐位与有效限制筛选；人工选择不会在刷新时被轮换覆盖。</small><label>替换原因<textarea value={swap.reason} maxLength={300} onChange={event => setSwap({ ...swap, reason: event.target.value })} placeholder="请说明替换原因"/></label><div><button className="primary-btn" type="button" disabled={busy === item.id || !swap.dishId || !swap.reason.trim()} onClick={() => replace(item)}>{busy === item.id ? '保存中…' : '确认替换'}</button><button className="text-btn" type="button" onClick={() => { setEditingId(''); setSwap({ dishId: '', reason: '' }); }}>取消</button></div>{!item.eligibleReplacements?.length && <small role="status">当前没有可确认的安全替换项，请联系配餐员。</small>}</div> : <button className="outline-btn meal-swap-trigger" type="button" disabled={!item.eligibleReplacements?.length || Boolean(currentOrder && (currentOrder.status === 'delivered' || (currentOrder.status === 'preparing' && !currentOrder.reviewRequired)))} onClick={() => { setEditingId(item.id); setSwap({ dishId: '', reason: '' }); }}>{currentOrder?.status === 'preparing' && !currentOrder.reviewRequired ? '订单备餐中，联系配餐员' : currentOrder?.status === 'delivered' ? '订单已送达，不可替换' : '替换此餐位'}</button>}
+            {editingId === item.id ? <div className="meal-swap-form"><label>替换菜品<select value={swap.dishId} onChange={event => setSwap({ ...swap, dishId: event.target.value })}><option value="">请选择符合当前限制的菜品</option>{(item.eligibleReplacements || []).map(dish => <option value={dish.id} key={dish.id}>{dish.name} · 演示供货</option>)}</select></label><small>替代项已按当前供应、餐次、餐位与有效限制筛选；人工选择不会在刷新时被轮换覆盖。</small><label>替换原因<textarea aria-label="替换原因" value={swap.reason} maxLength={300} onChange={event => setSwap({ ...swap, reason: event.target.value })} placeholder="请说明替换原因"/></label><div><button className="primary-btn" type="button" disabled={busy === item.id || !swap.dishId || !swap.reason.trim()} onClick={() => replace(item)}>{busy === item.id ? '保存中…' : '确认替换'}</button><button className="text-btn" type="button" onClick={() => { setEditingId(''); setSwap({ dishId: '', reason: '' }); }}>取消</button></div>{!item.eligibleReplacements?.length && <small role="status">当前没有可确认的安全替换项，请联系配餐员。</small>}</div> : <button className="outline-btn meal-swap-trigger" type="button" disabled={!item.eligibleReplacements?.length || Boolean(currentOrder && (currentOrder.status === 'delivered' || (currentOrder.status === 'preparing' && !currentOrder.reviewRequired)))} onClick={() => { setEditingId(item.id); setSwap({ dishId: '', reason: '' }); }}>{currentOrder?.status === 'preparing' && !currentOrder.reviewRequired ? '订单备餐中，联系配餐员' : currentOrder?.status === 'delivered' ? '订单已送达，不可替换' : '替换此餐位'}</button>}
           </article>)}</div>
           {currentOrder ? <div className={`meal-order-status ${currentOrder.fulfillmentStatus}`} role="status" data-order-id={currentOrder.id}><span>订单号 {currentOrder.orderNo}</span><strong>{currentOrder.reviewRequired ? '须复核 · 暂停推进' : ORDER_STATUS_LABELS[currentOrder.status]}</strong>{currentOrder.reviewReasons?.map(reason => <small key={reason}>{reason}</small>)}{currentOrder.review && <small>最近核对：{currentOrder.review.checkedName} · {currentOrder.review.note}</small>}<small>提交时间（上海时间）：{mealLocalTime(currentOrder.createdAt)}</small><MealOrderTiming order={currentOrder}/></div> : <button type="button" className="primary-btn meal-order-btn" disabled={!canOrder(mealType) || Boolean(busy)} onClick={() => order(mealType)}>{busy === `order-${mealType}` ? '提交中…' : `提交${MEAL_LABELS[mealType]}订单`}</button>}
         </section>;
@@ -741,55 +743,62 @@ function CheckinFeedbackCard({ item, onCheckin, onFeedback, busy }) {
     setFeeling(item.feedback?.feeling || 'general');
     setNote(item.feedback?.note || '');
   }, [item.feedback?.id, item.feedback?.revision, item.feedback?.updatedAt]);
+  const clockAnchor = useRef({server: item.serverNow, started: performance.now()});
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => { clockAnchor.current={server:item.serverNow,started:performance.now()}; setElapsed(0); const timer=setInterval(()=>setElapsed(performance.now()-clockAnchor.current.started),1000); return ()=>clearInterval(timer); },[item.serverNow]);
+  const serverInstant=Date.parse(clockAnchor.current.server);
+  const checkinWindow=Number.isFinite(serverInstant)?checkinAvailability(item,new Date(serverInstant+elapsed).toISOString()):{canCheckin:false,checkinNote:'开始时间待核对，请刷新或联系工作人员'};
   const feedbackCanEdit = !item.feedback || item.feedback.businessDate === businessToday();
   return <article className="q24-execution-card" data-testid={`q24-appointment-${item.reservationId}`}>
     <div className="q24-execution-main"><div><span className="eyebrow">项目执行 · {item.businessDate}</span><h3>{item.projectName}</h3>
-      <p>{item.localStart}–{item.localEnd} · {item.location || '地点待核对'} · 预约编号 {item.reservationId}</p></div>
+      <p>{item.localStart}–{item.localEnd} · {item.location || '地点待核对'}</p></div>
       <span className={`q24-state ${item.reservationStatus}`}>{item.reservationStatus === 'confirmed' ? '预约有效' : item.reservationStatus === 'no_show' ? '未参加' : '已取消'}</span>
     </div>
     {item.executions?.map(entry => <p className="health-review-note" role="status" key={entry.id}>{STAFF_JOB_LABELS[entry.jobType]}：{entry.status === 'completed' ? '服务已完成' : '已登记未参加'} · {entry.actorName} · {entry.note}</p>)}
-    {item.checkin ? <div className="q24-checkin-saved" role="status"><strong>已签到</strong><span>签到编号 {item.checkin.id} · {mealLocalTime(item.checkin.checkedInAt)}</span></div>
-      : <div className="q24-checkin-action"><span>项目开始后可完成签到；未签到的预约不会标记为已参加。</span>
+    {item.checkin ? <div className="q24-checkin-saved" role="status"><strong>已签到</strong><span>{mealLocalTime(item.checkin.checkedInAt)}</span></div>
+      : <div className="q24-checkin-action"><span>{checkinWindow.checkinNote}</span>
         <button type="button" className="primary-btn small-btn" data-testid={`q24-checkin-${item.reservationId}`}
-          disabled={busy || item.reservationStatus !== 'confirmed'} onClick={() => onCheckin(item.reservationId)}>
+          disabled={busy || !checkinWindow.canCheckin} onClick={() => onCheckin(item.reservationId)}>
           {busy ? '正在签到…' : '签到'}</button></div>}
     {item.checkin && <form className="q24-feedback-form" data-testid={`q24-feedback-${item.reservationId}`}
       onSubmit={event => { event.preventDefault(); onFeedback(item, { feeling, note }); }}>
-      <div className="q24-feedback-head"><div><strong>项目后的感受</strong><span>{item.feedback ? `反馈编号 ${item.feedback.id} · 第 ${item.feedback.revision} 版` : '你的记录只关联这次真实签到'}</span></div>
+      <div className="q24-feedback-head"><div><strong>项目后的感受</strong><span>{item.feedback ? `反馈第 ${item.feedback.revision} 版` : '你的记录只关联这次真实签到'}</span></div>
         {item.feedback && <small>{feedbackCanEdit ? '上海时间今天可修改' : `已过修改时段 · ${item.feedback.businessDate}`}</small>}</div>
       <label>感受<select aria-label={`${item.projectName}的项目感受`} value={feeling} onChange={event => setFeeling(event.target.value)} disabled={!feedbackCanEdit || busy}>
         <option value="comfortable">舒服</option><option value="general">一般</option><option value="uncomfortable">不舒服</option>
       </select></label>
-      <label>补充说明<textarea rows="2" maxLength={500} value={note} onChange={event => setNote(event.target.value)}
+      <label>补充说明<textarea aria-label="补充说明" rows="2" maxLength={500} value={note} onChange={event => setNote(event.target.value)}
         placeholder="可以简短记录身体感受" disabled={!feedbackCanEdit || busy}/></label>
       {feedbackCanEdit && <button type="submit" className="outline-btn small-btn" disabled={busy}>{busy ? '保存中…' : item.feedback ? '保存当天修改' : '保存感受'}</button>}
       {item.feedback?.revisions?.length > 1 && <details className="q24-feedback-history"><summary>修改记录（{item.feedback.revisions.length} 版）</summary>
         <ol>{item.feedback.revisions.map(revision => <li key={revision.id || revision.revision}>第 {revision.revision} 版 · {WELLNESS_FEELING_LABELS[revision.feeling]} · {revision.businessDate} · {revision.note || '无补充说明'}</li>)}</ol>
       </details>}
     </form>}
+    <SourceDetails data={item}/>
   </article>;
 }
 
 function ReplanEventCard({ item, onEvaluate, busy }) {
   const changes = item.changes || [];
   return <article className="q24-replan-card" data-testid={`q24-replan-${item.id}`}>
-    <header><div><span className="eyebrow">可追溯的调整来源</span><h3>{item.sourceLabel}</h3>
-      <p>{item.sourceType}:{item.sourceId} · 来源版本 {item.sourceVersion} · 记录于 {mealLocalTime(item.createdAt)}</p></div>
+    <header><div><span className="eyebrow">可追溯的调整来源</span><h3>{businessText(item.sourceLabel)}</h3>
+      <p>{businessText(item.sourceType)} · 来源版本 {item.sourceVersion} · 记录于 {mealLocalTime(item.createdAt)}</p></div>
       <span className={`q24-state ${item.status}`}>{item.candidateStatus === 'active' || item.candidateStatus === 'auto_activated' ? '候选已激活' : item.candidate ? '候选待审核' : item.requiresAttention ? '待评估' : '已记录'}</span>
     </header>
-    {item.triggerReason && <p className="q24-replan-reason">{item.triggerReason}</p>}
+    {item.triggerReason && <BusinessReason value={item.triggerReason}/>}
     {item.requiresAttention && !item.candidate && <button type="button" className="primary-btn small-btn" data-testid={`q24-evaluate-${item.id}`}
       disabled={busy} onClick={() => onEvaluate(item.id)}>{busy ? '正在生成候选…' : '生成待审核候选'}</button>}
     {item.candidate && <div className="q24-diff-card" data-testid={`q24-diff-${item.id}`}>
-      <div className="q24-diff-head"><strong>方案差异</strong><span>原版 {item.baseline?.draftId || '暂无已激活版本'} → 候选 {item.candidate.draftId}（第 {item.candidate.version} 版）</span></div>
-      <p>来源依据：{item.sourceType}:{item.sourceId} · 版本 {item.sourceVersion}。候选在审核完成前不会替换当前疗程或预约。</p>
+      <div className="q24-diff-head"><strong>方案差异</strong><span>原版 {item.baseline ? `第 ${item.baseline.version} 版` : '暂无已激活版本'} → 候选第 {item.candidate.version} 版</span></div>
+      <p>来源依据：{businessText(item.sourceType)} · 版本 {item.sourceVersion}。候选在审核完成前不会替换当前疗程或预约。</p>
       {changes.length ? <div className="q24-diff-list">{changes.map(change => <div className={`q24-diff-row ${change.kind}`} key={change.key}>
         <span>{change.kind === 'added' ? '新增' : change.kind === 'removed' ? '移除' : '调整'}</span>
         <div><small>原安排</small><strong>{change.original ? `${change.original.businessDate} ${change.original.localStart || ''} ${change.original.title}` : '无'}</strong></div>
         <div><small>候选安排</small><strong>{change.candidate ? `${change.candidate.businessDate} ${change.candidate.localStart || ''} ${change.candidate.title}` : '无'}</strong></div>
       </div>)}</div> : <div className="q24-no-diff">两个版本的已保存条目相同；保留原版与候选编号供审核比较。</div>}
-      <div className="q24-diff-footer"><span>原版有效预约：{item.activeReservations?.length || 0} 条</span><span>候选状态：{item.candidate.reviewStatus === 'pending_review' ? '待审核' : item.candidate.reviewStatus}</span></div>
+      <div className="q24-diff-footer"><span>原版有效预约：{item.activeReservations?.length || 0} 条</span><span>候选状态：{businessText(item.candidate.reviewStatus)}</span></div>
     </div>}
+    <SourceDetails data={item}/>
   </article>;
 }
 
@@ -798,10 +807,10 @@ function EnvironmentHistoryNote({ history }) {
   return <section className="stage21-draft-notice" data-testid="environment-history">
     <strong>生成时环境 · 历史快照</strong><p>{history.notice}</p>
     <p>生成时间：{mealLocalTime(history.generatedAt)}（上海时间）；旧版来源/规则理由保留。</p>
-    {history.generated?.map((old,index)=><p key={old.snapshotId||index}>原地点：{old.location?.name || old.location?.id || '当时地点未记录'} · 原状态：{({available:'当时资料可用',unavailable:'当时来源不可用',stale:'当时资料已过期',demo:'当时为合成资料'})[old.status] || '见原规则理由，未记录的不推测'} · 原快照 {old.snapshotId || '未记录'}</p>)}
+    {history.generated?.map((old,index)=><p key={old.snapshotId||index}>原地点：{old.location?.name || old.location?.id || '当时地点未记录'} · 原状态：{({available:'当时资料可用',unavailable:'当时来源不可用',stale:'当时资料已过期',demo:'当时为合成资料'})[old.status] || '见原规则理由，未记录的不推测'}</p>)}
     <strong>{history.changed ? '当前地点或来源已不同，请重新评估' : '当前来源对照（不更新旧版）'}</strong>
     {history.current?.map(now=><p key={now.targetDate}>{now.targetDate} · {now.location?.name || '当前地点未配置'} · {({available:'当前选中点可用',demo:'当前合成示例',stale:'当前资料过期',unavailable:'当前资料不可用'})[now.status] || '当前资料待核对'} · 当前来源另列，不是原草案结论。</p>)}
-    <p>需要重新评估时，客人使用上方“生成新版本草案”，医护使用待审版本的“保存新待审版本”；读取此说明不会生成、批准或预约。</p>
+    <p>需要重新评估时，客人使用上方“生成新版本草案”，医护使用待审版本的“保存新待审版本”；读取此说明不会生成、批准或预约。</p><SourceDetails data={history}/>
   </section>;
 }
 
@@ -856,7 +865,7 @@ function GuestSchedule({ me, onSelectResource }) {
     setWorkingId(`checkin:${reservationId}`); setError(''); setNotice('');
     try {
       const result = await request(`/me/reservations/${encodeURIComponent(reservationId)}/checkin`, { method: 'POST', body: '{}' });
-      setNotice(`已签到，签到编号 ${result.id}；重复请求仍会返回这条记录。`);
+      setNotice(`已签到；重复操作不会重复登记。`);
       await load();
     } catch (requestError) { setError(requestError.message || '签到未能保存，请核对预约开始时间'); }
     finally { setWorkingId(''); }
@@ -869,7 +878,7 @@ function GuestSchedule({ me, onSelectResource }) {
         ? `/me/feedback/${encodeURIComponent(item.feedback.id)}`
         : `/me/reservations/${encodeURIComponent(item.reservationId)}/feedback`;
       const result = await request(route, { method: item.feedback ? 'PUT' : 'POST', body: JSON.stringify(body) });
-      setNotice(`已保存预约 ${item.reservationId} 的第 ${result.revision} 版反馈。`);
+      setNotice(`已保存这次项目的第 ${result.revision} 版反馈。`);
       await load();
     } catch (requestError) { setError(requestError.message || '反馈未能保存，请刷新后重试'); }
     finally { setWorkingId(''); }
@@ -879,7 +888,7 @@ function GuestSchedule({ me, onSelectResource }) {
     setWorkingId(`replan:${eventId}`); setError(''); setNotice('');
     try {
       const result = await request(`/me/replanning-events/${encodeURIComponent(eventId)}/evaluate`, { method: 'POST', body: '{}' });
-      setNotice(`已生成候选疗程 ${result.candidate?.draftId || ''}；当前预约在审核前保持不变。`);
+      setNotice(`已生成第 ${result.candidate?.version || '新'} 版待审疗程；请联系负责医护，当前预约在审核前保持不变。`);
       await load();
     } catch (requestError) { setError(requestError.message || '候选疗程生成失败'); }
     finally { setWorkingId(''); }
@@ -893,20 +902,20 @@ function GuestSchedule({ me, onSelectResource }) {
       byDate.get(item.businessDate).push(item);
     }
     return <article className="stage21-draft-card" key={draft.draftId} data-draft-id={draft.draftId}>
-      <header><div><span className="eyebrow">WELLNESS DRAFT · VERSION {draft.version}</span><h2>{draft.stayStart} 至 {draft.stayEnd}（离店日不排入）</h2><p>草案编号 {draft.draftId} · 来源运行 {draft.sourceRunId || '未记录'} · {draft.createdAt ? new Date(draft.createdAt).toLocaleString('zh-CN') : '—'}</p></div><span className={`stage21-status ${draft.reviewStatus === 'active' || draft.reviewStatus === 'auto_activated' ? 'active' : draft.reviewStatus === 'returned' ? 'returned' : 'pending'}`}>{draft.reviewStatus === 'active' ? '医护已通过 · 已激活' : draft.reviewStatus === 'auto_activated' ? '低风险自动激活' : draft.reviewStatus === 'returned' ? '已退回 · 请重新生成' : draft.reviewStatus === 'superseded' ? '已有更新版本' : '等待医护审核'}</span></header>
-      <div className="stage21-draft-notice">{draft.reviewStatus === 'active' || draft.reviewStatus === 'auto_activated' ? '疗程已激活；真实项目预约会显示在下方日程。' : draft.reviewStatus === 'returned' ? `医护退回原因：${draft.reviewReason || '请联系医护核对'}。请生成新版本。` : draft.reviewStatus === 'superseded' ? '该版本保留供追溯；请查看更新版本。' : '只供本人和医护核对。待审核草案不会预约、点餐或占用时段名额。'}</div>
+      <header><div><span className="eyebrow">WELLNESS DRAFT · VERSION {draft.version}</span><h2>{draft.stayStart} 至 {draft.stayEnd}（离店日不排入）</h2><p>第 {draft.version} 版 · 生成于 {businessTime(draft.createdAt)}</p></div><span className={`stage21-status ${draft.reviewStatus === 'active' || draft.reviewStatus === 'auto_activated' ? 'active' : draft.reviewStatus === 'returned' ? 'returned' : 'pending'}`}>{draft.reviewStatus === 'active' ? '医护已通过 · 已激活' : draft.reviewStatus === 'auto_activated' ? '低风险自动激活' : draft.reviewStatus === 'returned' ? '已退回 · 请重新生成' : draft.reviewStatus === 'corrected' ? '医护已纠正 · 查看新版本' : draft.reviewStatus === 'superseded' ? '已有更新版本' : '等待医护审核'}</span></header>
+      <div className="stage21-draft-notice">{draft.reviewStatus === 'active' || draft.reviewStatus === 'auto_activated' ? '疗程已激活；真实项目预约会显示在下方日程。' : draft.reviewStatus === 'returned' ? `医护退回原因：${draft.reviewReason || '请联系医护核对'}。请生成新版本。` : ['superseded','corrected'].includes(draft.reviewStatus) ? '该版本已被医护更新，保留生成时来源供追溯；请查看当前激活版本。' : '只供本人和医护核对。待审核草案不会预约、点餐或占用时段名额。'}</div>
       <EnvironmentHistoryNote history={draft.environmentHistory}/><AdoptedDomainSuggestions evidence={draft.evidence} onSelectResource={onSelectResource}/>
-      <div className="stage21-days">{[...byDate.entries()].map(([date, dayItems]) => <section className="stage21-day" key={date}>
+      <SourceDetails data={draft}/><div className="stage21-days">{[...byDate.entries()].map(([date, dayItems]) => <section className="stage21-day" key={date}>
         <div className="stage21-day-head"><h3>{date}</h3><span>{dayItems.length} 项 · {dayItems.filter(item => item.type === 'gap').length} 项缺口</span></div>
         <div className="stage21-item-grid">{dayItems.map(item => <article className={`stage21-item ${item.status}`} key={item.id}>
           <div className="stage21-item-top"><span>{item.type === 'meal' ? ({breakfast:'早餐',lunch:'午餐',dinner:'晚餐'})[item.slotKey] || '餐食' : item.type === 'activity' ? ({morning:'上午活动',afternoon:'下午活动',evening:'晚间活动'})[item.slotKey] || '活动' : item.type === 'rest' ? ({morning:'上午安排',afternoon:'下午安排',evening:'晚间安排'})[item.slotKey] || '安排' : '资料缺口'}</span><strong>{item.localStart ? `${item.localStart}–${item.localEnd}` : item.status === 'gap' ? '未安排' : '时间待定'}</strong></div>
           <h4>{item.title}</h4>{item.location && <p className="stage21-item-location">{item.location}</p>}
           {item.evidence?.resource?.audioUrl && <button type="button" className="outline-btn" onClick={() => onSelectResource?.(item.evidence.resource)}>打开陪伴资源</button>}
-          <span className={`stage21-status ${item.status}`}>{({pending_review:'待本人确认',mandatory_review:'必须人工核对',sampled_review:'抽样人工核对',pending_confirmation:'环境待确认',proposed:'建议休息',gap:'信息缺口',excluded:'已排除'})[item.status] || item.status}</span>
-          <p className="stage21-item-reason">{item.reason}</p>
-          {item.ruleIds?.length > 0 && <p className="stage21-rule-list"><b>规则：</b>{item.ruleIds.join('、')}</p>}
-          {item.environmentSnapshotId && <p className="stage21-rule-list"><b>环境快照：</b>{item.environmentSnapshotId}</p>}
-          {item.evidence?.healthRisk && <p className="stage21-rule-list"><b>健康约束：</b>{Object.entries(item.evidence.healthRisk).filter(([,value]) => value === true).map(([key]) => key).join('、') || '需人工复核'}</p>}
+          <span className={`stage21-status ${item.status}`}>{({pending_review:'待本人确认',mandatory_review:'必须人工核对',sampled_review:'抽样人工核对',pending_confirmation:'环境待确认',proposed:'建议休息',gap:'信息缺口',excluded:'已排除'})[item.status] || businessText(item.status)}</span>
+          <BusinessReason value={item.reason}/>
+          {item.ruleIds?.length > 0 && <SourceDetails><p>规则：{item.ruleIds.join('、')}</p></SourceDetails>}
+          {item.environmentSnapshotId && <SourceDetails><p>环境快照：{item.environmentSnapshotId}</p></SourceDetails>}
+          {item.evidence?.healthRisk && <p className="stage21-rule-list"><b>健康约束：</b>{Object.entries(item.evidence.healthRisk).filter(([,value]) => value === true).map(([key]) => businessText(key)).join('、') || '需人工复核'}</p>}
           <details className="stage21-sources"><summary>来源与证据</summary><p>候选编号：{item.candidateId || '无'}</p>{formatSources(item.sourceIds).length ? <ul>{formatSources(item.sourceIds).map(value => <li key={value}>{value}</li>)}</ul> : <p>没有可引用的来源编号。</p>}
             {item.evidence?.rules?.map((rule, index) => <p key={`${rule.ruleId}-${index}`}>{rule.ruleId} · {rule.action} · {rule.reason}</p>)}
           </details>
@@ -918,7 +927,7 @@ function GuestSchedule({ me, onSelectResource }) {
   return <><PageTitle eyebrow="MY SCHEDULE" title="日程与疗程草案" desc="待审核建议、已确认预约和取消记录分开显示。草案不会占用真实时段。" action={<button type="button" className="outline-btn small-btn" onClick={load} disabled={loading}>刷新日程　↻</button>}/>
     <section className="surface stage21-plan-toolbar"><div><strong>当前入住区间</strong><span>{stayValid ? `${stayStart} 至 ${stayEnd} · 离店日不排入` : '入住日期尚未完整登记'}</span><small>三晚最多生成 3 天；十晚最多生成 7 天。只使用领域候选、当日餐单和已登记的实际时段。</small></div><button type="button" className="primary-btn" onClick={createDraft} disabled={!stayValid || generating || loading}>{generating ? '正在生成并核对…' : drafts.length ? '生成新版本草案' : '生成疗程草案'}</button></section>
     {notice && <div className="stage21-success" role="status">{notice}</div>}{error && <div className="project-form-error" role="alert">{error}</div>}
-    {notifications.length > 0 && <section className="surface wellness-guest-notifications"><SectionHead title="疗程更正提醒"/><ul>{notifications.slice(0, 5).map(item => <li key={item.id}><span>{item.message}</span><small>{item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN') : ''}</small></li>)}</ul></section>}
+    {notifications.length > 0 && <section className="surface wellness-guest-notifications"><SectionHead title="日程通知"/>{[...new Set(notifications.map(item=>notificationCategory(item).key))].map(key=><section key={key} className="release-notice-group" data-notice-category={key}><h3>{notificationCategory(notifications.find(item=>notificationCategory(item).key===key)).label}</h3><ul>{notifications.filter(item=>notificationCategory(item).key===key).map(item=><li key={item.id}><span>{businessText(item.message)}</span><small>{businessTime(item.createdAt)}</small><SourceDetails data={item}/></li>)}</ul></section>)}</section>}
     {loading ? <section className="surface project-state">正在读取草案、预约和取消记录…</section> : <>
       <section className="stage21-timeline-section q24-execution-section" data-testid="q24-execution-feedback">
         <div className="stage21-section-heading"><div><span className="eyebrow">EXECUTION · CHECK-IN · FEEDBACK</span><h2>项目签到与感受</h2><p>只有本人真实预约可以签到；签到后可留下项目感受，并在提交当天修改。</p></div><span>{checkins.filter(item => item.checkin).length} 次已签到</span></div>
@@ -936,10 +945,10 @@ function GuestSchedule({ me, onSelectResource }) {
         {drafts.length ? <div className="stage21-draft-list">{drafts.map(renderDraft)}</div> : <div className="surface project-state project-empty"><strong>还没有疗程草案</strong><p>{stayValid ? '生成后会在这里显示逐日餐食、时段、缺口和证据。' : '请先联系工作人员登记有效入住区间。'}</p></div>}
       </section>
       <section className="stage21-timeline-section"><div className="stage21-section-heading"><div><span className="eyebrow">CONFIRMED · UPCOMING</span><h2>待执行预约</h2><p>这里只列出仍有效且尚未开始的已确认预约，容量编号来自预约记录。</p></div><span>{timeline?.upcomingBookings?.length || 0} 条</span></div>
-        {timeline?.upcomingBookings?.length ? <div className="surface reservation-list-panel">{timeline.upcomingBookings.map(item => <article className="reservation-row" key={item.id}><div><strong>{item.projectName}</strong><span>{slotDateLabel(item.businessDate)} · {item.localStart}–{item.localEnd}</span><small>{item.location} · 预约编号 {item.id}</small></div><span className="reservation-status confirmed">已确认</span></article>)}</div> : <div className="surface project-state project-empty">当前没有待执行预约。草案不会显示在本列表中。</div>}
+        {timeline?.upcomingBookings?.length ? <div className="surface reservation-list-panel">{timeline.upcomingBookings.map(item => <article className="reservation-row" key={item.id}><div><strong>{item.projectName}</strong><span>{slotDateLabel(item.businessDate)} · {item.localStart}–{item.localEnd}</span><small>{item.location}</small><SourceDetails data={item}/></div><span className="reservation-status confirmed">已确认</span></article>)}</div> : <div className="surface project-state project-empty">当前没有待执行预约。草案不会显示在本列表中。</div>}
       </section>
       <section className="stage21-timeline-section"><div className="stage21-section-heading"><div><span className="eyebrow">CANCELLED · HISTORY</span><h2>取消记录</h2><p>取消预约保留为历史记录，不会进入待执行日程。</p></div><span>{timeline?.cancelledHistory?.length || 0} 条</span></div>
-        {timeline?.cancelledHistory?.length ? <div className="surface reservation-list-panel">{timeline.cancelledHistory.map(item => <article className="reservation-row" key={item.id}><div><strong>{item.projectName}</strong><span>{slotDateLabel(item.businessDate)} · {item.localStart}–{item.localEnd}</span><small>{item.location} · 预约编号 {item.id}</small></div><span className="reservation-status cancelled">已取消</span></article>)}</div> : <div className="surface project-state project-empty">当前没有取消记录。</div>}
+        {timeline?.cancelledHistory?.length ? <div className="surface reservation-list-panel">{timeline.cancelledHistory.map(item => <article className="reservation-row" key={item.id}><div><strong>{item.projectName}</strong><span>{slotDateLabel(item.businessDate)} · {item.localStart}–{item.localEnd}</span><small>{item.location}</small><SourceDetails data={item}/></div><span className="reservation-status cancelled">已取消</span></article>)}</div> : <div className="surface project-state project-empty">当前没有取消记录。</div>}
       </section>
     </>}
   </>;
@@ -1319,7 +1328,7 @@ function GuestDailyBrief({ me, go }) {
             <div className="stage25-greeting"><strong>{brief.greeting}</strong><span>{brief.stay?.label}</span></div>
             <div className="stage25-brief-section" data-testid="stage25-activity-schedule"><div className="stage25-section-title"><strong>今日活动</strong><button type="button" onClick={() => openTarget('reservations')}>查看预约 →</button></div>
               {brief.activities?.length ? brief.activities.map(item => <article className="stage25-plan-row" key={item.reservationId} data-source-id={item.reservationId}>
-                <span>{item.localStart}–{item.localEnd}</span><div><strong>{item.projectName}</strong><small>{item.businessDate} · 预约 {item.reservationId} · {item.location || '地点待核对'}</small></div>
+                <span>{item.localStart}–{item.localEnd}</span><div><strong>{item.projectName}</strong><SourceDetails><small>{item.businessDate} · 预约 {item.reservationId} · {item.location || '地点待核对'}</small></SourceDetails></div>
                 <button type="button" aria-label={`查看预约 ${item.reservationId}`} onClick={() => openTarget(item.targetUrl)}>查看</button>
               </article>) : <p className="stage25-muted">当天没有已确认的活动预约。</p>}
             </div>
@@ -1334,14 +1343,14 @@ function GuestDailyBrief({ me, go }) {
               <section><div className="stage25-section-title"><strong>当前选用环境资料</strong></div>
                 <ul className="stage25-source-list">{(briefState.currentEnvironment || brief.environment)?.map(item => <li key={item.domain} data-source-id={item.sourceId || ''}>
                   <span>{item.domain === 'weather' ? '天气' : item.domain === 'tide' ? '潮汐' : '海况'}</span>
-                  <div><strong>{item.available ? item.summary : item.missingNote}</strong>{item.available && <small>{item.sourceName} · 来源 {item.sourceId}</small>}</div>
+                  <div><strong>{item.available ? item.summary : item.missingNote}</strong>{item.available && <small>{item.sourceName}</small>}</div>
                 </li>)}</ul>
               </section>
             </div>
             {briefState.generatedBrief && <details className="stage25-missing" data-testid="brief-environment-history"><summary>生成时环境（历史快照，保持原件）</summary><p>生成时间 {mealLocalTime(briefState.generatedAt)} · 当前对照地点 {briefState.environmentContext?.currentLocation?.name || '未配置'}；旧来源与当前不同不会回写旧简报。</p><ul>{briefState.generatedBrief.environment?.map(item=><li key={item.domain}>{({weather:'天气',tide:'潮汐',marine:'海况'})[item.domain]}：原来源 {item.sourceId || '当时缺失'} · 原摘要 {String(item.summary || item.missingNote || '当时资料未记录').replaceAll('unknown','当时分级未设置').replaceAll('global mean sea level','全球平均海平面')}</li>)}</ul></details>}
             {brief.careItems?.length > 0 && <section className="stage25-care-list" data-testid="stage25-care-items"><div className="stage25-section-title"><strong>关怀与安排变动</strong><button type="button" onClick={() => openTarget('mood')}>查看心情记录 →</button></div>
               {brief.careItems.map(item => <article key={`${item.sourceType}:${item.sourceId}`} data-source-id={item.sourceId}>
-                <div><strong>{item.title}</strong><p>{item.message}</p><small>{item.sourceLabel} · 来源 ID {item.sourceId}</small></div>
+                <div><strong>{item.title}</strong><p>{item.message}</p><SourceDetails><small>{item.sourceLabel} · 来源 ID {item.sourceId}</small></SourceDetails></div>
                 <button type="button" onClick={() => openTarget(item.targetUrl)}>查看</button>
               </article>)}
             </section>}
@@ -1355,7 +1364,7 @@ function GuestDailyBrief({ me, go }) {
       {error && <p className="stage25-error" role="alert">{error}</p>}
       {notificationState.items?.length ? <ul className="stage25-notification-list">{notificationState.items.slice(0, 8).map(item => <li key={item.id}
         className={item.readAt ? 'read' : 'unread'} data-testid={`stage25-notice-${item.id}`} data-notification-id={item.id} data-source-id={item.sourceId} data-target-type={item.targetType} data-target-id={item.targetId} data-target-url={item.targetUrl}>
-        <div><strong>{item.message}</strong><small>{item.sourceType} · 来源 {item.sourceId} · {item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN') : ''}</small></div>
+        <div><strong>{businessText(item.message)}</strong><small>{notificationCategory(item).label} · {businessTime(item.createdAt)}</small><SourceDetails data={item}/></div>
         <div className="stage25-notification-actions"><button type="button" onClick={() => openTarget(item.targetUrl)}>打开</button>
           {!item.readAt && <button type="button" disabled={readingId === item.id} onClick={() => void markRead(item)}>{readingId === item.id ? '保存中…' : '标为已读'}</button>}
         </div>
@@ -1457,7 +1466,7 @@ function HealthIntakeHistory({ history = [] }) {
     const statusLabel = item.status === 'confirmed' ? '已人工核实' : item.status === 'rejected' ? '已驳回' : '待核实';
     const actor = item.reviewerName || item.submitterName || (item.source === 'assistant' ? '健康助手' : '客人');
     return <details className="health-history-item" key={item.id}>
-      <summary><span className={`health-intake-status ${item.status}`}>{statusLabel}</span><strong>第 {item.revision || '旧记录'} 版 · {item.source === 'form' ? '表单' : item.source === 'assistant' ? '对话' : item.source}</strong><time>{item.reviewedAt || item.submittedAt ? new Date(item.reviewedAt || item.submittedAt).toLocaleString('zh-CN') : '—'}</time></summary>
+      <summary><span className={`health-intake-status ${item.status}`}>{statusLabel}</span><strong>第 {item.revision || '旧记录'} 版 · {item.source === 'form' ? '表单' : item.source === 'assistant' ? '对话' : item.source}</strong><time>{item.reviewedAt || item.submittedAt ? new Date(item.reviewedAt || item.submittedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) : '—'}</time></summary>
       <div className="health-history-meta"><span>提交人：{item.submitterName || (item.source === 'assistant' ? '客人通过助手' : '客人')}</span><span>处理人：{item.reviewerName || '尚未处理'}</span><span>来源会话：{item.sessionId || '表单提交'}</span><span>来源人：{actor}</span></div>
       {item.content && item.source !== 'form' && <p className="health-intake-raw">原始内容：{item.content}</p>}
       {changes.length ? <div className="health-history-diff"><div className="health-history-diff-head"><span>字段</span><span>修改前</span><span>修改后</span></div>{changes.map(change => <div className="health-history-diff-row" key={change.label}><strong>{change.label}</strong><span>{change.before}</span><span>{change.after}</span></div>)}</div> : <p className="health-intake-raw">{item.status === 'rejected' ? '驳回时正式档案保持不变。' : '记录保留；当前候选没有可对照的结构化字段。'}</p>}
@@ -1703,11 +1712,11 @@ function Stage21HealthWorkspace({ onIntakeSaved }) {
       <form className="stage21-utterance-form" onSubmit={submitUtterance}><label htmlFor="stage21-utterance">本人自述<textarea id="stage21-utterance" rows="3" maxLength="1200" value={utterance} onChange={event => setUtterance(event.target.value)} placeholder="例如：最近睡不好、对虾过敏"/></label><small>{utterance.length}/1200 字 · 不用于诊断</small><button className="primary-btn" type="submit" disabled={extracting || !utterance.trim()}>{extracting ? '正在整理原文…' : '提取候选'}</button></form>
       {extractionNotice && <div className="stage21-success" role="status">{extractionNotice}</div>}{extractionError && <div className="project-form-error" role="alert">{extractionError}</div>}
       {extractionLoading ? <QueryState text="正在读取提取记录…"/> : extractions.length ? <div className="stage21-extraction-list">{extractions.map(extraction => <article className="stage21-extraction-card" key={extraction.id}>
-        <header><div><strong>提取编号 {extraction.id}</strong><span>状态：{statusText(extraction.status)} · {extraction.executionMode} · 会话 {extraction.sessionId || '—'}</span></div><time>{extraction.createdAt ? new Date(extraction.createdAt).toLocaleString('zh-CN') : '—'}</time></header>
+        <header><div><strong>提取编号 {extraction.id}</strong><SourceDetails><span>状态：{statusText(extraction.status)} · {extraction.executionMode} · 会话 {extraction.sessionId || '—'}</span></SourceDetails></div><time>{extraction.createdAt ? new Date(extraction.createdAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) : '—'}</time></header>
         <blockquote>{extraction.source?.utterance || '原文暂不可用'}</blockquote>
         {extraction.clarificationQuestion && <div className="stage21-clarification"><strong>需要补充事实</strong><p>{extraction.clarificationQuestion}</p><small>请在上方输入框回答；系统不会根据模糊说法推断诊断或行动能力。</small></div>}
         {extraction.candidates?.length > 0 && <div className="stage21-candidates">{extraction.candidates.map(candidate => <div className="stage21-candidate" key={candidate.candidateId}>
-          <div><strong>{({chronic:'慢病自述',allergies:'过敏自述',dietaryRestrictions:'饮食忌口',sleep:'睡眠自述',skin:'皮肤自述',mobility:'行动能力'})[candidate.field] || candidate.field}：{candidate.value || (candidate.status === 'unknown' ? '不确定' : '无')}</strong><span>候选 {candidate.candidateId} · {candidate.reviewStatus || (candidate.status === 'pending_confirmation' ? '待本人确认' : '待本人选择')}</span><blockquote>原文证据：「{candidate.evidenceText}」</blockquote><small>来源会话 {candidate.source?.sessionId || extraction.sessionId || '—'} · 来源类型 {candidate.source?.type || extraction.source?.type}</small></div>
+          <div><strong>{({chronic:'慢病自述',allergies:'过敏自述',dietaryRestrictions:'饮食忌口',sleep:'睡眠自述',skin:'皮肤自述',mobility:'行动能力'})[candidate.field] || candidate.field}：{candidate.value || (candidate.status === 'unknown' ? '不确定' : '无')}</strong><span>候选 {candidate.candidateId} · {candidate.reviewStatus || (candidate.status === 'pending_confirmation' ? '待本人确认' : '待本人选择')}</span><blockquote>原文证据：「{candidate.evidenceText}」</blockquote><SourceDetails><small>来源会话 {candidate.source?.sessionId || extraction.sessionId || '—'} · 来源类型 {candidate.source?.type || extraction.source?.type}</small></SourceDetails></div>
           {extraction.status === 'pending_confirmation' && <label>本人选择<select value={decisions[candidate.candidateId] || candidate.decision || ''} onChange={event => setDecisions(current => ({ ...current, [candidate.candidateId]: event.target.value }))}><option value="">请选择</option><option value="confirm">确认这项</option><option value="reject">拒绝这项</option></select></label>}
         </div>)}{extraction.status === 'pending_confirmation' && <button className="primary-btn" type="button" onClick={() => decideExtraction(extraction)} disabled={confirmingId === extraction.id || extraction.candidates.some(item => !['confirm','reject'].includes(decisions[item.candidateId] || item.decision || ''))}>{confirmingId === extraction.id ? '保存选择中…' : '保存逐项选择'}</button>}</div>}
         {!extraction.candidates?.length && !extraction.clarificationQuestion && <p className="stage21-empty-candidate">没有可确认的候选。请重新用自己的话描述。</p>}
@@ -1892,7 +1901,7 @@ function GuestHealth({ me }) {
 
   const today = businessToday();
   return <>
-    <PageTitle eyebrow="MY HEALTH" title="我的健康状况" desc="记录和查看健康指标。时间以 Asia/Shanghai 显示，保存时转换为 UTC。"/>
+    <PageTitle eyebrow="MY HEALTH" title="我的健康状况" desc="记录和查看健康指标；日期和时间统一使用上海时间。"/>
     <div className="health-summary health-metric-summary">
       <div><span>最近记录</span><strong>{latestRecord?.displayValue || '—'}</strong><small>{latestRecord ? `${latestRecord.metricLabel} · ${latestRecord.unit}` : '等待记录'}</small></div>
       <div><span>有效记录</span><strong>{activeRecords.length}</strong><small>撤回记录保留在历史中</small></div>
@@ -1918,15 +1927,15 @@ function GuestHealth({ me }) {
     </section>
 
     <section className="surface health-trend-surface">
-      <div className="health-section-heading health-trend-heading"><div><span className="eyebrow">TREND</span><h2>{selectedMetric.label}趋势</h2><p>按上海业务日取当天最新的有效样本；时间相同时按记录 ID 降序选取。</p></div>
+      <div className="health-section-heading health-trend-heading"><div><span className="eyebrow">TREND</span><h2>{selectedMetric.label}趋势</h2><p>每天显示最新有效记录；撤回的记录不参与趋势。</p></div>
         <div className="health-trend-controls"><label>指标<select aria-label="趋势指标" value={metric} onChange={event => setMetric(event.target.value)}>{HEALTH_METRIC_OPTIONS.map(option => <option value={option.key} key={option.key}>{option.label}</option>)}</select></label><div className="health-window-toggle" role="group" aria-label="趋势窗口">{[7, 30].map(windowDays => <button type="button" className={days === windowDays ? 'active' : ''} aria-pressed={days === windowDays} key={windowDays} onClick={() => setDays(windowDays)}>{windowDays}日</button>)}</div></div>
       </div>
       {trendLoading ? <div className="health-chart-state" role="status">正在加载趋势与摘要…</div> : trendError ? <div className="health-chart-state health-error-state" role="alert"><span>{trendError}</span><button type="button" className="outline-btn" onClick={() => setRefreshKey(current => current + 1)}>重试</button></div> : trend ? <>
         <HealthMetricChart trend={trend}/>
         <div className={`health-trend-summary ${summary?.status === 'insufficient_data' ? 'insufficient' : ''}`}>
           <strong>{summary?.status === 'insufficient_data' ? '样本不足' : '变化摘要'}</strong>
-          {summary?.status === 'insufficient_data' ? <p>{summary.reason}</p> : <><p>{summary?.changeDescription || '暂无可比较变化'}</p><small>窗口 {summary?.window?.start} 至 {summary?.window?.end} · 有效样本 {summary?.sampleCount} 天 · 缺失 {summary?.missingDayCount} 天</small><small>引用记录：{summary?.sourceRecordIds?.length ? summary.sourceRecordIds.join('、') : '—'}</small></>}
-          <small className="health-demo-note">{summary?.demoRule?.note || trend.demoRule?.note} 规则 {summary?.demoRule?.id || trend.demoRule?.id} v{summary?.demoRule?.version || trend.demoRule?.version}</small>
+          {summary?.status === 'insufficient_data' ? <BusinessReason value={summary.reason}/> : <><p>{summary?.changeDescription || '暂无可比较变化'}</p><small>窗口 {summary?.window?.start} 至 {summary?.window?.end} · 有效样本 {summary?.sampleCount} 天 · 缺失 {summary?.missingDayCount} 天</small><SourceDetails data={{sourceRecordIds:summary?.sourceRecordIds}}/></>}
+          <small className="health-demo-note">{summary?.demoRule?.note || trend.demoRule?.note}</small><SourceDetails data={summary?.demoRule || trend.demoRule}/>
         </div>
       </> : null}
     </section>
@@ -1941,8 +1950,8 @@ function GuestHealth({ me }) {
             <div className="health-record-metric"><strong>{record.metricLabel}</strong><small>{record.unit || '单位未提供'}{record.parseStatus !== 'valid' ? ' · 旧值未解析' : ''}</small></div>
             <div className="health-record-value">{record.displayValue}{record.demoOutlier && <span className="health-outlier-tag" title={record.demoRule.note}>演示异常值</span>}</div>
             <div className="health-record-note">{record.note || '—'}</div>
-            <div className="health-record-source"><strong>{record.source === 'guest' ? '客人录入' : record.source === 'device' ? '设备记录' : record.source === 'import' ? '导入记录' : '工作人员记录'}</strong><small>{record.recorderName || record.recordedBy || '录入人未提供'}</small></div>
-            <div className="health-record-time"><strong>{healthBusinessTime(record.recordedAt)}</strong><small>上海时间 · {record.id}</small></div>
+            <div className="health-record-source"><strong>{record.source === 'guest' ? '客人录入' : record.source === 'device' ? '设备记录' : record.source === 'import' ? '导入记录' : '工作人员记录'}</strong><small>{record.recorderName || '录入人未提供'}</small></div>
+            <div className="health-record-time"><strong>{healthBusinessTime(record.recordedAt)}</strong><SourceDetails data={record}/></div>
             <div className="health-record-action">{record.voidedAt ? <span className="health-retracted-label">已撤回</span> : isOwn && isToday ? <button type="button" className="health-retract-trigger" onClick={() => { setRetractId(String(record.id)); setRetractReason(''); setRetractError(''); }}>撤回</button> : isOwn ? <span className="health-expired-label" title="仅可撤回上海时间当天录入的记录">已过撤回时间</span> : null}</div>
             {record.voidedAt && <div className="health-retraction-audit">撤回于 {healthBusinessTime(record.voidedAt)} · 原因：{record.voidReason || '未提供'}</div>}
             {retractId === String(record.id) && <form className="health-retract-form" onSubmit={submitRetraction}><label>撤回原因<input autoFocus maxLength={500} value={retractReason} onChange={event => { setRetractReason(event.target.value); setRetractError(''); }} placeholder="请说明撤回原因"/></label>{retractError && <small role="alert" className="health-field-error">{retractError}</small>}<div><button className="outline-btn" type="button" onClick={() => setRetractId('')}>取消</button><button className="primary-btn" type="submit" disabled={retracting}>{retracting ? '提交中…' : '确认撤回'}</button></div></form>}
@@ -2212,11 +2221,11 @@ function OperationsWorkbench({ notify, me, initialSource = null }) {
         <label>项目<select aria-label="项目筛选" value={reservationProjectId} onChange={event => setReservationProjectId(event.target.value)}><option value="">全部项目</option>{[...new Map(slots.map(slot => [slot.projectId, slot.projectName])).entries()].map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
         <label>预约状态<select aria-label="预约状态筛选" value={reservationStatus} onChange={event => setReservationStatus(event.target.value)}><option value="all">全部</option><option value="active">有效预约</option><option value="history">历史与取消</option></select></label>
       </div>
-      <div className="stage26-reservations" data-testid="stage26-reservation-list">{reservations.map(item => <article key={item.id} data-reservation-id={item.id} data-guest-id={item.guestId} data-status={item.status}><div><strong>{item.projectName} · {item.guestName}</strong><small>{item.businessDate} {item.localStart}–{item.localEnd} · {item.id}</small><small>状态：{item.status}{item.checkinStatus ? ` · ${item.checkinStatus}` : ''}{item.rescheduledTo ? ` · 已改至 ${item.rescheduledTo}` : ''}</small></div><div className="stage26-row-actions">{item.status === 'confirmed' && Date.parse(item.startsAt) <= Date.now() && <button type="button" className="outline-btn" onClick={() => markNoShow(item)}>登记未参加</button>}{item.status === 'cancelled' && String(item.cancellationReason || '').startsWith('weather_batch:') && <button type="button" className="outline-btn" onClick={() => inspectAlternatives(item)}>查看替代时段</button>}</div></article>)}</div>
+      <div className="stage26-reservations" data-testid="stage26-reservation-list">{reservations.map(item => <article key={item.id} data-reservation-id={item.id} data-guest-id={item.guestId} data-status={item.status}><div><strong>{item.projectName} · {item.guestName}</strong><small>{item.businessDate} {item.localStart}–{item.localEnd} · {item.id}</small><small>状态：{businessText(item.status)}{item.checkinStatus ? ` · ${item.checkinStatus}` : ''}{item.rescheduledTo ? ` · 已改至 ${item.rescheduledTo}` : ''}</small></div><div className="stage26-row-actions">{item.status === 'confirmed' && Date.parse(item.startsAt) <= Date.now() && <button type="button" className="outline-btn" onClick={() => markNoShow(item)}>登记未参加</button>}{item.status === 'cancelled' && String(item.cancellationReason || '').startsWith('weather_batch:') && <button type="button" className="outline-btn" onClick={() => inspectAlternatives(item)}>查看替代时段</button>}</div></article>)}</div>
       {rebooking && <div className="stage26-confirm" data-testid="stage26-rebooking"><strong>原预约 {rebooking.reservation.id} · 选择替代时段</strong><p>{rebooking.note}</p><label>可选时段<select value={selectedCandidate} onChange={event => setSelectedCandidate(event.target.value)}>{rebooking.candidates?.map(item => <option key={item.id} value={item.id}>{item.businessDate} {item.localStart}–{item.localEnd} · 余 {item.remaining} · {item.reason || item.safety}</option>)}</select></label><button type="button" className="primary-btn" disabled={!selectedCandidate} onClick={confirmAlternative}>明确确认改约</button><button type="button" className="outline-btn" onClick={() => setRebooking(null)}>取消</button></div>}
     </section>
     <section className="surface stage26-panel"><header><div><span className="eyebrow">SERVICE CONTINUITY</span><h2>服务事项</h2></div></header>
-      {incidents.length ? incidents.map(item => <article className="stage26-incident" key={`${item.supplier}:${item.feature}`}><div><strong>{item.supplier} · {item.feature} · {item.status}</strong><small>连续失败 {item.failureCount} 次 · {item.firstFailedAt} 至 {item.lastFailedAt}</small><p>{item.impactSummary}</p>{item.recoveredAt && <small>恢复时间 {item.recoveredAt}</small>}</div>{item.status === 'open' && item.recoveredAt && <button type="button" className="primary-btn" onClick={() => closeIncident(item)}>关闭已恢复事项</button>}</article>) : <p className="stage26-muted">目前没有需要跟进的运营事项。</p>}
+      {incidents.length ? incidents.map(item => <article className="stage26-incident" key={`${item.supplier}:${item.feature}`}><div><strong>{item.supplier} · {item.feature} · {businessText(item.status)}</strong><small>连续失败 {item.failureCount} 次 · {item.firstFailedAt} 至 {item.lastFailedAt}</small><p>{item.impactSummary}</p>{item.recoveredAt && <small>恢复时间 {item.recoveredAt}</small>}</div>{item.status === 'open' && item.recoveredAt && <button type="button" className="primary-btn" onClick={() => closeIncident(item)}>关闭已恢复事项</button>}</article>) : <p className="stage26-muted">目前没有需要跟进的运营事项。</p>}
     </section>
   </div>;
 }
@@ -2235,21 +2244,21 @@ function StaffDailySchedule({ jobType, notify }) {
   const label = jobType === 'coach' ? '教练每日安排' : '理疗师工作安排';
   return <div className="stage26-operations" data-testid="stage26-staff-schedule"><PageTitle eyebrow="SERVICE SCHEDULE" title={label} desc="查看本人时段分工及负责客人的签到/反馈；服务结束后记录完成，未参加须在开始后登记。" action={<button type="button" className="outline-btn" onClick={load}>刷新日程</button>}/><section className="surface stage26-filter-row"><label>业务日期<input type="date" value={date} onChange={event => setDate(event.target.value)}/></label><span>{data?.total ?? 0} 个任务 · {STAFF_JOB_LABELS[jobType]}</span></section>{error && <div className="stage26-error" role="alert">{error}</div>}<section className="surface stage26-panel stage26-reservations">{data?.items?.length ? data.items.map(item => {
     const execution = item.executions?.find(entry => entry.jobType === jobType);
-    return <article key={`${item.id}:${item.reservationId || 'empty'}`} data-reservation-id={item.reservationId || ''} data-guest-id={item.guestId || ''}><div><strong>{item.projectName} · {item.guestName || '暂无有效负责关系或预约'}</strong><small>{item.businessDate} {item.localStart}–{item.localEnd} · {item.reservationId || '尚无可处理预约'}</small>
+    return <article key={`${item.id}:${item.reservationId || 'empty'}`} data-reservation-id={item.reservationId || ''} data-guest-id={item.guestId || ''}><div><strong>{item.projectName} · {item.guestName || '暂无有效负责关系或预约'}</strong><SourceDetails><small>{item.businessDate} {item.localStart}–{item.localEnd} · {item.reservationId || '尚无可处理预约'}</small></SourceDetails>
       {item.reservationId && <><p>{item.checkin ? `客人已签到 · ${mealLocalTime(item.checkin.checkedInAt)}` : '客人尚未签到'}</p>{item.feedback && <p>客人反馈第 {item.feedback.revision} 版：{({comfortable:'舒服',general:'一般',uncomfortable:'不舒服'})[item.feedback.feeling] || item.feedback.feeling} · {item.feedback.note}</p>}
-      {execution ? <p role="status">{execution.status === 'completed' ? '服务已完成' : '已登记未参加'} · {execution.actorName} · {execution.note}</p> : <div className="meal-swap-form"><label>服务工作说明<textarea maxLength={500} value={notes[item.reservationId] || ''} onChange={event => setNotes(current => ({ ...current, [item.reservationId]: event.target.value }))}/></label><button type="button" className="primary-btn" disabled={Boolean(busy) || !item.checkin || !notes[item.reservationId]?.trim()} onClick={() => record(item, 'completed')}>记录服务完成</button><button type="button" className="outline-btn" disabled={Boolean(busy) || Boolean(item.checkin) || !notes[item.reservationId]?.trim()} onClick={() => record(item, 'no_show')}>登记未参加</button></div>}</>}
+      {execution ? <p role="status">{execution.status === 'completed' ? '服务已完成' : '已登记未参加'} · {execution.actorName} · {execution.note}</p> : <div className="meal-swap-form"><label>服务工作说明<textarea aria-label="服务工作说明" maxLength={500} value={notes[item.reservationId] || ''} onChange={event => setNotes(current => ({ ...current, [item.reservationId]: event.target.value }))}/></label><button type="button" className="primary-btn" disabled={Boolean(busy) || !item.checkin || !notes[item.reservationId]?.trim()} onClick={() => record(item, 'completed')}>记录服务完成</button><button type="button" className="outline-btn" disabled={Boolean(busy) || Boolean(item.checkin) || !notes[item.reservationId]?.trim()} onClick={() => record(item, 'no_show')}>登记未参加</button></div>}</>}
     </div></article>;
   }) : <Empty text="当天没有已分配的服务时段。"/>}<small className="stage26-muted">{data?.privacyNote}</small></section></div>;
 }
 
 function AdoptedDomainSuggestions({ evidence, onSelectResource }) {
-  if (!evidence?.adoption || !evidence.selectedSuggestions?.length) return null;
+  if (!evidence?.selectedSuggestions?.length) return null;
   const names = { physio:'理疗', nutrition:'营养', exercise:'运动', psychology:'心理陪伴' };
-  return <section className="surface" data-testid="adopted-domain-suggestions"><SectionHead title="本次采纳的领域建议"/>
-    <p>同源运行 {evidence.parentRunId} · 会话 {evidence.sessionId || evidence.adoption.sessionId}</p>
-    <p>餐食仅为计划，陪伴资源不需预约；活动以医护审核后关联的真实预约为准。</p>
+  return <section className="surface" data-testid="adopted-domain-suggestions"><SectionHead title="生成时的领域建议（原始来源）"/>
+    {evidence.executionMode === 'recorded_fixture' && <p className="release-boundary">录制合成模型工具演练 · 不是真实模型输出，也不代表正式业务验收通过。</p>}<SourceDetails data={{parentRunId:evidence.parentRunId,sessionId:evidence.sessionId||evidence.adoption?.sessionId}}/>
+    <p>这些是生成时的只读建议，原文保留。当前是否已激活、预约或送达，请以本页当前审核状态和实际业务记录为准；原文不随执行状态改写。</p>
     {evidence.selectedSuggestions.map(suggestion => <article key={suggestion.candidateId} data-suggestion-domain={suggestion.domain}>
-      <strong>{names[suggestion.domain] || suggestion.domain} · {suggestion.title}</strong><p>{suggestion.reason}</p>
+      <strong>{names[suggestion.domain] || suggestion.domain} · {suggestion.title}</strong><BusinessReason value={suggestion.reason}/>
       {suggestion.domain === 'psychology' && suggestion.details?.audioUrl && onSelectResource && <button type="button" className="outline-btn" onClick={() => onSelectResource({id:suggestion.details.resourceId,title:suggestion.title,audioUrl:suggestion.details.audioUrl,durationSeconds:suggestion.details.durationSeconds,type:'guided'})}>打开陪伴资源</button>}
       <details><summary>领域来源</summary><p>候选 {suggestion.candidateId} · 专业运行 {suggestion.childRunId}</p>{suggestion.sourceIds.map((source,index) => <p key={`${source.type}:${source.id}:${index}`}>{source.label || source.type} · {source.type}:{source.id}</p>)}</details>
     </article>)}
@@ -2377,19 +2386,19 @@ function WellnessReviewWorkbench({ notify, initialDraftId = '', onInitialDraftOp
       <section className="surface wellness-review-queue" aria-busy={loading}>
         <div className="wellness-review-list-head"><strong>{mode === 'pending_review' ? '待审核疗程' : '已处理疗程'}</strong><span>{items.length} 条</span></div>
         {loading ? <QueryState text="正在读取授权范围内的审核记录…"/> : items.length ? items.map(item => <button type="button" key={item.draftId} data-draft-id={item.draftId} className={`wellness-review-row ${selectedId === item.draftId ? 'selected' : ''}`} onClick={() => openDetail(item.draftId)}>
-          <span className="wellness-review-avatar">{initials(item.guestName)}</span><span className="wellness-review-row-copy"><strong>{item.guestName} <small>{item.roomNo || '未分配房间'}</small></strong><span>版本 {item.version} · {item.stayStart} 至 {item.stayEnd}</span><small>草案 {item.draftId} · 来源运行 {item.sourceRunId || '未记录'}</small><span>{item.summary || '暂无条目摘要'}</span><small>{item.generatedAt ? new Date(item.generatedAt).toLocaleString('zh-CN') : '生成时间未记录'} · {item.itemCount} 项</small></span><span className={`wellness-risk ${item.riskLevel}`}>{item.riskLevel === 'high' ? '强制复核' : item.riskLevel === 'sampled' ? '抽样' : '常规'}</span>
+          <span className="wellness-review-avatar">{initials(item.guestName)}</span><span className="wellness-review-row-copy"><strong>{item.guestName} <small>{item.roomNo || '未分配房间'}</small></strong><span>版本 {item.version} · {item.stayStart} 至 {item.stayEnd}</span><span>{businessText(item.summary) || '暂无条目摘要'}</span><small>{item.generatedAt ? new Date(item.generatedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) : '生成时间未记录'} · {item.itemCount} 项</small></span><span className={`wellness-risk ${item.riskLevel}`}>{item.riskLevel === 'high' ? '强制复核' : item.riskLevel === 'sampled' ? '抽样' : '常规'}</span>
         </button>) : <div className="wellness-review-empty"><Empty text={mode === 'pending_review' ? '当前没有待审核疗程' : '没有符合筛选条件的已完成记录'}/></div>}
       </section>
       <section className="wellness-review-detail" data-testid="wellness-review-detail" data-draft-id={detail?.draftId || ''} aria-busy={detailLoading || Boolean(busy)}>
         {detailLoading ? <div className="surface"><QueryState text="正在读取疗程版本、证据与审核历史…"/></div> : detail ? <>
-          <section className="surface wellness-review-detail-head"><div><span className="eyebrow">VERSION {detail.version} · {detail.draftId}</span><h2>{detail.guestName} · {detail.stayStart} 至 {detail.stayEnd}</h2><p>来源父运行 {detail.evidence?.parentRunId || detail.sourceRunId || '未记录'} · {detail.createdAt ? new Date(detail.createdAt).toLocaleString('zh-CN') : '生成时间未记录'}</p></div><span className={`wellness-review-status ${detail.reviewStatus}`}>{detail.reviewStatus === 'pending_review' ? '待审核' : detail.reviewStatus === 'active' ? '已激活' : detail.reviewStatus === 'auto_activated' ? '自动激活' : detail.reviewStatus === 'returned' ? '已退回' : detail.reviewStatus === 'corrected' ? '已纠正' : '已替代'}</span></section>
+          <section className="surface wellness-review-detail-head"><div><span className="eyebrow">第 {detail.version} 版</span><h2>{detail.guestName} · {detail.stayStart} 至 {detail.stayEnd}</h2><p>第 {detail.version} 版 · 生成于 {businessTime(detail.createdAt)}</p></div><span className={`wellness-review-status ${detail.reviewStatus}`}>{detail.reviewStatus === 'pending_review' ? '待审核' : detail.reviewStatus === 'active' ? '已激活' : detail.reviewStatus === 'auto_activated' ? '自动激活' : detail.reviewStatus === 'returned' ? '已退回' : detail.reviewStatus === 'corrected' ? '已纠正' : '已替代'}</span></section>
           {detail.reviewReason && <div className="wellness-review-reason"><b>最近审核原因：</b>{detail.reviewReason}</div>}
-          <EnvironmentHistoryNote history={detail.environmentHistory}/><AdoptedDomainSuggestions evidence={detail.evidence}/>
+          <SourceDetails data={detail}/><EnvironmentHistoryNote history={detail.environmentHistory}/><AdoptedDomainSuggestions evidence={detail.evidence}/>
           <section className="surface"><div className="wellness-review-section-head"><SectionHead title="逐项证据"/><span>{detail.items?.length || 0} 项</span></div>
-            {(detail.items || []).map(item => <article className="wellness-evidence-item" key={item.id}>
-              <div className="wellness-evidence-title"><div><span>{item.type === 'activity' ? '活动' : item.type === 'meal' ? '餐食建议' : item.type === 'gap' ? '资料缺口' : '休息'}</span><h3>{item.title}</h3></div><b>{item.date} {item.localStart ? `${item.localStart}–${item.localEnd}` : ''}</b></div>
-              <p>{item.reason}</p><div className="wellness-evidence-tags"><span>状态：{item.status}</span>{item.ruleIds?.map(rule => <span key={rule}>规则 {rule}</span>)}{item.environmentSnapshotId && <span>环境 {item.environmentSnapshotId}</span>}</div>
-              {item.evidence?.healthRisk && <p className="wellness-evidence-risk">档案健康复核：{Object.entries(item.evidence.healthRisk).filter(([, value]) => value === true).map(([key]) => key).join('、') || '当前未标记硬风险'}；证据来自服务端保存的档案与规则评估。</p>}
+            {(detail.items || []).map(item => <article className="wellness-evidence-item" data-item-id={item.id} key={item.id}>
+              <div className="wellness-evidence-title"><div><span>{item.type === 'activity' ? '活动' : item.type === 'meal' ? '餐食建议' : item.type === 'gap' ? '资料缺口' : '休息'}</span><h3>{item.title}</h3></div><b>{item.businessDate || item.date} {item.localStart ? `${item.localStart}–${item.localEnd}` : ''}</b></div>
+              <BusinessReason value={item.reason}/><div className="wellness-evidence-tags"><span>状态：{businessText(item.status)}</span>{item.ruleIds?.map(rule => <span key={rule}>规则 {rule}</span>)}{item.environmentSnapshotId && <SourceDetails><p>环境 {item.environmentSnapshotId}</p></SourceDetails>}</div>
+              {item.evidence?.healthRisk && <p className="wellness-evidence-risk">档案健康复核：{Object.entries(item.evidence.healthRisk).filter(([, value]) => value === true).map(([key]) => businessText(key)).join('、') || '当前未标记硬风险'}；证据来自服务端保存的档案与规则评估。</p>}
               <details className="wellness-evidence-sources"><summary>来源编号、规则理由与版本依据</summary>
                 {item.sourceIds?.length ? <ul>{item.sourceIds.map((source, index) => <li key={`${source.type}:${source.id}:${index}`}><b>{source.type}:{source.id}</b> · {source.label || '来源标签未记录'}</li>)}</ul> : <p>无可验证来源编号，不能补造引用。</p>}
                 {item.evidence?.rules?.length ? item.evidence.rules.map((rule, index) => <p key={`${rule.ruleId}-${index}`}>{rule.ruleId} · {rule.action} · {rule.reason}</p>) : <p>此条没有保存规则命中证据。</p>}
@@ -2398,14 +2407,14 @@ function WellnessReviewWorkbench({ notify, initialDraftId = '', onInitialDraftOp
               {item.type === 'activity' && canCorrectCurrent && <label className="wellness-slot-choice">纠正为另一时段<select value={selectedSlots[item.id] || ''} onChange={event => setSelectedSlots(current => ({ ...current, [item.id]: event.target.value }))}><option value="">保持当前时段</option>{(alternatives[item.id] || []).map(option => <option value={option.slotId} key={option.slotId}>{option.date} · {option.projectName} · {option.localStart}–{option.localEnd} · {option.location} · 余 {option.remaining}</option>)}</select></label>}
             </article>)}
           </section>
-          {detail.reservations?.length > 0 && <section className="surface"><SectionHead title="关联预约"/><div className="wellness-reservation-list">{detail.reservations.map(item => <div key={item.id}><strong>{item.project_name}</strong><span>{item.business_date} {item.local_start}–{item.local_end} · {item.status}</span><small>预约 {item.id} · 条目 {item.wellness_draft_item_id || '未关联'}</small></div>)}</div></section>}
-          {(canReviewCurrent || canCorrectCurrent) && <section className="surface wellness-review-actions"><SectionHead title={canReviewCurrent ? '审核操作' : '版本纠正'}/><label>{canReviewCurrent ? '修订或退回原因' : '纠正原因'}<textarea rows="3" value={revisionReason} onChange={event => setRevisionReason(event.target.value)} placeholder="记录依据、变更内容和需要注意的事实"/></label>
+          {detail.reservations?.length > 0 && <section className="surface"><SectionHead title="关联预约"/><div className="wellness-reservation-list">{detail.reservations.map(item => <div key={item.id}><strong>{item.project_name}</strong><span>{item.business_date} {item.local_start}–{item.local_end} · {businessText(item.status)}</span><SourceDetails data={item}/></div>)}</div></section>}
+          {(canReviewCurrent || canCorrectCurrent) && <section className="surface wellness-review-actions"><SectionHead title={canReviewCurrent ? '审核操作' : '版本纠正'}/><label>{canReviewCurrent ? '修订或退回原因' : '纠正原因'}<textarea aria-label={canReviewCurrent ? '修订或退回原因' : '纠正原因'} rows="3" value={revisionReason} onChange={event => setRevisionReason(event.target.value)} placeholder="记录依据、变更内容和需要注意的事实"/></label>
             <div className="wellness-action-buttons">{canReviewCurrent && <><button type="button" className="outline-btn" onClick={() => act('revise')} disabled={Boolean(busy) || !Object.values(selectedSlots).some(Boolean)}>{busy === 'revise' ? '保存中…' : '保存新待审版本'}</button><button type="button" className="primary-btn" onClick={() => act('approve')} disabled={Boolean(busy)}>{busy === 'approve' ? '激活中…' : detail.approvalAction === 'approved_after_revision' ? '修改后通过并激活' : '审核通过并激活'}</button></>}{canCorrectCurrent && <button type="button" className="primary-btn" onClick={() => act('correct')} disabled={Boolean(busy) || !Object.values(selectedSlots).some(Boolean)}>{busy === 'correct' ? '纠正中…' : '保存纠正版并重新激活'}</button>}</div>
-            {canReviewCurrent && detail.approvalContext && <small className="wellness-approval-context">此版本由医护修订事件 {detail.approvalContext.revisionEventId} 创建；第 {detail.approvalContext.fromVersion} 版 → 第 {detail.approvalContext.toVersion} 版。修订原因：{detail.approvalContext.revisionReason}</small>}
-            {canReviewCurrent && <label className="wellness-return-field">退回原因<textarea rows="2" value={returnReason} onChange={event => setReturnReason(event.target.value)} placeholder="说明退回项目和再次生成需要排除的原因"/></label>}
+            {canReviewCurrent && detail.approvalContext && <SourceDetails><small className="wellness-approval-context">此版本由医护修订事件 {detail.approvalContext.revisionEventId} 创建；第 {detail.approvalContext.fromVersion} 版 → 第 {detail.approvalContext.toVersion} 版。修订原因：{detail.approvalContext.revisionReason}</small></SourceDetails>}
+            {canReviewCurrent && <label className="wellness-return-field">退回原因<textarea aria-label="退回原因" rows="2" value={returnReason} onChange={event => setReturnReason(event.target.value)} placeholder="说明退回项目和再次生成需要排除的原因"/></label>}
             {canReviewCurrent && <button type="button" className="wellness-return-button" onClick={() => act('return')} disabled={Boolean(busy) || !returnReason.trim()}>{busy === 'return' ? '退回中…' : '退回并要求重新生成'}</button>}
           </section>}
-          <section className="surface"><div className="wellness-review-section-head"><SectionHead title="不可变审核历史"/><span>{detail.history?.length || 0} 条</span></div>{detail.history?.length ? <div className="wellness-history-list">{detail.history.map(event => <article key={event.id}><span className={`wellness-history-action ${event.action}`}>{({revision:'修订',approved:'通过',approved_after_revision:'修改后通过',returned:'退回',auto_activated:'自动激活',corrected:'纠正'})[event.action] || event.action}</span><div><strong>{event.actorName} · {event.actorRole} · {event.createdAt ? new Date(event.createdAt).toLocaleString('zh-CN') : '时间未记录'}</strong><p>{event.reason || '未记录原因'} · 版本 {event.fromVersion ?? '—'} → {event.toVersion ?? '—'}</p></div></article>)}</div> : <Empty text="尚无审核事件"/>}</section>
+          <section className="surface"><div className="wellness-review-section-head"><SectionHead title="不可变审核历史"/><span>{detail.history?.length || 0} 条</span></div>{detail.history?.length ? <div className="wellness-history-list">{detail.history.map(event => <article key={event.id}><span className={`wellness-history-action ${event.action}`}>{({revision:'修订',approved:'通过',approved_after_revision:'修改后通过',returned:'退回',auto_activated:'自动激活',corrected:'纠正'})[event.action] || event.action}</span><div><strong>{event.actorName} · {businessText(event.actorRole)} · {event.createdAt ? new Date(event.createdAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) : '时间未记录'}</strong><p>{event.reason || '未记录原因'} · 版本 {event.fromVersion ?? '—'} → {event.toVersion ?? '—'}</p></div></article>)}</div> : <Empty text="尚无审核事件"/>}</section>
         </> : <div className="surface wellness-review-no-selection"><div>✓</div><h2>选择一条疗程审核记录</h2><p>列表显示当前授权范围内的客人、入住日期、生成时间、风险和条目摘要。</p></div>}
       </section>
     </div>
@@ -2458,13 +2467,13 @@ function WellnessHistoryWorkbench({ canOpenDetails, notify }) {
       <label>结束日期<input type="date" value={to} onChange={event => setTo(event.target.value)}/></label>
       <button type="submit" className="primary-btn small-btn" disabled={loading}>查询</button>
     </form></section>
-    {attention.length > 0 && <section className="surface wellness-history-attention"><SectionHead title="管理员待关注事项"/><div>{attention.map(item => <article key={item.id}><b>{item.guest_name}</b><span>{item.reason}</span><small>{item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : ''}</small></article>)}</div></section>}
+    {attention.length > 0 && <section className="surface wellness-history-attention"><SectionHead title="管理员待关注事项"/><div>{attention.map(item => <article key={item.id}><b>{item.guest_name}</b><span>{item.reason}</span><small>{item.created_at ? new Date(item.created_at).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) : ''}</small></article>)}</div></section>}
     <section className="surface wellness-history-results"><div className="wellness-review-list-head"><strong>审核事件</strong><span>{result.total || 0} 条</span></div>{loading ? <QueryState text="正在读取不可变历史…"/> : result.items?.length ? result.items.map(item => <article className="wellness-history-row" key={item.id}>
       <span className={`wellness-history-action ${item.action}`}>{({revision:'修订',approved:'通过',approved_after_revision:'修改后通过',returned:'退回',auto_activated:'自动激活',corrected:'纠正'})[item.action] || item.action}</span>
-      <div><strong>{item.guestName} · {item.actorName} · {item.actorRole}</strong><p>{item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN') : '时间未记录'} · 版本 {item.fromVersion ?? '—'} → {item.toVersion ?? '—'}</p><p>{item.reason || '未记录原因'}</p><small>草案 {item.draftId} · 事件 {item.id}</small></div>
+      <div><strong>{item.guestName} · {item.actorName} · {businessText(item.actorRole)}</strong><p>{item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) : '时间未记录'} · 版本 {item.fromVersion ?? '—'} → {item.toVersion ?? '—'}</p><BusinessReason value={item.reason || '未记录原因'}/><SourceDetails><small>草案 {item.draftId} · 事件 {item.id}</small></SourceDetails></div>
       {canOpenDetails && <button type="button" className="outline-btn small-btn" onClick={() => openVersion(item.draftId)}>查看版本</button>}
     </article>) : <Empty text="没有符合条件的审核历史"/>}</section>
-    {selectedDetail && <section className="surface wellness-history-version"><div className="wellness-review-section-head"><SectionHead title={`${selectedDetail.guestName} · 第 ${selectedDetail.version} 版`}/><button type="button" className="outline-btn small-btn" onClick={() => setSelectedDetail(null)}>关闭</button></div><p>父运行：{selectedDetail.evidence?.parentRunId || '无可验证来源运行'}</p>{selectedDetail.items?.map(item => <article key={item.id}><strong>{item.date} · {item.title}</strong><p>{item.reason}</p><small>来源：{item.sourceIds?.map(source => `${source.type}:${source.id}`).join('、') || '未记录'}</small></article>)}</section>}
+    {selectedDetail && <section className="surface wellness-history-version"><div className="wellness-review-section-head"><SectionHead title={`${selectedDetail.guestName} · 第 ${selectedDetail.version} 版`}/><button type="button" className="outline-btn small-btn" onClick={() => setSelectedDetail(null)}>关闭</button></div><p>父运行：{selectedDetail.evidence?.parentRunId || '无可验证来源运行'}</p>{selectedDetail.items?.map(item => <article key={item.id}><strong>{item.date} · {item.title}</strong><BusinessReason value={item.reason}/><SourceDetails><small>来源：{item.sourceIds?.map(source => `${source.type}:${source.id}`).join('、') || '未记录'}</small></SourceDetails></article>)}</section>}
   </div>;
 }
 
@@ -2497,7 +2506,7 @@ function DietitianMealWorkbench({ notify }) {
 
   return <><PageTitle eyebrow="DIETITIAN WORKBENCH" title="备餐订单" desc="仅显示当前有效分工客人的日期、餐次、房间、餐品和明确限制；状态按已提交 → 备餐中 → 已送达推进。" action={<button className="outline-btn" type="button" onClick={load} disabled={loading}>刷新　↻</button>}/>
     <section className="surface meal-toolbar"><label>服务日期<input type="date" value={date} onChange={event => setDate(event.target.value)}/></label><label>餐次<select value={mealType} onChange={event => setMealType(event.target.value)}>{['breakfast', 'lunch', 'dinner'].map(item => <option key={item} value={item}>{MEAL_LABELS[item]}</option>)}</select></label><span>业务日期与订单时刻均按上海时间显示</span></section>
-    {loading ? <section className="surface"><QueryState text="正在加载授权范围内的订单…"/></section> : error ? <section className="surface"><QueryState error text={error} retryText="备餐订单加载失败"/><button className="outline-btn" type="button" onClick={load}>重试</button></section> : !orders.length ? <section className="surface meal-empty"><div className="meal-empty-icon">◒</div><h2>当前没有可备餐订单</h2><p>此列表只显示你当前有效分工客人的已提交订单。</p></section> : <div className="dietitian-orders">{orders.map(order => <article className="surface dietitian-order" key={order.id} data-testid={`stage26-meal-order-${order.id}`} data-order-id={order.id} data-guest-id={order.guestId} data-order-status={order.status}><header><div><span className="eyebrow">{order.businessDate} · {MEAL_LABELS[order.mealType]}</span><h2>{order.guestName} <small>房间 {order.roomNo || '未登记'}</small></h2><p>订单号 {order.orderNo} · 订单ID {order.id} · 提交时间（上海时间）{mealLocalTime(order.createdAt)}</p><MealOrderTiming order={order}/></div><strong className={`meal-state ${order.fulfillmentStatus}`}>{order.reviewRequired ? '须复核 · 暂停推进' : ORDER_STATUS_LABELS[order.status]}</strong></header><p className="meal-source-note">{order.dishes[0]?.sourceReference || '演示菜品资料'} 供货状态不代表实时库存或履约。</p><div className="dietitian-dishes">{order.dishes.map(dish => <div key={`${dish.slot}-${dish.dishId}`}><span>{SLOT_LABELS[dish.slot]}</span><strong>{dish.name}</strong><small>明确食材：{mealFoodLabels(dish.ingredients).join('、') || '未提供'} · 明确过敏原：{mealFoodLabels(dish.allergens).join('、') || '未列出'}</small></div>)}</div><div className="dietitian-restrictions"><strong>当前明确限制及来源状态</strong>{order.explicitRestrictions?.length ? <ul>{order.explicitRestrictions.map((item, index) => <li key={`${item.source}-${item.sourceId}-${item.value}-${index}`}>{mealFoodLabels([item.value])[0]} · {mealSourceLabel(item.source)} · {mealRestrictionStatusLabel(item.status)}</li>)}</ul> : <p>无已记录的明确限制</p>}{order.reviewNotices?.map((notice, index) => <p role="status" key={`${notice.code}-${index}`}>{notice.text}</p>)}</div>{order.reviewRequired && <div className="dietitian-restrictions" role="status">{order.reviewReasons.map(reason => <p key={reason}>{reason}</p>)}<MealRestrictionReview guestId={order.guestId} notify={notify} onChanged={load}/><label>订单复核说明<textarea value={reviewNotes[order.id] || ''} maxLength={1000} onChange={event => setReviewNotes(current => ({ ...current, [order.id]: event.target.value }))}/></label><button type="button" className="outline-btn" disabled={Boolean(busyId) || !order.canReview || !reviewNotes[order.id]?.trim()} onClick={async () => { setBusyId(order.id); try { await request(`/staff/meals/orders/${order.id}/review`, { method: 'POST', body: JSON.stringify({ note: reviewNotes[order.id] }) }); notify('订单复核完成，可以继续推进'); await load(); } catch (err) { notify(err.message); await load(); } finally { setBusyId(''); } }}>确认当前订单符合限制</button></div>}{order.review && <p>最近核对：{order.review.checkedName} · {order.review.note}</p>}<footer>{order.status === 'reserved' && <button className="primary-btn" type="button" disabled={Boolean(busyId) || order.reviewRequired} onClick={() => advance(order, 'preparing')}>{busyId === order.id ? '保存中…' : '开始备餐'}</button>}{order.status === 'preparing' && <button className="primary-btn" type="button" disabled={Boolean(busyId) || order.reviewRequired} onClick={() => advance(order, 'delivered')}>{busyId === order.id ? '保存中…' : '标记已送达'}</button>}</footer></article>)}</div>}
+    {loading ? <section className="surface"><QueryState text="正在加载授权范围内的订单…"/></section> : error ? <section className="surface"><QueryState error text={error} retryText="备餐订单加载失败"/><button className="outline-btn" type="button" onClick={load}>重试</button></section> : !orders.length ? <section className="surface meal-empty"><div className="meal-empty-icon">◒</div><h2>当前没有可备餐订单</h2><p>此列表只显示你当前有效分工客人的已提交订单。</p></section> : <div className="dietitian-orders">{orders.map(order => <article className="surface dietitian-order" key={order.id} data-testid={`stage26-meal-order-${order.id}`} data-order-id={order.id} data-guest-id={order.guestId} data-order-status={order.status}><header><div><span className="eyebrow">{order.businessDate} · {MEAL_LABELS[order.mealType]}</span><h2>{order.guestName} <small>房间 {order.roomNo || '未登记'}</small></h2><p>订单号 {order.orderNo} · 提交时间（上海时间）{mealLocalTime(order.createdAt)}</p><SourceDetails data={order}/><MealOrderTiming order={order}/></div><strong className={`meal-state ${order.fulfillmentStatus}`}>{order.reviewRequired ? '须复核 · 暂停推进' : ORDER_STATUS_LABELS[order.status]}</strong></header><p className="meal-source-note">{order.dishes[0]?.sourceReference || '演示菜品资料'} 供货状态不代表实时库存或履约。</p><div className="dietitian-dishes">{order.dishes.map(dish => <div key={`${dish.slot}-${dish.dishId}`}><span>{SLOT_LABELS[dish.slot]}</span><strong>{dish.name}</strong><small>明确食材：{mealFoodLabels(dish.ingredients).join('、') || '未提供'} · 明确过敏原：{mealFoodLabels(dish.allergens).join('、') || '未列出'}</small></div>)}</div><div className="dietitian-restrictions"><strong>当前明确限制及来源状态</strong>{order.explicitRestrictions?.length ? <ul>{order.explicitRestrictions.map((item, index) => <li key={`${item.source}-${item.sourceId}-${item.value}-${index}`}>{mealFoodLabels([item.value])[0]} · {mealSourceLabel(item.source)} · {mealRestrictionStatusLabel(item.status)}</li>)}</ul> : <p>无已记录的明确限制</p>}{order.reviewNotices?.map((notice, index) => <p role="status" key={`${notice.code}-${index}`}>{notice.text}</p>)}</div>{order.reviewRequired && <div className="dietitian-restrictions" role="status">{order.reviewReasons.map(reason => <p key={reason}>{reason}</p>)}<MealRestrictionReview guestId={order.guestId} notify={notify} onChanged={load}/><label>订单复核说明<textarea aria-label="订单复核说明" value={reviewNotes[order.id] || ''} maxLength={1000} onChange={event => setReviewNotes(current => ({ ...current, [order.id]: event.target.value }))}/></label><button type="button" className="outline-btn" disabled={Boolean(busyId) || !order.canReview || !reviewNotes[order.id]?.trim()} onClick={async () => { setBusyId(order.id); try { await request(`/staff/meals/orders/${order.id}/review`, { method: 'POST', body: JSON.stringify({ note: reviewNotes[order.id] }) }); notify('订单复核完成，可以继续推进'); await load(); } catch (err) { notify(err.message); await load(); } finally { setBusyId(''); } }}>确认当前订单符合限制</button></div>}{order.review && <p>最近核对：{order.review.checkedName} · {order.review.note}</p>}<footer>{order.status === 'reserved' && <button className="primary-btn" type="button" disabled={Boolean(busyId) || order.reviewRequired} onClick={() => advance(order, 'preparing')}>{busyId === order.id ? '保存中…' : '开始备餐'}</button>}{order.status === 'preparing' && <button className="primary-btn" type="button" disabled={Boolean(busyId) || order.reviewRequired} onClick={() => advance(order, 'delivered')}>{busyId === order.id ? '保存中…' : '标记已送达'}</button>}</footer></article>)}</div>}
   </>;
 }
 
@@ -2783,9 +2792,9 @@ function GuestAgentResults() {
   return <section className="surface" data-testid="guest-agent-results"><SectionHead title="管家协作" link="刷新协作" onClick={load}/>
     {error ? <p role="alert">{error}</p> : !status ? <p>正在读取协作记录…</p> : <>
       <p>{agentStateLabel(status.state)}</p>
-      {run ? <><small>运行 {run.runId} · {fmtDateTime(run.createdAt)}</small><p style={{whiteSpace:'pre-wrap'}}>{run.reply || '任务尚未返回答复。'}</p>
+      {run ? <><small>{fmtDateTime(run.createdAt)}</small><BusinessReason value={businessText(run.reply || '任务尚未返回答复。')}/>
         <button type="button" className="outline-btn" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? '收起原运行详情' : '打开原运行详情'}</button>
-        {open && <div data-run-id={run.runId}><p>会话 {run.sessionId}</p><div className="assistant-sources"><strong>查询来源</strong>{run.sources.map(source => <article key={`${source.type}:${source.id}`}><span>{source.label}</span><small>{source.id}</small></article>)}</div>
+        {open && <div data-run-id={run.runId}><SourceDetails><p>会话 {run.sessionId}</p></SourceDetails><div className="assistant-sources"><strong>查询来源</strong>{run.sources.map(source => <article key={`${source.type}:${source.id}`}><span>{source.label}</span><SourceDetails><small>{source.id}</small></SourceDetails></article>)}</div>
           {run.collaboration && <AssistantCollaborationTrace collaboration={run.collaboration}/>}
           {run.steps.map(step => <p key={step.stepIndex}>{step.summary} · {step.status}</p>)}</div>}</> : <p>当前授权范围内没有协作记录。可使用右下角助手整理建议。</p>}
     </>}
@@ -2818,7 +2827,7 @@ function StaffCareFollowUpTasks({ guests, onChooseGuest }) {
   return <section className="surface stage25-staff-care" aria-label="关怀跟进待办" data-testid="stage25-staff-care-tasks">
     <header><div><span className="eyebrow">CARE FOLLOW-UP</span><h2>关怀跟进待办</h2></div><button type="button" className="outline-btn" onClick={() => void load()} disabled={loading}>刷新</button></header>
     {loading ? <p role="status">正在读取当前负责范围内的待办…</p> : error ? <p role="alert">{error}</p> : items.length ? <ul>{items.map(item => <li key={item.id} data-source-id={item.sourceId} data-guest-id={item.guestId}>
-      <div><strong>{item.title}</strong><p>{item.guestName} · {item.detail}</p><small>{item.sourceType} · 来源 {item.sourceId} · {item.createdAt ? mealLocalTime(item.createdAt) : ''}</small></div>
+      <div><strong>{item.title}</strong><p>{item.guestName} · {item.detail}</p><SourceDetails><small>{item.sourceType} · 来源 {item.sourceId} · {item.createdAt ? mealLocalTime(item.createdAt) : ''}</small></SourceDetails></div>
       <button type="button" disabled={!guestIds.has(item.guestId)} onClick={() => onChooseGuest(guests.find(guest => guest.id === item.guestId))}>{guestIds.has(item.guestId) ? '打开客人档案' : '超出当前搜索结果'}</button>
     </li>)}</ul> : <p>当前负责范围内没有待跟进事项。</p>}
   </section>;
@@ -2965,7 +2974,7 @@ function ClinicianHealthReview({ guestId, notify, onGuestRefresh }) {
     {loading ? <QueryState text="正在读取待核实采集…"/> : <>
       <div className="clinician-review-current"><strong>正式档案版本 {data?.profileVersion ?? 0}</strong>{HEALTH_PROFILE_FIELDS.filter(field => data?.verifiedProfile?.[field.key]?.status !== 'unanswered').map(field => <span key={field.key}>{field.label}：{displayHealthField(field.key, data.verifiedProfile[field.key])}</span>)}</div>
       {pending.length ? <div className="clinician-review-queue">{pending.map(item => <article className="clinician-review-item" key={item.id}>
-        <div className="clinician-review-item-head"><div><span className="health-intake-status pending">待核实</span><strong>第 {item.revision || '旧记录'} 版 · {item.source === 'form' ? '客人表单' : item.source === 'assistant' ? '助手对话' : item.source}</strong></div><time>{item.submittedAt ? new Date(item.submittedAt).toLocaleString('zh-CN') : '—'}</time></div>
+        <div className="clinician-review-item-head"><div><span className="health-intake-status pending">待核实</span><strong>第 {item.revision || '旧记录'} 版 · {item.source === 'form' ? '客人表单' : item.source === 'assistant' ? '助手对话' : item.source}</strong></div><time>{item.submittedAt ? new Date(item.submittedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) : '—'}</time></div>
         <div className="clinician-review-submitter">提交人：{item.submitterName || '客人'} · 基于正式版本 {item.baseProfileVersion}</div>
         {item.candidate ? <>
           <div className="clinician-candidate-grid">{HEALTH_PROFILE_FIELDS.filter(field => item.candidate[field.key]?.status !== 'unanswered').map(field => <div key={field.key}><span>{field.label}</span><strong>{displayHealthField(field.key, item.candidate[field.key])}</strong></div>)}</div>
@@ -3138,7 +3147,7 @@ function DeanTeam({ notify }) {
                 <SectionHead title="近期工作记录"/>
                 <div className="staff-log-list">
                   {selected.logs.length ? selected.logs.map((log) => (
-                    <div key={log.id}><span className="log-dot"/><div><strong>{log.action === 'service.execution.record' ? '记录服务执行' : log.action}</strong><p>{log.detail || '完成一项工作操作'}</p><small>{log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN') : '—'}</small></div></div>
+                    <div key={log.id}><span className="log-dot"/><div><strong>{log.action === 'service.execution.record' ? '记录服务执行' : log.action}</strong><p>{log.detail || '完成一项工作操作'}</p><small>{log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) : '—'}</small></div></div>
                   )) : <Empty text="暂无工作记录"/>}
                 </div>
               </section>
@@ -3563,7 +3572,7 @@ function AssistantWidget({ role = 'public', user = null, guestId = '', onAuthExp
         {currentAssistantNotice && <article className="stage25-assistant-notice" data-testid="stage25-assistant-notice" data-notification-id={currentAssistantNotice.id} data-source-id={currentAssistantNotice.sourceId} data-target-type={currentAssistantNotice.targetType} data-target-id={currentAssistantNotice.targetId} data-target-url={currentAssistantNotice.targetUrl}>
           <span className="eyebrow">站内提醒 · {currentAssistantNotice.sourceType}</span>
           <strong>{currentAssistantNotice.message}</strong>
-          <small>来源 {currentAssistantNotice.sourceId} · 目标 {currentAssistantNotice.targetType}:{currentAssistantNotice.targetId}</small>
+          <SourceDetails><small>来源 {currentAssistantNotice.sourceId} · 目标 {currentAssistantNotice.targetType}:{currentAssistantNotice.targetId}</small></SourceDetails>
           <div><button type="button" onClick={() => openAssistantNotice(currentAssistantNotice)}>打开提醒</button>
             {!currentAssistantNotice.readAt && <button type="button" onClick={() => void markAssistantNoticeRead(currentAssistantNotice)}>标为已读</button>}
             <button type="button" onClick={() => void enableBrowserReminder()}>开启浏览器提醒</button></div>
@@ -3599,7 +3608,7 @@ function AssistantWidget({ role = 'public', user = null, guestId = '', onAuthExp
             const canOpenReview = role === 'staff' && user?.jobType === 'clinician' && source.type === 'wellness_draft';
             const canOpenOperations = role === 'staff' && user?.jobType === 'administrator' && source.type === 'project_slot';
             return <article key={`${source.type}:${source.id}`} data-source-type={source.type} data-source-id={source.id}>
-              <span>{source.label}</span><small>{source.id}</small>
+              <span>{source.label}</span><SourceDetails><small>{source.id}</small></SourceDetails>
               {canOpenReview && <button type="button" data-testid="assistant-review-source" data-source-id={source.id}
                 data-guest-id={guestId} data-run-id={message.runId || ''} data-tool-name="search_staff_review_context"
                 onClick={() => onOpenReviewSource?.(source.id)}>打开待审方案</button>}
@@ -3672,7 +3681,7 @@ function AssistantCollaborationTrace({ collaboration, onSelectResource, onAdopt 
       <span>本次如何生成</span><small>{collaboration.agents?.length || 0} 个专业任务 · {assistantExecutionModeLabel(collaboration.executionMode)}</small><b aria-hidden="true">{expanded ? '−' : '+'}</b>
     </button>
     {expanded && <div className="assistant-trace-body">
-      <div className="assistant-trace-run"><strong>{parent.name || '海屿管家'} · 协调任务</strong><small>runId {parent.runId || '—'}</small><small>{parent.agentId || 'household.concierge'} · v{parent.instructionVersion || '—'} · {assistantExecutionModeLabel(parent.executionMode)}</small>
+      <div className="assistant-trace-run"><strong>{parent.name || '海屿管家'} · 协调任务</strong><SourceDetails><small>runId {parent.runId || '—'}</small></SourceDetails><small>{parent.agentId || 'household.concierge'} · v{parent.instructionVersion || '—'} · {assistantExecutionModeLabel(parent.executionMode)}</small>
         {parent.model && <small>模型 {parent.model}</small>}
         {collaboration.coordinatorError
           ? <small className="assistant-trace-coordinator-status failed">管家选择未完成（{collaboration.coordinatorError}）；回退来源：已完成领域智能体候选，未标为管家采用。</small>
@@ -3684,10 +3693,10 @@ function AssistantCollaborationTrace({ collaboration, onSelectResource, onAdopt 
       </div>
       {(collaboration.agents || []).map(agent => <article className={`assistant-trace-agent ${agent.status === 'failed' ? 'failed' : ''}`} key={agent.runId}>
         <strong>{agent.name || agent.agentId} <span>{agent.status === 'completed' ? '已完成' : agent.status === 'failed' ? '未完成' : agent.status}</span></strong>
-        <small>runId {agent.runId}</small><small>{agent.agentId} · v{agent.instructionVersion || '—'} · {assistantExecutionModeLabel(agent.executionMode)}</small>
+        <SourceDetails><small>runId {agent.runId}</small></SourceDetails><small>{agent.agentId} · v{agent.instructionVersion || '—'} · {assistantExecutionModeLabel(agent.executionMode)}</small>
         <small>{agent.model || '未取得模型'} · {formatTraceDuration(agent.durationMs)} · {Number(agent.inputTokens || 0) + Number(agent.outputTokens || 0)} tokens · 估算 ${Number(agent.estimatedCostUsd || 0).toFixed(6)}</small>
-        {(agent.tools || []).map((tool, index) => <small className="assistant-trace-tool" key={`${agent.runId}-${tool.toolName}-${index}`}>工具 {tool.toolName} · {tool.status === 'completed' ? '完成' : '失败'} · {formatTraceDuration(tool.durationMs)}</small>)}
-        {(agent.sources || []).length > 0 && <div className="assistant-trace-sources"><b>引用</b>{agent.sources.map(source => <small key={`${agent.runId}-${source.type}:${source.id}`}>{source.label || source.type} · {source.id}</small>)}</div>}
+        {(agent.tools || []).map((tool, index) => <SourceDetails><small className="assistant-trace-tool" key={`${agent.runId}-${tool.toolName}-${index}`}>工具 {tool.toolName} · {tool.status === 'completed' ? '完成' : '失败'} · {formatTraceDuration(tool.durationMs)}</small></SourceDetails>)}
+        {(agent.sources || []).length > 0 && <div className="assistant-trace-sources"><b>引用</b>{agent.sources.map(source => <SourceDetails><small key={`${agent.runId}-${source.type}:${source.id}`}>{source.label || source.type} · {source.id}</small></SourceDetails>)}</div>}
       </article>)}
       {(collaboration.gaps || []).map(gap => <div className="assistant-trace-gap" key={`${gap.agentId}:${gap.runId || 'missing'}`}>领域缺口：{gap.domain} 未完成（{gap.errorCode || '未知原因'}）</div>)}
       {(collaboration.candidates || []).length > 0 && <div className="assistant-trace-candidates"><b>候选复核</b>{collaboration.candidates.map(candidate => <div className={`assistant-trace-candidate ${candidate.status}`} key={`${candidate.domain}:${candidate.candidateId}`}>
@@ -3696,7 +3705,7 @@ function AssistantCollaborationTrace({ collaboration, onSelectResource, onAdopt 
           : `${candidateStatusLabel(candidate.status)}${selectionVerified && collaboration.selectedCandidateIds?.includes(candidate.candidateId)
             ? ' · 管家采用' : selectionVerified && candidate.status === 'adopted' ? ' · 管家未选择'
               : !selectionVerified && candidate.status === 'adopted' ? ' · 管家选择未验证' : ''}`}</span><small>{candidate.reason}</small>
-        {(candidate.sourceIds || []).length > 0 && <small>来源 ID：{candidate.sourceIds.map(source => source.id).join('、')}</small>}
+        {(candidate.sourceIds || []).length > 0 && <SourceDetails><small>来源 ID：{candidate.sourceIds.map(source => source.id).join('、')}</small></SourceDetails>}
         {candidate.domain === 'psychology' && candidate.status === 'adopted' && candidate.details?.audioUrl && onSelectResource && <button type="button" className="assistant-resource-button" onClick={() => onSelectResource({
           id: candidate.details.resourceId || candidate.candidateId, title: candidate.title, audioUrl: candidate.details.audioUrl,
           durationSeconds: candidate.details.durationSeconds, source: candidate.details.resourceSource, license: candidate.details.license

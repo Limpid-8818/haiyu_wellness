@@ -1,6 +1,7 @@
 import { db, hasActiveTransaction, id, log, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { systemBusinessClock } from './clock.js';
+import {checkinAvailability} from '../../shared/release-presentation.js';
 
 const FEELINGS = new Set(['comfortable', 'general', 'uncomfortable']);
 const lockSuffix = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
@@ -112,7 +113,9 @@ export async function listGuestCheckins(guestId) {
         checkinId: row.checkinId, feeling: row.feeling, note: row.feedbackNote, revision: row.feedbackRevision,
         businessDate: row.feedbackBusinessDate, createdAt: row.feedbackCreatedAt, updatedAt: row.feedbackUpdatedAt }, revisions);
     }
-    items.push({ reservationId: row.reservationId, reservationStatus: row.attendanceStatus === 'no_show' ? 'no_show' : row.reservationStatus,
+    const reservationStatus=row.attendanceStatus === 'no_show' ? 'no_show' : row.reservationStatus;
+    const window=checkinAvailability({reservationStatus,startsAt:row.startsAt,checkin:row.checkinId},systemBusinessClock.utc());
+    items.push({ ...window, serverNow:systemBusinessClock.utc(), reservationId: row.reservationId, reservationStatus,
       businessDate: dateText(row.businessDate),
       startsAt: Number.isFinite(parseInstant(row.startsAt)) ? new Date(parseInstant(row.startsAt)).toISOString() : row.startsAt,
       endsAt: Number.isFinite(parseInstant(row.endsAt)) ? new Date(parseInstant(row.endsAt)).toISOString() : row.endsAt,

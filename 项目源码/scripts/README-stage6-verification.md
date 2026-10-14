@@ -1,0 +1,7 @@
+# 阶段6验收工具与可移植测试边界
+
+正常产品入口仍npm run dev/build；bugfix-stage6及v02—v06是固定历史合同的本机验收工具，不是默认启动入口。需要本机ignored历史封包/ledger/profile配置及受控授权；缺历史必须拒绝，不造SHA证据。worker真实图额度已用完，不得复用旧版本开启新图。当前人类只授权优先交付，不继续模型/截图复测。
+
+默认定向测试不依赖这些历史文件：release-controller-contract与release-capture-repaired用明确小合成budget fixture验证纯ledger、caller/mode/拒错和context清理；另assert真实历史loader在缺输入时拒绝。纯测试fixture不是实际模型usage、业务trace或验收PASS。真实历史SHA核验保留在对应版本preflight/consumption.js等手动工具中，原源码不改，原96/98包证据保持在本机ignored输出。
+
+所有测试所引用的脚本模块随源码提交；未提交Key、用户库、依赖、raw历史ledger或PNG。v06 Source入口和只读about:blank DOM显示快照的方法仅作交接能力，Source自身新live终验和截图根因本次后置，参见BUG列表V03与P3证据项；不得凭工具存在称整体终验通过。
