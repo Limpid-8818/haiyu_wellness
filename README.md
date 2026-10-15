@@ -2,7 +2,7 @@
 
 # 海屿康养社区智能康养系统
 
-> 新开发者请先看[前后端启动手册](docs/开发者启动手册.md)，其中包含安装、SQLite/MySQL、分开启动、构建、代理和当前验收边界。
+> 新开发者请先看[前后端启动手册](docs/开发者启动手册.md)，其中包含安装、SQLite/MySQL、分开启动、构建、代理和当前验收边界。前端代码组织（目录结构、依赖方向、useQuery/hash 路由等约定）见[前端代码组织与架构](docs/前端代码组织与架构_20261015.md)。
 
 > 当前BUG修复入口（2026-10-13）：请先阅读[待修复BUG列表](待修复BUG列表.md)和[交接说明](docs/BUG修复交接_20261013.md)。已有真实四领域与管家运行（9模型/8工具）证据，但最终答复、采纳业务闭环及其他岗位仍有问题/未验项，整体仍 `NOT_FINAL_ACCEPTED`。当前 `.env.example` 包含50次模型上限和大连地区代表点公开环境配置，私密Key与本地用户数据库不在仓库。
 
@@ -52,7 +52,9 @@ PORT=24520 WEB_PORT=25520 API_PROXY_TARGET=http://127.0.0.1:24520 npm run dev
 
 ```bash
 cd 项目源码
-npm test
+npm test              # server 侧测试（node --test）
+npm run test -w web   # web 侧测试（Vitest：lib 单测 + 渲染冒烟）
+npm run lint -w web   # web 侧 eslint
 npm run build
 npm start                 # 仅启动 API
 ```
@@ -83,7 +85,7 @@ npm start
 
 `LLM_TIMEOUT_MS` 控制模型请求超时，默认 20,000 毫秒；正数有效，超过 120,000 毫秒时按 120,000 计算，缺失、非正数或无效值使用默认值。`ASSISTANT_SESSION_TTL_MS` 控制新助手会话有效期，默认 28,800,000 毫秒（8 小时），最大按 604,800,000 毫秒（7 天）计算；缺失、非正数或无效值使用默认值。修改环境变量后需重启 API。
 
-`DB_DRIVER` 省略时为 `sqlite`；SQLite 使用 `DB_PATH`，自定义路径的父目录会在 API 启动时自动创建。MySQL 必须显式设为 `DB_DRIVER=mysql`，并提供 `MYSQL_HOST`、`MYSQL_PORT`、`MYSQL_USER`、`MYSQL_DATABASE` 和必要的 `MYSQL_PASSWORD`。运行 v1–v12 增量迁移后，两种数据库均有 26 张业务表；v4 新增岗位能力表，v5 扩展健康档案和采集字段，v6 新增项目/知识/规则表，v7 更正知识来源，v8 新增 `environment_snapshots`，v9 新增 `activity_slots` 与 `reservations`，v10 新增菜品目录、客人菜单、餐位、订单和幂等请求表，v11 为健康记录增加结构化指标和软撤回审计字段，v12 新增心情记录、持续关注项和资源使用表。连接错误不会触发 SQLite fallback。导入器只从显式指定的 SQLite 副本导入 11 张基础表、2 张预约表和 4 张膳食菜单/订单表；菜品目录由 v10 迁移种子提供。当前 Stage10 验证覆盖 17 张导入表和 30 个关系检查，Stage17/18 分别验证健康指标和心情功能的迁移兼容性。原始目标脚本仍在 [`数据库设计/haiyu_wellness_mysql8.sql`](数据库设计/haiyu_wellness_mysql8.sql)，字段差异见[SQLite 到 MySQL 映射](docs/SQLite到MySQL字段映射.md)。
+`DB_DRIVER` 省略时为 `sqlite`；SQLite 使用 `DB_PATH`，自定义路径的父目录会在 API 启动时自动创建。MySQL 必须显式设为 `DB_DRIVER=mysql`，并提供 `MYSQL_HOST`、`MYSQL_PORT`、`MYSQL_USER`、`MYSQL_DATABASE` 和必要的 `MYSQL_PASSWORD`。服务启动时运行 v1–v28 增量迁移（v4 岗位能力、v5 健康档案扩展、v6–v8 目录/规则/环境快照、v9 预约、v10 膳食、v11 健康指标、v12 心情记录，v13–v28 陆续覆盖助手运行、疗程草案与审核、业务确认、签到反馈、每日简报、运营排期、膳食限制复核、服务执行和热路径索引；迁移名单见 `server/src/db.js`）。连接错误不会触发 SQLite fallback。导入器只从显式指定的 SQLite 副本导入基础用户表、预约表和膳食菜单/订单表；菜品目录由迁移种子提供。原始目标脚本仍在 [`数据库设计/haiyu_wellness_mysql8.sql`](数据库设计/haiyu_wellness_mysql8.sql)，字段差异见[SQLite 到 MySQL 映射](docs/SQLite到MySQL字段映射.md)。
 
 ## 演示账号
 
