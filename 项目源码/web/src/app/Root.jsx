@@ -15,6 +15,10 @@ export function Root() {
   const logout = useCallback(() => {
     localStorage.removeItem('community_token');
     localStorage.removeItem('community_user');
+    // G17：退出后清掉工作区 hash，避免下次登录被旧深链带进任意 section。
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
     setUser(null);
     setMode('home');
   }, []);
