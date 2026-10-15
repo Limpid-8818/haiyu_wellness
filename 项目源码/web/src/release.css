@@ -21,5 +21,6 @@
 @media(min-width:1600px){.workspace .stage21-draft-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,34rem),1fr));gap:1.2rem}}
 
 .wellness-guest-notifications li{display:grid;grid-template-columns:minmax(0,1fr) auto}.wellness-guest-notifications li>.release-details{grid-column:1/-1}
+.stage21-reason-era{display:block;margin:.15rem 0;color:#52746d;font-size:.8rem;line-height:1.6}
 .workspace :is(.wellness-review-row-copy,.wellness-evidence-sources,.wellness-history-list) :is(span,small,p){font-size:.8rem;line-height:1.7}
 .workspace .wellness-evidence-item>p{font-size:.875rem}.workspace .wellness-reservation-list>div{grid-template-columns:minmax(0,1fr)}
