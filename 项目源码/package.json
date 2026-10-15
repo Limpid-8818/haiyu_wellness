@@ -6,6 +6,7 @@
     "node": ">=22.13.0",
     "npm": ">=10"
   },
+  "packageManager": "npm@10.9.3",
   "scripts": {
     "demo:team": "node scripts/init-demo-team.js",
     "demo:mock": "node scripts/demo-mock-data.mjs",
