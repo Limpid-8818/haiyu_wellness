@@ -42,7 +42,10 @@ export function AppShell({ user, onLogout }) {
   const [reviewDraftRequest, setReviewDraftRequest] = useState('');
   const [operationsSourceRequest, setOperationsSourceRequest] = useState(null);
   const toastTimer = useRef(null);
-  const landingResolved = useRef(Boolean(user.initialSection || user.role === 'guest'));
+  // G17：URL 深链/登录指定落点优先于岗位默认落点，避免 /me 返回后覆盖 hash 恢复的页面。
+  const landingResolved = useRef(Boolean(
+    user.initialSection || user.role === 'guest' || window.location.hash.replace(/^#/, '')
+  ));
   const assistantRole = user.role === 'dean' ? 'dean' : user.role;
 
   const notify = useCallback((message) => {
