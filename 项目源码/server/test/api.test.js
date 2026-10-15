@@ -725,9 +725,9 @@ test('model timeout falls back safely using only a local stub', async () => {
     assert.equal(result.data.live, false);
     assert.equal(result.data.mode, '安全引导模式');
     assert.ok(elapsed < 220, `timeout took ${elapsed}ms`);
-    const expiresAt = mutateDatabase(dbPath, database => database.prepare('SELECT expires_at FROM assistant_sessions WHERE id=?').get(result.data.sessionId).expires_at);
-    const ttlMs = new Date(expiresAt).getTime() - started;
-    assert.ok(ttlMs >= 120_000 && ttlMs <= 130_000, `session TTL should use configured value, got ${ttlMs}ms`);
+    const sessionTimes = mutateDatabase(dbPath, database => database.prepare('SELECT started_at,expires_at FROM assistant_sessions WHERE id=?').get(result.data.sessionId));
+    const ttlMs = new Date(sessionTimes.expires_at).getTime() - new Date(sessionTimes.started_at).getTime();
+    assert.ok(ttlMs === 120_000, `session TTL should use configured value, got ${ttlMs}ms`);
   } finally {
     await stopApi(fixture);
     await stopModelStub(stub);

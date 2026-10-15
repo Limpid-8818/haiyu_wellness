@@ -106,6 +106,14 @@ test('F02/F11: order pauses on new restrictions, rejects actual advancement, saf
   const ids = await fixture('order');
   await report(ids, { allergies: field(), dietaryRestrictions: field() });
   let menu = await call(ids.guest, '/meals/menus', 'POST', { businessDate: date }, 201);
+  // 菜单按业务日期轮换，若不固定菜品，本用例是否触发替换流程将取决于运行日期。
+  // 这里把早餐主菜固定为含鸡蛋的演示菜品、其余餐位固定为无过敏原菜品，
+  // 保证任何日期运行时，新增限制都会确定性地触发换菜与复核流程。
+  await db.prepare(`UPDATE meal_menu_items SET dish_id='dish-egg-custard' WHERE menu_id=? AND meal_type='breakfast' AND slot='main'`).run(menu.menu.id);
+  await db.prepare(`UPDATE meal_menu_items SET dish_id='dish-chicken-rice' WHERE menu_id=? AND meal_type IN ('lunch','dinner') AND slot='main'`).run(menu.menu.id);
+  await db.prepare(`UPDATE meal_menu_items SET dish_id='dish-wintermelon-soup' WHERE menu_id=? AND meal_type IN ('lunch','dinner') AND slot='soup'`).run(menu.menu.id);
+  assert.equal((await db.prepare(`SELECT dish_id FROM meal_menu_items WHERE menu_id=? AND meal_type='breakfast' AND slot='main'`).get(menu.menu.id)).dish_id,
+    'dish-egg-custard', '早餐主菜应固定为含鸡蛋的演示菜品（dish-egg-custard），若失败请检查菜品种子是否变更');
   const payload = { menuId: menu.menu.id, businessDate: date, mealType: 'breakfast', version: menu.menu.version };
   const placed = await call(ids.guest, '/meals/orders', 'POST', payload, 201, 'synthetic-order');
   const orderId = placed.order.id;
