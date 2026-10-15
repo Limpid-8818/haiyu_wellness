@@ -31,6 +31,15 @@ const dataDir = path.resolve(here, '../data');
 export const driver = String(process.env.DB_DRIVER || 'sqlite').toLowerCase();
 if (!['sqlite', 'mysql'].includes(driver)) throw new Error(`Unsupported DB_DRIVER: ${driver}`);
 
+// G40：LIKE 通配符转义。用户输入中的 %/_/\ 不再被当作通配符；
+// SQLite 必须带显式 ESCAPE 子句反斜杠转义才生效（MySQL 默认即支持，子句同样兼容）。
+export function escapeLikeValue(value) {
+  return `%${String(value ?? '').replace(/[\\%_]/g, char => `\\${char}`)}%`;
+}
+export function likeEscapeClause() {
+  return driver === 'mysql' ? " ESCAPE '\\\\'" : " ESCAPE '\\'";
+}
+
 const transactionContext = new AsyncLocalStorage();
 let sqliteHandle;
 let mysqlPool;

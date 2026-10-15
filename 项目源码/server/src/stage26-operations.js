@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { AppError } from './errors.js';
-import { db, guestProfile, hasActiveTransaction, id, json, log, now, transaction } from './db.js';
+import { db, guestProfile, hasActiveTransaction, id, json, log, now, transaction, escapeLikeValue, likeEscapeClause } from './db.js';
 import { listAdminProjectSlots, listGuestProjectSlots, createReservation } from './booking.js';
 import { createNotificationOnce } from './wellness-notifications.js';
 import { listProjects } from './catalog.js';
@@ -63,12 +63,14 @@ export async function listOrganizationGuests({ query = '', date = '' } = {}) {
   const needle = String(query || '').trim().slice(0, 100);
   const dateFilter = String(date || '').trim();
   if (dateFilter && !isValidDate(dateFilter)) throw new AppError(400, 'GUEST_SEARCH_DATE_INVALID', '入住日期格式无效');
-  const match = `%${needle.replace(/[\\%_]/g, value => `\\${value}`)}%`;
+  // G40：改用统一转义助手，并补上此前缺失、导致 SQLite 下转义无效的 ESCAPE 子句。
+  const match = escapeLikeValue(needle);
+  const matchEsc = likeEscapeClause();
   const rows = await db.prepare(`SELECT u.id,u.name,u.status AS accountStatus,u.created_at AS createdAt,
       p.gender,p.birth_date AS birthDate,p.room_no AS roomNo,p.check_in AS checkIn,p.check_out AS checkOut,
       p.chronic_json AS chronicJson,p.allergies_json AS allergiesJson,p.health_profile_json AS healthProfileJson
     FROM users u JOIN guest_profiles p ON p.user_id=u.id
-    WHERE u.role='guest' AND (?='' OR u.name LIKE ? OR p.room_no LIKE ? OR p.check_in LIKE ?)
+    WHERE u.role='guest' AND (?='' OR u.name LIKE ?${matchEsc} OR p.room_no LIKE ?${matchEsc} OR p.check_in LIKE ?${matchEsc})
       AND (?='' OR p.check_in=?) ORDER BY p.check_in DESC,u.name,u.id LIMIT 200`).all(
     needle, match, match, match, dateFilter, dateFilter);
   const today = systemBusinessClock.dateKey();

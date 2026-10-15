@@ -713,7 +713,12 @@ test('model timeout falls back safely using only a local stub', async () => {
       ASSISTANT_SESSION_TTL_MS: '120000'
     });
     const guestToken = await login(fixture.base, 'guest');
-    const status = await request(fixture.base, '/assistant/status');
+    // 端点对匿名只返回连接概况（G39）；完整配置需登录后读取。
+    const anonymousStatus = await request(fixture.base, '/assistant/status');
+    assert.equal(anonymousStatus.data.live, true);
+    assert.equal(anonymousStatus.data.executionMode, 'live');
+    assert.equal(anonymousStatus.data.timeoutMs, undefined);
+    const status = await request(fixture.base, '/assistant/status', { token: guestToken });
     assert.equal(status.data.live, true);
     assert.equal(status.data.timeoutMs, 50);
     const started = Date.now();

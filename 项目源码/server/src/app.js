@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import crypto from 'node:crypto';
 import {
-  db, hashPassword, verifyPassword, now, log, publicUser, guestProfile, guestSummary, transaction, json, id
+  db, hashPassword, verifyPassword, now, log, publicUser, guestProfile, guestSummary, transaction, json, id,
+  escapeLikeValue, likeEscapeClause
 } from './db.js';
 import { signToken, readToken } from './auth.js';
 import { recordStaffExecution } from './service-execution.js';
@@ -70,7 +71,11 @@ import {
 } from './stage26-operations.js';
 
 const app = express();
-app.use(cors({ origin: true }));
+// G10：仅白名单来源可跨域读取（逗号分隔可用 CORS_ALLOWED_ORIGINS 覆盖；
+// 无 Origin 头的同域请求与服务端调用不受影响）。
+const corsAllowedOrigins = new Set(String(process.env.CORS_ALLOWED_ORIGINS
+  || 'http://127.0.0.1:5180,http://localhost:5180').split(',').map(value => value.trim()).filter(Boolean));
+app.use(cors({ origin: (origin, callback) => callback(null, !origin || corsAllowedOrigins.has(origin)) }));
 app.use(express.json({ limit: '256kb' }));
 
 const routeHandler = handler => (req, res, next) => Promise.resolve().then(() => handler(req, res, next)).catch(next);
@@ -585,7 +590,15 @@ routes.post('/api/rules/evaluate', auth, async (req, res) => {
   }));
 });
 
-routes.get('/api/assistant/status', async (req, res) => res.json(assistantStatus()));
+routes.get('/api/assistant/status', optionalAuth, async (req, res) => {
+  const status = assistantStatus();
+  if (!req.user) {
+    // G39：匿名访客只返回连接概况（公开首页助手角标所需），不暴露完整工具清单与预算契约。
+    return res.json({ live: status.live, executionMode: status.executionMode, mode: status.mode,
+      model: status.model, provider: status.provider, fallback: status.fallback });
+  }
+  res.json(status);
+});
 routes.post('/api/assistant/chat', optionalAuth, async (req, res) => {
   const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
   const clientRequestId = req.get('Idempotency-Key') || body.clientRequestId;
@@ -690,6 +703,9 @@ routes.post('/api/auth/register', async (req, res) => {
   res.status(201).json({ token: signToken(user), user: safeUser(user), admissionStatus: 'pending' });
 });
 
+// G38：账号不存在时对固定哈希执行一次等价的密码校验，抹平登录响应的计时侧信道，
+// 使响应耗时无法用于枚举已注册账号。
+const LOGIN_TIMING_HASH = hashPassword('login-timing-equalizer');
 routes.post('/api/auth/login', async (req, res) => {
   const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
   const { username, password, role } = body;
@@ -697,7 +713,11 @@ routes.post('/api/auth/login', async (req, res) => {
     throw new AppError(401, 'AUTH_INVALID_CREDENTIALS', '账号、密码或身份不匹配');
   }
   const user = await db.prepare("SELECT * FROM users WHERE username=? AND role=? AND status='active'").get(username, role);
-  if (!user || !verifyPassword(password, user.password_hash)) {
+  if (!user) {
+    verifyPassword(password, LOGIN_TIMING_HASH);
+    throw new AppError(401, 'AUTH_INVALID_CREDENTIALS', '账号、密码或身份不匹配');
+  }
+  if (!verifyPassword(password, user.password_hash)) {
     throw new AppError(401, 'AUTH_INVALID_CREDENTIALS', '账号、密码或身份不匹配');
   }
   await log(user.id, 'login', 'user', user.id, '登录系统');
@@ -1223,12 +1243,12 @@ routes.patch('/api/dean/job-capabilities', auth, staffManagementOnly, async (req
 routes.get('/api/dean/guests', auth, staffManagementOnly, async (req, res) => {
   const filter = queryString(req.query.status) || 'all';
   if (!['all', 'pending', 'in_house', 'checked_out'].includes(filter)) throw new AppError(400, 'STAY_FILTER_INVALID', '入住状态筛选条件不正确');
-  const query = `%${queryString(req.query.q)}%`;
+  const query = escapeLikeValue(queryString(req.query.q));
   const rows = await db.prepare(`SELECT u.id,u.name,u.username,u.phone,u.status,gp.room_no AS roomNo,
     gp.check_in AS checkIn,gp.check_out AS checkOut,gp.stay_plan AS stayPlan
     FROM users u LEFT JOIN guest_profiles gp ON gp.user_id=u.id
     WHERE u.role='guest' AND u.status='active'
-      AND (u.name LIKE ? OR u.phone LIKE ? OR COALESCE(gp.room_no,'') LIKE ?)
+      AND (u.name LIKE ?${likeEscapeClause()} OR u.phone LIKE ?${likeEscapeClause()} OR COALESCE(gp.room_no,'') LIKE ?${likeEscapeClause()})
     ORDER BY u.name,u.id`).all(query, query, query);
   const guests = rows.map(row => ({ ...row, stayStatus: stayStatus(row.checkIn, row.checkOut) }));
   res.json(filter === 'all' ? guests : guests.filter(guest => guest.stayStatus === filter));
@@ -1337,14 +1357,14 @@ routes.post('/api/dean/staff/:id/reviews', auth, deanOnly, async (req, res) => {
 
 routes.get('/api/staff/guests', auth, staffOnly, async (req, res) => {
   const scope = await accessibleGuestIds(req.user);
-  const q = `%${queryString(req.query.q)}%`;
+  const q = escapeLikeValue(queryString(req.query.q));
   if (!scope.length) return res.json([]);
   const placeholders = scope.map(() => '?').join(',');
   const rows = await db.prepare(`SELECT u.id,u.name,u.phone,gp.room_no AS roomNo,gp.check_in AS checkIn,gp.check_out AS checkOut,
     gp.chronic_json AS chronicJson,gp.allergies_json AS allergiesJson,gp.health_profile_json AS formalJson
     FROM users u LEFT JOIN guest_profiles gp ON gp.user_id=u.id
     WHERE u.role='guest' AND u.status='active' AND u.id IN (${placeholders})
-      AND (u.name LIKE ? OR COALESCE(gp.room_no,'') LIKE ?) ORDER BY u.name`).all(...scope, q, q);
+      AND (u.name LIKE ?${likeEscapeClause()} OR COALESCE(gp.room_no,'') LIKE ?${likeEscapeClause()}) ORDER BY u.name`).all(...scope, q, q);
   res.json(rows.map(row => {
     const formal = normalizeHealthProfile(json(row.formalJson, {}));
     return { ...row,
