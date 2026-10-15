@@ -1,5 +1,6 @@
 import {businessText} from '../../shared/release-presentation.js';
 import {SourceDetails} from './SourceDetails.jsx';
+import { businessToday } from './lib/date.js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const MOOD_OPTIONS = [
@@ -13,10 +14,6 @@ const MOOD_OPTIONS = [
 function formatDuration(seconds) {
   const value = Math.max(0, Math.floor(Number(seconds) || 0));
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
-}
-
-function businessToday() {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
 
 export function MoodSpace({ requestApi, activeResource, onSelectResource }) {

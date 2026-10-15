@@ -2,12 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './environment.css';
 import {businessTime} from '../../shared/release-presentation.js';
 import {SourceDetails} from './SourceDetails.jsx';
-
-function businessDateKey() {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date());
-}
+import { businessToday as businessDateKey } from './lib/date.js';
 
 function showValue(value, unit = '') {
   return !(typeof value === 'number' || (typeof value === 'string' && value.trim())) || !Number.isFinite(Number(value)) ? '暂无数据' : String(value) + unit;

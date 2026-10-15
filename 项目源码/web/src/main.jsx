@@ -22,111 +22,16 @@ import { checkinAvailability,businessText,businessTime,notificationCategory} fro
 import {SourceDetails,BusinessReason} from './SourceDetails.jsx';
 import EnvironmentPanel from './EnvironmentPanel.jsx';
 import { MoodPlayerDock, MoodSpace } from './MoodSpace.jsx';
+import { request } from './lib/request.js';
+import { fmtDate, businessToday, shanghaiDateOffset, slotDateLabel, mealLocalTime, localDateValue, healthBusinessDate, healthBusinessTime, healthInputNow, healthValueToUtc, fmtDateTime } from './lib/date.js';
+import { asText, initials, normalizeGuestSummary, normalizeGuestList } from './lib/normalize.js';
+import { PageTitle, Metric, SectionHead, Principle, Field, ReadonlyField, Info, Empty, QueryState, ErrorState, Loading } from './shared/ui.jsx';
+import { Brand } from './shared/branding.jsx';
+import { ErrorBoundary } from './shared/ErrorBoundary.jsx';
+import { PasswordPanel } from './shared/PasswordPanel.jsx';
+import { STAFF_JOB_LABELS, defaultStaffSection, staffSectionLabel, admissionLabel, wellnessTargetSection } from './app/navigation.js';
 
-const API = '/api';
 const PROFILE_FIELD_LIMITS = { phone: 32, emergencyContact: 128, mobility: 128 };
-
-class ApiError extends Error {
-  constructor(message, { status = 0, code = '', data = null } = {}) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.code = code;
-    this.data = data;
-  }
-}
-
-async function request(path, options = {}) {
-  const { onUnauthorized, ...fetchOptions } = options;
-  const token = localStorage.getItem('community_token');
-  let response;
-  try {
-    response = await fetch(API + path, {
-      ...fetchOptions,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(fetchOptions.headers || {})
-      }
-    });
-  } catch (error) {
-    if (error?.name === 'AbortError') throw error;
-    throw new ApiError('网络连接失败，请检查服务是否启动', { data: error });
-  }
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new ApiError(data.error || data.message || `请求失败（${response.status}）`, {
-      status: response.status,
-      code: data.code,
-      data
-    });
-    if (response.status === 401 && typeof onUnauthorized === 'function') onUnauthorized(error);
-    if (response.status === 401 && token && !path.startsWith('/auth/login') && typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('community:auth-expired'));
-    }
-    throw error;
-  }
-  return data;
-}
-
-const fmtDate = (value) => value ? new Date(value).toLocaleDateString('zh-CN', { timeZone:'Asia/Shanghai', month: 'long', day: 'numeric' }) : '—';
-const initials = (name = '') => name.slice(0, 1);
-const asText = (value) => typeof value === 'string' ? value : value == null ? '' : String(value);
-
-function normalizeHealthRecord(row = {}) {
-  return {
-    ...row,
-    type: row.type ?? row.record_type ?? '',
-    recordedAt: row.recordedAt ?? row.recorded_at ?? '',
-    recordedBy: row.recordedBy ?? row.recorded_by ?? ''
-  };
-}
-
-function normalizeAdvice(row = {}) {
-  return {
-    ...row,
-    createdAt: row.createdAt ?? row.created_at ?? '',
-    updatedAt: row.updatedAt ?? row.updated_at ?? '',
-    authorName: row.authorName ?? row.author_name ?? ''
-  };
-}
-
-function normalizeGuestSummary(data) {
-  if (!data || typeof data !== 'object') return data;
-  const source = data.profile || {};
-  const profile = data.profile ? {
-    ...source,
-    birthDate: source.birthDate ?? source.birth_date ?? '',
-    roomNo: source.roomNo ?? source.room_no ?? '',
-    checkIn: source.checkIn ?? source.check_in ?? '',
-    checkOut: source.checkOut ?? source.check_out ?? '',
-    stayPlan: source.stayPlan ?? source.stay_plan ?? '',
-    emergencyContact: source.emergencyContact ?? source.emergency_contact ?? '',
-    chronic: Array.isArray(source.chronic) ? source.chronic : [],
-    allergies: Array.isArray(source.allergies) ? source.allergies : []
-  } : data.profile;
-  return {
-    ...data,
-    profile,
-    health: Array.isArray(data.health) ? data.health.map(normalizeHealthRecord) : [],
-    advice: Array.isArray(data.advice) ? data.advice.map(normalizeAdvice) : []
-  };
-}
-
-function normalizeGuestList(rows) {
-  if (!Array.isArray(rows)) return [];
-  return rows.map((row) => ({
-    ...row,
-    roomNo: row.roomNo ?? row.room_no ?? '',
-    chronic: Array.isArray(row.chronic) ? row.chronic : [],
-    allergies: Array.isArray(row.allergies) ? row.allergies : []
-  }));
-}
-
-function Brand({ compact = false }) {
-  return <div className={`brand ${compact ? 'compact' : ''}`}><span className="brand-mark">屿</span><div><strong>海屿康养社区</strong>{!compact && <small>本地网页演示</small>}</div></div>;
-}
 
 function PublicHeader({ onHome }) {
   return <header className="public-header"><Brand/><nav><button type="button" className="text-btn" onClick={onHome}>首页</button><a href="#news">社区动态</a><a href="#about">关于海屿</a></nav><div className="header-status"><span className="status-dot"/>服务正常</div></header>;
@@ -241,29 +146,6 @@ function Login({ role, onBack, onLogin }) {
   return <div className="login-shell"><div className="login-aside"><Brand/><div className="login-quote"><span>“</span><h2 dangerouslySetInnerHTML={{ __html: copy.quote }}/><p>{copy.lead}</p></div><div className="login-aside-foot">海屿康养社区 · 安全工作区</div></div><div className="login-panel"><button type="button" className="back-btn" onClick={onBack}>← 返回首页</button><div className="login-form-wrap"><div className={`role-badge ${role}`}>{registering ? '客人注册' : copy.badge}</div><h1>{registering ? '创建客人账号' : '欢迎回来'}</h1><p className="form-lead">{registering ? '使用手机号注册，注册后可进入个人档案。' : `请输入你的账号信息，进入${copy.space}。`}</p>{registering ? <form onSubmit={register} noValidate><label htmlFor="register-name">姓名<input id="register-name" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" maxLength={64} required/></label><label htmlFor="register-phone">手机号<input id="register-phone" value={phone} onChange={(event) => setPhone(event.target.value)} type="tel" inputMode="tel" autoComplete="tel" maxLength={11} required/></label><label htmlFor="register-password">密码<input id="register-password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="new-password" minLength={8} maxLength={128} required/></label><label htmlFor="register-confirm-password">确认密码<input id="register-confirm-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} type="password" autoComplete="new-password" minLength={8} maxLength={128} required aria-invalid={passwordMismatch}/></label>{passwordMismatch && <div className="form-error inline-error" role="alert">两次输入的密码不一致</div>}{error && <div className="form-error" role="alert" aria-live="assertive">{error}</div>}<button type="submit" className="primary-btn full" disabled={loading || passwordMismatch} aria-busy={loading}>{loading ? '正在创建…' : '注册并进入档案　→'}</button><button type="button" className="login-switch" onClick={() => { setRegistering(false); setPassword(copy.password); setConfirmPassword(''); setError(''); }}>已有账号？返回登录</button></form> : <form onSubmit={submit}><label htmlFor="login-username">账号<input id="login-username" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username"/></label><label htmlFor="login-password">密码<input id="login-password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password"/></label>{error && <div className="form-error" role="alert" aria-live="assertive">{error}</div>}<button type="submit" className="primary-btn full" disabled={loading} aria-busy={loading}>{loading ? '正在进入…' : '进入工作区　→'}</button>{role === 'guest' && <button type="button" className="login-switch" onClick={() => { setRegistering(true); setPassword(''); setConfirmPassword(''); setError(''); }}>没有账号？客人注册</button>}</form>}{!registering && <div className="demo-hint">演示账号已预填，可直接点击进入。生产环境请使用机构分配的账号。</div>}</div></div></div>;
 }
 
-const STAFF_JOB_LABELS = {
-  clinician: '医护',
-  administrator: '管理员',
-  coach: '教练',
-  therapist: '理疗师',
-  dietitian: '配餐员'
-};
-
-function defaultStaffSection(user) {
-  if (user.role === 'dean') return 'overview';
-  return ({
-    clinician: 'wellness-review',
-    administrator: 'overview',
-    coach: 'daily',
-    therapist: 'therapy',
-    dietitian: 'meal-prep'
-  })[user.jobType] || 'review';
-}
-
-function admissionLabel(status) {
-  return ({ pending: '待入住', in_house: '在住', checked_out: '已离店' })[status] || '待入住';
-}
-
 function AppShell({ user, onLogout }) {
   const [section, setSection] = useState(user.initialSection || (user.role === 'guest' ? 'caretaker' : defaultStaffSection(user)));
   const [me, setMe] = useState(null);
@@ -356,15 +238,6 @@ function AppShell({ user, onLogout }) {
   return <div className="app-shell"><aside className="app-sidebar"><Brand compact/><div className="workspace-label">{user.role === 'guest' ? '客人空间' : user.role === 'dean' ? '院长空间' : `${STAFF_JOB_LABELS[user.jobType] || '工作人员'}工作区`}</div><nav className="side-nav" aria-label="工作区导航">{nav.map(item => <button type="button" key={item.id} className={selectedNavId === item.id ? 'active' : ''} onClick={() => setSection(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}</button>)}</nav><div className="side-bottom"><div className="privacy-note"><span>◈</span><div><strong>隐私保护中</strong><small>仅展示你有权限查看的信息</small></div></div><button type="button" className="logout-btn" onClick={onLogout}>退出登录</button></div></aside><div className="app-main"><header className="app-header"><div className="breadcrumb">海屿康养社区　/　<span>{nav.find((item) => item.id === selectedNavId)?.label || staffSectionLabel(section, user)}</span></div><div className="user-menu"><div className="avatar">{initials(user.name)}</div><div><strong>{user.name}</strong><small>{user.role === 'guest' ? '康养客人' : user.role === 'dean' ? '院长' : `${STAFF_JOB_LABELS[user.jobType] || '工作人员'}`}</small></div><button type="button" onClick={onLogout}>退出</button></div></header><main className="workspace"><p className="release-boundary" data-testid="release-boundary">本地网页演示 · 菜品、供货、排期和容量为合成示例。已接入的公开环境预报使用地区代表点，机构精确地点未核实；资料不代表安全批准。</p>{meLoading ? <Loading/> : meError ? <ErrorState text={meError} onRetry={loadMe}/> : user.role === 'guest' ? <GuestView section={section} me={me} notify={notify} onSaved={(data) => setMe(normalizeGuestSummary(data))} go={setSection} activeResource={activeMoodResource} onSelectResource={setActiveMoodResource}/> : <StaffView section={section} me={me} notify={notify} onGuestChange={handleGuestChange} go={setSection} reviewDraftId={reviewDraftRequest} onReviewDraftOpened={clearReviewDraftRequest} operationsSource={operationsSourceRequest}/>}</main>{user.role === 'guest' && <MoodPlayerDock resource={activeMoodResource} requestApi={request}/>}</div>{toast && <div className="toast" role="status" aria-live="polite">✓ {toast}</div>}<AssistantWidget key={assistantKey} role={assistantRole} user={user} guestId={assistantGuestId} onAuthExpired={handleAuthExpired} onSelectResource={setActiveMoodResource} onNavigate={setSection} onOpenReviewSource={openReviewSource} onOpenOperationsSource={openOperationsSource}/></div>;
 }
 
-function staffSectionLabel(section, user) {
-  return ({ review: '医护审核台', daily: '每日安排', therapy: '理疗工作台', 'meal-prep': '备餐单', operations: '机构运营',
-    'projects-admin': '项目维护', rules: '禁忌规则' })[section] || (user.role === 'dean' ? '院长空间' : '工作台');
-}
-
-function PageTitle({ eyebrow, title, desc, action }) {
-  return <div className="page-title"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1>{desc && <p>{desc}</p>}</div>{action}</div>;
-}
-
 function GuestView({ section, me, notify, onSaved, go, activeResource, onSelectResource }) {
   if (!me) return <Loading/>;
   if (section === 'profile') return <GuestProfile me={me} notify={notify} onSaved={onSaved}/>;
@@ -422,19 +295,6 @@ function mealSourceLabel(value) { return MEAL_SOURCE_LABELS[value] || '健康档
 function mealRestrictionStatusLabel(value) { return MEAL_RESTRICTION_STATUS_LABELS[value] || '已记录'; }
 function mealFoodLabels(values) {
   return (values || []).map(value => MEAL_FOOD_LABELS[String(value).trim().toLocaleLowerCase()] || value);
-}
-function mealLocalTime(value) {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return '—';
-  return date.toLocaleString('zh-CN', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: 'numeric', day: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
-}
-
-function businessToday() {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
 
 function MealConstraintList({ constraints, emptyText }) {
@@ -631,21 +491,6 @@ function ProjectDetail({ project, onBack, go }) {
     <ProjectBooking project={project} go={go}/>
     <EnvironmentPanel projectId={project.id} requestApi={request}/>
   </>;
-}
-
-function shanghaiDateOffset(offset = 0) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).formatToParts(new Date());
-  const values = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, Number(part.value)]));
-  const date = new Date(Date.UTC(values.year, values.month - 1, values.day + offset, 12));
-  return date.toISOString().slice(0, 10);
-}
-
-function slotDateLabel(value) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    timeZone: 'Asia/Shanghai', month: 'long', day: 'numeric', weekday: 'short'
-  }).format(new Date(`${value}T12:00:00+08:00`));
 }
 
 function reservationStatusLabel(status) {
@@ -1280,11 +1125,6 @@ function publishWellnessNotificationUpdate() {
   window.dispatchEvent(new Event(WELLNESS_NOTIFICATION_EVENT));
 }
 
-function wellnessTargetSection(targetUrl) {
-  return ({ caretaker: 'caretaker', schedule: 'schedule', reservations: 'reservations',
-    projects: 'projects', meals: 'meals', mood: 'mood', advice: 'advice' })[targetUrl] || null;
-}
-
 function GuestDailyBrief({ me, go }) {
   const [briefState, setBriefState] = useState(null);
   const [notificationState, setNotificationState] = useState({ items: [], unreadCount: 0 });
@@ -1786,42 +1626,6 @@ const HEALTH_METRIC_OPTIONS = [
   { key: 'steps', label: '步数', unit: '步' },
   { key: 'weight', label: '体重', unit: 'kg' }
 ];
-
-function healthBusinessDate(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return '';
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
-  const fields = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
-  return `${fields.year}-${fields.month}-${fields.day}`;
-}
-
-function healthBusinessTime(value) {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('zh-CN', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
-  }).format(date);
-}
-
-function healthInputNow() {
-  const date = new Date();
-  const fields = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
-  }).formatToParts(date).filter(part => part.type !== 'literal').reduce((output, part) => ({ ...output, [part.type]: part.value }), {});
-  return `${fields.year}-${fields.month}-${fields.day}T${fields.hour}:${fields.minute}`;
-}
-
-function healthValueToUtc(value) {
-  const match = String(value || '').match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/);
-  if (!match) throw new Error('请选择有效的记录时间');
-  const date = new Date(`${match[1]}T${match[2]}:00+08:00`);
-  if (!Number.isFinite(date.getTime())) throw new Error('请选择有效的记录时间');
-  return date.toISOString();
-}
 
 function GuestHealth({ me }) {
   const [records, setRecords] = useState([]);
@@ -2641,12 +2445,6 @@ function CapabilitiesMatrix({ notify }) {
   return <><PageTitle eyebrow="JOB CAPABILITIES" title="岗位权限矩阵" desc="医护建议权限由岗位固定配置；管理员只能调整预先开放的运营汇总查看开关。" action={<button type="button" className="outline-btn" onClick={load} disabled={loading}>刷新　↻</button>}/><section className="surface table-surface"><SectionHead title="岗位能力"/><div className="org-table-wrap"><table className="org-table capability-table"><thead><tr><th>岗位</th><th>医护建议发布</th><th>查看运营汇总</th></tr></thead><tbody>{loading ? <tr><td colSpan="3">正在加载权限矩阵…</td></tr> : error ? <tr><td colSpan="3" role="alert">{error}</td></tr> : data?.matrix?.map(row => <tr key={row.jobType}><th scope="row">{row.jobTypeLabel}</th><td><span className={`capability-fixed ${row.capabilities[medicalKey] ? 'allowed' : 'denied'}`}>{row.capabilities[medicalKey] ? '仅此岗位' : '不可用'}</span></td><td><label className="capability-toggle"><input type="checkbox" checked={Boolean(row.capabilities[summaryKey])} disabled={saving === `${row.jobType}:${summaryKey}`} aria-label={`${row.jobTypeLabel} 查看运营汇总`} onChange={event => toggle(row.jobType, summaryKey, event.target.checked)}/><span>{row.capabilities[summaryKey] ? '已开启' : '已关闭'}</span></label></td></tr>)}</tbody></table></div><div className="capability-note"><strong>医护建议发布</strong><span>医护岗位固定开放；服务岗位、管理员和院长均不能通过此矩阵获得。</span></div></section></>;
 }
 
-function localDateValue(offsetDays = 0) {
-  const date = new Date();
-  date.setDate(date.getDate() + offsetDays);
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
-}
-
 function StayManagement({ notify }) {
   const [guests, setGuests] = useState([]);
   const [selectedId, setSelectedId] = useState('');
@@ -2792,10 +2590,6 @@ function staffActionLabel(action) {
     'password.change': '修改登录密码',
     login: '登录系统'
   })[action] || action || '工作操作';
-}
-
-function fmtDateTime(value) {
-  return value ? new Date(value).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 }
 
 function agentStateLabel(state) {
@@ -3202,30 +2996,6 @@ function DeanTeam({ notify }) {
       </div>
     </>
   );
-}
-
-function PasswordPanel({ notify }) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ currentPassword: '', newPassword: '' });
-  const [saving, setSaving] = useState(false);
-
-  async function save(event) {
-    event.preventDefault();
-    if (saving) return;
-    setSaving(true);
-    try {
-      await request('/me/password', { method: 'POST', body: JSON.stringify(form) });
-      notify('密码已修改，请妥善保管');
-      setForm({ currentPassword: '', newPassword: '' });
-      setOpen(false);
-    } catch (error) {
-      notify(error.message || '密码修改失败，请稍后再试');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return <section className="surface password-panel"><div><strong>登录密码</strong><p>定期修改密码，保护你的账号安全。</p></div><button type="button" className="outline-btn" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? '收起' : '修改密码'}</button>{open && <form className="password-form" onSubmit={save} aria-busy={saving}><Field label="当前密码" value={form.currentPassword} type="password" autoComplete="current-password" onChange={(value) => setForm({ ...form, currentPassword: value })} required/><Field label="新密码（至少 8 位）" value={form.newPassword} type="password" minLength={8} autoComplete="new-password" onChange={(value) => setForm({ ...form, newPassword: value })} required/><button type="submit" className="primary-btn" disabled={saving} aria-busy={saving}>{saving ? '修改中…' : '确认修改'}</button></form>}</section>;
 }
 
 function AssistantWidget({ role = 'public', user = null, guestId = '', onAuthExpired, onSelectResource, onNavigate,
@@ -3762,62 +3532,6 @@ function assistantWelcome(role) {
   if (role === 'guest') return '你好，我是你的健康支持助手。你可以说“录入我的身体情况”，我会一次问一两个问题，帮你整理给工作人员。';
   if (role === 'dean') return '你好，我是院长管理助手。我可以根据工作记录帮你整理问题和改进意见。';
   return '你好，我是工作助手。你可以输入客人观察、交接内容或服务需求，我会帮你整理成可核对的工作材料。';
-}
-
-function Metric({ label, value, hint, tone }) {
-  return <div className={`metric-card ${tone}`}><span>{label}</span><strong>{value}</strong><small>{hint}</small></div>;
-}
-
-function SectionHead({ title, link, onClick, action }) {
-  return <div className="surface-head"><h2>{title}</h2>{action || (link && <button type="button" className="link-btn" onClick={onClick}>{link}　→</button>)}</div>;
-}
-
-function Principle({ icon, title, text }) {
-  return <div className="principle"><span>{icon}</span><div><strong>{title}</strong><p>{text}</p></div></div>;
-}
-
-function Field({ label, value, onChange, type = 'text', placeholder = '', maxLength, minLength, inputMode, autoComplete, required = false }) {
-  return <label>{label}<input type={type} value={value ?? ''} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} minLength={minLength} inputMode={inputMode} autoComplete={autoComplete} required={required}/></label>;
-}
-
-function ReadonlyField({ label, value }) {
-  return <div className="readonly-field"><label>{label} <span className="lock-mark" aria-hidden="true">🔒</span></label><input className="readonly-input" value={value || '—'} disabled readOnly aria-label={`${label}（只读）`}/></div>;
-}
-
-function Info({ label, value }) {
-  return <div className="info-item"><span>{label}</span><strong>{value || '—'}</strong></div>;
-}
-
-function Empty({ text }) {
-  return <div className="empty"><span>○</span><p>{text}</p></div>;
-}
-
-function QueryState({ text, error = false, retryText = '', onRetry, retryLabel = '重试' }) {
-  return <div className={`query-state ${error ? 'error' : ''}`} role={error ? 'alert' : 'status'}><span>{error ? '!' : '⌁'}</span><p>{text}</p>{retryText && <small>{retryText}</small>}{onRetry && <button type="button" className="outline-btn small-btn" onClick={onRetry}>{retryLabel}</button>}</div>;
-}
-
-function ErrorState({ text, onRetry }) {
-  return <div className="error-state" role="alert"><h2>暂时无法打开工作区</h2><p>{text}</p><button type="button" className="outline-btn" onClick={onRetry}>重新加载</button></div>;
-}
-
-function Loading() {
-  return <div className="loading" role="status"><span className="loader"/>正在载入你的空间…</div>;
-}
-
-// G19：渲染异常不再整站白屏，给出可操作的恢复入口并保留技术详情供排查。
-class ErrorBoundary extends React.Component {
-  constructor(props) { super(props); this.state = { error: null }; }
-  static getDerivedStateFromError(error) { return { error }; }
-  componentDidCatch(error) { console.error('[web] render error:', error); }
-  render() {
-    if (!this.state.error) return this.props.children;
-    return <div className="error-boundary" role="alert">
-      <h1>页面出现了一点问题</h1>
-      <p>内容渲染遇到异常。你可以刷新页面重试；如果反复出现，请联系工作人员或开发者。</p>
-      <details className="release-details"><summary>技术详情</summary><pre>{String(this.state.error?.stack || this.state.error)}</pre></details>
-      <button type="button" className="primary-btn" onClick={() => window.location.reload()}>刷新页面</button>
-    </div>;
-  }
 }
 
 function Root() {
