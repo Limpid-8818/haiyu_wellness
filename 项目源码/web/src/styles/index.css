@@ -1,0 +1,30 @@
+/*
+ * 全站样式单一入口（G16 阶段 3）。按原 main.jsx 顶层导入顺序 @import，
+ * 层叠顺序与拆分前完全一致。阶段样式文件已按语义重命名：
+ *   org-stage11.css → health-review.css   stage13.css → project-admin.css
+ *   stage15.css     → booking.css         stage16.css → meals.css
+ *   stage21.css     → health-workspace.css stage22.css → wellness-review.css
+ *   stage24.css     → checkin-feedback.css stage25.css → daily-brief.css
+ *   stage26.css     → operations.css      styles.css  → base.css
+ *   web-layout.css  → layout.css
+ * 样式就近导入（按组件拆分 CSS）需重新评估层叠影响，另行立项，不在本阶段做。
+ * environment.css 仍由 EnvironmentPanel.jsx 就近导入（原状）。
+ */
+@import './base.css';
+@import './overrides.css';
+@import './agent.css';
+@import './assistant.css';
+@import './layout.css';
+@import './age-friendly.css';
+@import './health-review.css';
+@import './project-admin.css';
+@import './booking.css';
+@import './meals.css';
+@import './health-workspace.css';
+@import './wellness-review.css';
+@import './checkin-feedback.css';
+@import './daily-brief.css';
+@import './operations.css';
+@import './health-metrics.css';
+@import './mood.css';
+@import './release.css';

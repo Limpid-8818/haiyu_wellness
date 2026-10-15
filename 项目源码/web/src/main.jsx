@@ -1,23 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles.css';
-import './overrides.css';
-import './agent.css';
-import './assistant.css';
-import './web-layout.css';
-import './age-friendly.css';
-import './org-stage11.css';
-import './stage13.css';
-import './stage15.css';
-import './stage16.css';
-import './stage21.css';
-import './stage22.css';
-import './stage24.css';
-import './stage25.css';
-import './stage26.css';
-import './health-metrics.css';
-import './mood.css';
-import './release.css';
+import './styles/index.css';
 import { Root } from './app/Root.jsx';
 import { ErrorBoundary } from './shared/ErrorBoundary.jsx';
 
