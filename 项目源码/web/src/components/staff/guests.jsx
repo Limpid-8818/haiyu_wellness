@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { fmtDate, fmtDateTime, mealLocalTime } from '../../lib/date.js';
 import { initials, normalizeGuestSummary, normalizeGuestList } from '../../lib/normalize.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle, Metric, SectionHead, Principle, Field, Info, Empty, QueryState } from '../../shared/ui.jsx';
 import { admissionLabel, STAFF_JOB_LABELS } from '../../app/navigation.js';
 import { PasswordPanel } from '../../shared/PasswordPanel.jsx';
@@ -11,22 +12,8 @@ import { agentStateLabel } from '../assistant/assistant-parts.jsx';
 import { SourceDetails } from '../../SourceDetails.jsx';
 
 export function StaffOverview({ me }) {
-  const [overview, setOverview] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    request('/staff/overview').then((data) => {
-      if (active) setOverview(data);
-    }).catch((requestError) => {
-      if (active) setError(requestError.message || '工作概览暂时无法加载');
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
-  }, []);
-
+  const { data: overview, loading, error } = useQuery(async (signal) => request('/staff/overview', { signal }),
+    [], { fallbackMessage: '工作概览暂时无法加载' });
   const recent = Array.isArray(overview?.recent) ? overview.recent : [];
   return <><PageTitle eyebrow="STAFF WORKSPACE" title={`早上好，${me.name}`} desc="这是你的工作概览，今天也请从容地照顾好每一位客人。"/><div className="staff-banner"><div><span className="banner-kicker">今日工作台</span><h2>先看一眼需要关注的人</h2><p>进入“我负责的客人”，你可以查询档案、查看健康情况，并留下新的医嘱或建议。</p></div><div className="staff-symbol">✚</div></div>{error ? <QueryState error text={error} retryText="请刷新页面重试"/> : <><div className="metric-grid"><Metric label="负责客人" value={loading ? '…' : overview?.guests ?? 0} hint="当前授权范围内" tone="teal"/><Metric label="有效医嘱" value={loading ? '…' : overview?.activeAdvice ?? 0} hint="负责客人的有效医嘱" tone="blue"/><Metric label="近期工作记录" value={loading ? '…' : recent.length} hint="最近 8 条记录" tone="orange"/></div><section className="surface"><SectionHead title="近期工作记录"/>{loading ? <QueryState text="正在加载工作记录…"/> : recent.length ? <div className="staff-recent-list">{recent.map((entry) => <article className="staff-recent-row" key={entry.id}><span className="staff-recent-mark" aria-hidden="true">{entry.action === 'advice.create' ? '✚' : '◈'}</span><div><strong>{staffActionLabel(entry.action)}</strong><p>{entry.detail || '已记录一项工作操作'}</p></div><time dateTime={entry.createdAt}>{fmtDateTime(entry.createdAt)}</time></article>)}</div> : <Empty text="还没有近期工作记录"/>}</section></>}<AgentPanel role="staff"/><section className="surface"><SectionHead title="工作原则"/><div className="principle-grid"><Principle icon="◈" title="信息最小化" text="只查看完成工作所必需的客人信息。"/><Principle icon="⌁" title="建议可追溯" text="每条医嘱都保留作者、时间和状态。"/><Principle icon="♧" title="先沟通再行动" text="涉及健康风险时，及时联系客人与医护团队。"/></div></section></>;
 }
@@ -54,16 +41,11 @@ function AgentPanel({ role }) {
 }
 
 function StaffCareFollowUpTasks({ guests, onChooseGuest }) {
-  const [items, setItems] = useState([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const load = useCallback(async () => {
-    setError('');
-    try { const result = await request('/staff/care-follow-up-tasks'); setItems(result.items || []); }
-    catch (loadError) { setError(loadError.message || '关怀待办暂时无法加载'); }
-    finally { setLoading(false); }
-  }, []);
-  useEffect(() => { void load(); }, [load]);
+  const { data: tasksData, error, loading, load } = useQuery(async (signal) => {
+    const result = await request('/staff/care-follow-up-tasks', { signal });
+    return result.items || [];
+  }, [], { fallbackMessage: '关怀待办暂时无法加载' });
+  const items = tasksData || [];
   const guestIds = new Set(guests.map(guest => guest.id));
   return <section className="surface stage25-staff-care" aria-label="关怀跟进待办" data-testid="stage25-staff-care-tasks">
     <header><div><span className="eyebrow">CARE FOLLOW-UP</span><h2>关怀跟进待办</h2></div><button type="button" className="outline-btn" onClick={() => void load()} disabled={loading}>刷新</button></header>
@@ -171,23 +153,11 @@ export function StaffGuests({ notify, onGuestChange, canReview }) {
 }
 
 function ClinicianHealthReview({ guestId, notify, onGuestRefresh }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
   const [reasons, setReasons] = useState({});
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setData(await request(`/staff/guests/${guestId}/health-intakes`));
-    } catch (error) {
-      notify(error.message || '健康自述审核记录暂时无法加载');
-    } finally {
-      setLoading(false);
-    }
-  }, [guestId, notify]);
-
-  useEffect(() => { load(); }, [load]);
+  const { data, loading, load, setData } = useQuery(async (signal) => request(`/staff/guests/${guestId}/health-intakes`, { signal }),
+    [guestId], { fallbackMessage: '', onError: (loadError) => notify(loadError?.message || '健康自述审核记录暂时无法加载') });
 
   async function review(item, action) {
     if (actionId) return;

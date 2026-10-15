@@ -1,32 +1,23 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { shanghaiDateOffset, slotDateLabel } from '../../lib/date.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle } from '../../shared/ui.jsx';
 import { formatProjectWindows, parseProjectWindows } from '../guest/projects.jsx';
 
 export function ProjectAdmin({ notify }) {
-  const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [filter, setFilter] = useState('');
   const [form, setForm] = useState({ description: '', openWindowsText: '', active: true });
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   const [formError, setFormError] = useState('');
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const result = await request('/admin/projects');
-      setItems(result.items || []);
-      setSelectedId(current => result.items?.some(item => item.id === current) ? current : result.items?.[0]?.id || '');
-    } catch (requestError) {
-      setError(requestError.message || '项目资料暂时无法加载');
-    } finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const { data: itemsData, loading, error, load, setData } = useQuery(async (signal) => {
+    const result = await request('/admin/projects', { signal });
+    setSelectedId(current => result.items?.some(item => item.id === current) ? current : result.items?.[0]?.id || '');
+    return result.items || [];
+  }, [], { fallbackMessage: '项目资料暂时无法加载' });
+  const items = itemsData || [];
   const selected = useMemo(() => items.find(item => item.id === selectedId) || null, [items, selectedId]);
   useEffect(() => {
     if (selected) setForm({ description: selected.description, openWindowsText: formatProjectWindows(selected.openWindows), active: selected.active });
@@ -43,7 +34,7 @@ export function ProjectAdmin({ notify }) {
         method: 'PATCH',
         body: JSON.stringify({ description: form.description, openWindows: parseProjectWindows(form.openWindowsText), active: form.active })
       });
-      setItems(current => current.map(item => item.id === updated.id ? updated : item));
+      setData(current => current.map(item => item.id === updated.id ? updated : item));
       notify('项目资料已保存');
     } catch (requestError) {
       setFormError(requestError.message || '保存失败，请检查填写内容');
@@ -78,22 +69,14 @@ export function ProjectAdmin({ notify }) {
 function ProjectSlotAdmin({ project, notify }) {
   const dates = useMemo(() => Array.from({ length: 7 }, (_, index) => shanghaiDateOffset(index)), []);
   const [date, setDate] = useState(() => shanghaiDateOffset());
-  const [slots, setSlots] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [savingId, setSavingId] = useState('');
   const [capacityDraft, setCapacityDraft] = useState({});
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const result = await request(`/admin/projects/${encodeURIComponent(project.id)}/slots?date=${encodeURIComponent(date)}`);
-      setSlots(result.slots || []);
-      setCapacityDraft(Object.fromEntries((result.slots || []).map(slot => [slot.id, String(slot.capacity)])));
-    } catch (requestError) { setError(requestError.message || '时段排期暂时无法加载'); }
-    finally { setLoading(false); }
-  }, [project.id, date]);
-  useEffect(() => { load(); }, [load]);
+  const { data: slotsData, loading, error, setError, load } = useQuery(async (signal) => {
+    const result = await request(`/admin/projects/${encodeURIComponent(project.id)}/slots?date=${encodeURIComponent(date)}`, { signal });
+    setCapacityDraft(Object.fromEntries((result.slots || []).map(slot => [slot.id, String(slot.capacity)])));
+    return result.slots || [];
+  }, [project.id, date], { fallbackMessage: '时段排期暂时无法加载' });
+  const slots = slotsData || [];
   async function update(slot, changes) {
     setSavingId(slot.id);
     setError('');
@@ -121,19 +104,12 @@ function ProjectSlotAdmin({ project, notify }) {
 export function RulesWorkbench() {
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  useEffect(() => {
-    let current = true;
-    setLoading(true);
-    setError('');
+  const { data: rulesData, loading, error } = useQuery(async (signal) => {
     const params = search ? `?q=${encodeURIComponent(search)}` : '';
-    request(`/rules${params}`).then(result => { if (current) setItems(result.items || []); })
-      .catch(requestError => { if (current) setError(requestError.message || '规则暂时无法加载'); })
-      .finally(() => { if (current) setLoading(false); });
-    return () => { current = false; };
-  }, [search]);
+    const result = await request(`/rules${params}`, { signal });
+    return result.items || [];
+  }, [search], { fallbackMessage: '规则暂时无法加载' });
+  const items = rulesData || [];
   const actionLabel = { allow: '允许', restrict: '限制并审核', reject: '拒绝并审核' };
   return <>
     <PageTitle eyebrow="CLINICIAN WORKSPACE" title="禁忌规则" desc="检索系统执行的只读规则。演示规则不构成临床或海况标准。"/>

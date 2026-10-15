@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { businessToday, mealLocalTime, slotDateLabel } from '../../lib/date.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { checkinAvailability, businessText, businessTime, notificationCategory } from '../../../../shared/release-presentation.js';
 import { PageTitle, SectionHead, Empty } from '../../shared/ui.jsx';
 import { STAFF_JOB_LABELS } from '../../app/navigation.js';
@@ -248,19 +249,13 @@ export function GuestSchedule({ me, onSelectResource }) {
 }
 
 export function GuestReservations({ go }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [workingId, setWorkingId] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try { const result = await request('/reservations'); setItems(result.items || []); }
-    catch (requestError) { setError(requestError.message || '预约记录暂时无法加载'); }
-    finally { setLoading(false); }
-  }, []);
-  useEffect(() => { load(); }, [load]);
+  const { data: reservations, loading, error, setError, load } = useQuery(async (signal) => {
+    const result = await request('/reservations', { signal });
+    return result.items || [];
+  }, [], { fallbackMessage: '预约记录暂时无法加载' });
+  const items = reservations || [];
   async function cancel(item) {
     const time = `${slotDateLabel(item.businessDate)} ${item.localStart}–${item.localEnd}`;
     if (!window.confirm(`将取消「${item.projectName}」${time} 的预约，并释放一个名额。确认取消吗？`)) return;

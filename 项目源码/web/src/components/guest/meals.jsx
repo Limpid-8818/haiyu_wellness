@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { businessToday, mealLocalTime } from '../../lib/date.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle, QueryState, SectionHead } from '../../shared/ui.jsx';
 import { SourceDetails } from '../../SourceDetails.jsx';
 
@@ -41,17 +42,15 @@ export function MealOrderTiming({ order }) {
 }
 
 export function MealRestrictionReview({ guestId, canResolve = false, notify, onChanged }) {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [choices, setChoices] = useState([]);
   const [note, setNote] = useState('');
   const endpoint = guestId ? `/staff/guests/${guestId}/meal-restriction-review` : '/meals/restriction-review';
-  const load = useCallback(async () => {
-    try { const result = await request(endpoint); setData(result); setError(''); setChoices((result.review?.restrictions || []).map(() => ({ classification: '', foodValue: '' }))); }
-    catch (err) { setError(err.message); }
-  }, [endpoint]);
-  useEffect(() => { load(); }, [load]);
+  const { data, error, setError, load } = useQuery(async (signal) => {
+    const result = await request(endpoint, { signal });
+    setChoices((result.review?.restrictions || []).map(() => ({ classification: '', foodValue: '' })));
+    return result;
+  }, [endpoint], { fallbackMessage: '' });
   async function submit(resolve) {
     setBusy(true);
     try {

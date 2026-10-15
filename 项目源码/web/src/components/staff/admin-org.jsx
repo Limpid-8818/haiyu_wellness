@@ -1,30 +1,20 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { localDateValue, fmtDateTime } from '../../lib/date.js';
 import { initials } from '../../lib/normalize.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle, SectionHead, Empty, QueryState } from '../../shared/ui.jsx';
 import { admissionLabel, STAFF_JOB_LABELS } from '../../app/navigation.js';
 
 export function StaffManagement({ me, notify }) {
-  const [staff, setStaff] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updatingJobId, setUpdatingJobId] = useState('');
-  const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', username: '', phone: '', password: '', jobType: 'clinician' });
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await request('/dean/staff');
-      setStaff(Array.isArray(data) ? data : []);
-    } catch (requestError) {
-      setError(requestError.message || '员工列表暂时无法加载');
-    } finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+  const { data: staffData, loading, error, load } = useQuery(async (signal) => {
+    const data = await request('/dean/staff', { signal });
+    return Array.isArray(data) ? data : [];
+  }, [], { fallbackMessage: '员工列表暂时无法加载' });
+  const staff = staffData || [];
 
   async function createStaff(event) {
     event.preventDefault();
@@ -69,19 +59,9 @@ export function StaffManagement({ me, notify }) {
 }
 
 export function CapabilitiesMatrix({ notify }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState('');
-  const [error, setError] = useState('');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try { setData(await request('/dean/job-capabilities')); }
-    catch (requestError) { setError(requestError.message || '岗位权限暂时无法加载'); }
-    finally { setLoading(false); }
-  }, []);
-  useEffect(() => { load(); }, [load]);
+  const { data, loading, error, load, setData } = useQuery(async (signal) => request('/dean/job-capabilities', { signal }),
+    [], { fallbackMessage: '岗位权限暂时无法加载' });
 
   async function toggle(jobType, capability, enabled) {
     const key = `${jobType}:${capability}`;
@@ -109,26 +89,19 @@ export function CapabilitiesMatrix({ notify }) {
 }
 
 export function StayManagement({ notify }) {
-  const [guests, setGuests] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ roomNo: '', checkIn: localDateValue(), checkOut: localDateValue(3), stayPlan: 'three_night' });
 
-  const load = useCallback(async (status = filter, q = search) => {
-    setLoading(true);
-    setError('');
-    try {
-      const rows = await request(`/dean/guests?status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}`);
-      setGuests(Array.isArray(rows) ? rows : []);
-      if (selectedId && !rows.some(row => row.id === selectedId)) setSelectedId('');
-    } catch (requestError) { setError(requestError.message || '客人入住列表暂时无法加载'); }
-    finally { setLoading(false); }
-  }, [filter, search, selectedId]);
-  useEffect(() => { load(); }, [load]);
+  const { data: guestsData, loading, error, load } = useQuery(async (signal, status = filter, q = search) => {
+    const rows = await request(`/dean/guests?status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}`, { signal });
+    const list = Array.isArray(rows) ? rows : [];
+    setSelectedId(current => current && !list.some(row => row.id === current) ? '' : current);
+    return list;
+  }, [filter, search, selectedId], { fallbackMessage: '客人入住列表暂时无法加载' });
+  const guests = guestsData || [];
 
   const selected = guests.find(row => row.id === selectedId);
   function chooseGuest(row) {
@@ -166,36 +139,28 @@ export function StayManagement({ notify }) {
 }
 
 export function AssignmentManagement({ notify }) {
-  const [guests, setGuests] = useState([]);
-  const [staff, setStaff] = useState([]);
   const [guestId, setGuestId] = useState('');
   const [staffId, setStaffId] = useState('');
-  const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
-  const loadBase = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const [guestRows, staffRows] = await Promise.all([request('/dean/guests'), request('/dean/staff')]);
-      setGuests(Array.isArray(guestRows) ? guestRows : []);
-      setStaff(Array.isArray(staffRows) ? staffRows : []);
-      setGuestId(current => current && guestRows.some(row => row.id === current) ? current : guestRows[0]?.id || '');
-    } catch (requestError) { setError(requestError.message || '分工管理信息暂时无法加载'); }
-    finally { setLoading(false); }
-  }, []);
-  useEffect(() => { loadBase(); }, [loadBase]);
+  const { data: baseData, loading, error: baseError, load: loadBase } = useQuery(async (signal) => {
+    const [guestRows, staffRows] = await Promise.all([request('/dean/guests', { signal }), request('/dean/staff', { signal })]);
+    setGuestId(current => current && guestRows.some(row => row.id === current) ? current : guestRows[0]?.id || '');
+    return {
+      guests: Array.isArray(guestRows) ? guestRows : [],
+      staff: Array.isArray(staffRows) ? staffRows : []
+    };
+  }, [], { fallbackMessage: '分工管理信息暂时无法加载' });
+  const guests = baseData?.guests || [];
+  const staff = baseData?.staff || [];
 
-  const loadAssignments = useCallback(async () => {
-    if (!guestId) { setAssignments([]); return; }
-    try {
-      const rows = await request(`/dean/guests/${guestId}/assignments`);
-      setAssignments(Array.isArray(rows) ? rows : []);
-    } catch (requestError) { setError(requestError.message || '负责关系暂时无法加载'); }
-  }, [guestId]);
-  useEffect(() => { loadAssignments(); }, [loadAssignments]);
+  const { data: assignmentsData, error: assignmentsError, load: loadAssignments } = useQuery(async (signal) => {
+    if (!guestId) return [];
+    const rows = await request(`/dean/guests/${guestId}/assignments`, { signal });
+    return Array.isArray(rows) ? rows : [];
+  }, [guestId], { fallbackMessage: '负责关系暂时无法加载' });
+  const assignments = assignmentsData || [];
+  const error = baseError || assignmentsError;
 
   async function assign(event) {
     event.preventDefault();

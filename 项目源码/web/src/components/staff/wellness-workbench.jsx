@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { businessText, businessTime } from '../../../../shared/release-presentation.js';
 import { initials } from '../../lib/normalize.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle, SectionHead, Empty, QueryState } from '../../shared/ui.jsx';
 import { EnvironmentHistoryNote, AdoptedDomainSuggestions } from '../guest/schedule.jsx';
 import { SourceDetails, BusinessReason } from '../../SourceDetails.jsx';
@@ -168,37 +169,32 @@ export function WellnessHistoryWorkbench({ canOpenDetails, notify }) {
   const [action, setAction] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const [result, setResult] = useState({ items: [], total: 0 });
   const [attention, setAttention] = useState([]);
   const [selectedDetail, setSelectedDetail] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const { data: historyData, loading, error, load } = useQuery(async (signal) => {
+    const params = new URLSearchParams();
+    if (guestId.trim()) params.set('guestId', guestId.trim());
+    if (action) params.set('action', action);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const history = await request(`/staff/therapy-review-history?${params}`, { signal });
     try {
-      const params = new URLSearchParams();
-      if (guestId.trim()) params.set('guestId', guestId.trim());
-      if (action) params.set('action', action);
-      if (from) params.set('from', from);
-      if (to) params.set('to', to);
-      const history = await request(`/staff/therapy-review-history?${params}`);
-      setResult(history);
-      try {
-        const flags = await request('/staff/therapy-review-attention');
-        setAttention(flags.items || []);
-      } catch { setAttention([]); }
-    } catch (error) {
-      notify(error.message || '审核历史暂时无法加载');
-      setResult({ items: [], total: 0 });
-    } finally { setLoading(false); }
-  }, [guestId, action, from, to, notify]);
+      const flags = await request('/staff/therapy-review-attention', { signal });
+      setAttention(flags.items || []);
+    } catch { setAttention([]); }
+    return history;
+  }, [guestId, action, from, to], {
+    fallbackMessage: '',
+    onError: (loadError) => notify(loadError?.message || '审核历史暂时无法加载')
+  });
+  // 与原实现一致：加载失败时清空结果列表（错误提示经 notify 呈现）。
+  const result = error ? { items: [], total: 0 } : historyData;
 
   async function openVersion(draftId) {
     try { setSelectedDetail(await request(`/staff/therapy-drafts/${encodeURIComponent(draftId)}`)); }
-    catch (error) { notify(error.message || '该版本当前不在你的授权范围内'); }
+    catch (loadError) { notify(loadError.message || '该版本当前不在你的授权范围内'); }
   }
-
-  useEffect(() => { load(); }, [load]);
 
   return <div className="wellness-history-workbench">
     <PageTitle eyebrow="REVIEW AUDIT" title="疗程审核历史" desc="只读查询医护修订、通过、退回、自动激活和纠正记录；历史事件不会被页面编辑。" action={<button type="button" className="outline-btn" onClick={load} disabled={loading}>刷新　↻</button>}/>

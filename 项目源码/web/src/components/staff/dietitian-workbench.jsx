@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { businessToday, mealLocalTime } from '../../lib/date.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle, QueryState } from '../../shared/ui.jsx';
 import { SourceDetails } from '../../SourceDetails.jsx';
 import { MEAL_LABELS, SLOT_LABELS, ORDER_STATUS_LABELS, mealFoodLabels, mealSourceLabel, mealRestrictionStatusLabel, MealOrderTiming, MealRestrictionReview } from '../guest/meals.jsx';
@@ -8,20 +9,13 @@ import { MEAL_LABELS, SLOT_LABELS, ORDER_STATUS_LABELS, mealFoodLabels, mealSour
 export function DietitianMealWorkbench({ notify }) {
   const [date, setDate] = useState(businessToday);
   const [mealType, setMealType] = useState('breakfast');
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState('');
   const [reviewNotes, setReviewNotes] = useState({});
-  const [error, setError] = useState('');
-  const load = useCallback(async () => {
-    setLoading(true); setError('');
-    try {
-      const query = new URLSearchParams({ date, mealType });
-      setOrders(await request(`/staff/meals/orders?${query}`));
-    } catch (loadError) { setError(loadError.message || '备餐订单暂时无法加载'); }
-    finally { setLoading(false); }
-  }, [date, mealType]);
-  useEffect(() => { load(); }, [load]);
+  const { data: ordersData, loading, error, load } = useQuery(async (signal) => {
+    const query = new URLSearchParams({ date, mealType });
+    return request(`/staff/meals/orders?${query}`, { signal });
+  }, [date, mealType], { fallbackMessage: '备餐订单暂时无法加载' });
+  const orders = ordersData || [];
 
   async function advance(order, status) {
     setBusyId(order.id);

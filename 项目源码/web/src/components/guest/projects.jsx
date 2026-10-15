@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { shanghaiDateOffset, slotDateLabel } from '../../lib/date.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle } from '../../shared/ui.jsx';
 import { SourceDetails } from '../../SourceDetails.jsx';
 import EnvironmentPanel from '../../EnvironmentPanel.jsx';
@@ -156,29 +157,20 @@ export function GuestProjects({ go }) {
   const [filter, setFilter] = useState('');
   const [searchDraft, setSearchDraft] = useState('');
   const [search, setSearch] = useState('');
-  const [items, setItems] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [error, setError] = useState('');
   const [detailError, setDetailError] = useState('');
   const listRef = useRef(null);
   const savedScrollTop = useRef(0);
 
-  useEffect(() => {
-    let current = true;
-    setLoading(true);
-    setError('');
+  const { data: catalogItems, loading, error } = useQuery(async (signal) => {
     const params = new URLSearchParams();
     if (filter) params.set('category', filter);
     if (search) params.set('q', search);
-    request(`/projects${params.size ? `?${params.toString()}` : ''}`).then(result => {
-      if (current) setItems(result.items || []);
-    }).catch(requestError => {
-      if (current) setError(requestError.message || '项目目录暂时无法加载');
-    }).finally(() => { if (current) setLoading(false); });
-    return () => { current = false; };
-  }, [filter, search]);
+    const result = await request(`/projects${params.size ? `?${params.toString()}` : ''}`, { signal });
+    return result.items || [];
+  }, [filter, search], { fallbackMessage: '项目目录暂时无法加载' });
+  const items = catalogItems || [];
 
   useLayoutEffect(() => {
     if (!selected && listRef.current) listRef.current.scrollTop = savedScrollTop.current;

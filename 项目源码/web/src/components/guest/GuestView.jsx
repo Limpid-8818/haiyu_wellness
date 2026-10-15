@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { fmtDate, fmtDateTime } from '../../lib/date.js';
+import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle, Metric, SectionHead, Empty, Loading } from '../../shared/ui.jsx';
 import { admissionLabel } from '../../app/navigation.js';
 import { BusinessReason } from '../../SourceDetails.jsx';
@@ -59,14 +60,9 @@ function GuestOverview({ me, go }) {
 }
 
 function GuestAgentResults() {
-  const [status, setStatus] = useState(null);
-  const [error, setError] = useState('');
   const [open, setOpen] = useState(false);
-  const load = useCallback(async () => {
-    try { setStatus(await request('/agent/status')); setError(''); }
-    catch (error) { setError(error.message || '暂时无法读取协作记录'); }
-  }, []);
-  useEffect(() => { void load(); }, [load]);
+  const { data: status, error, load } = useQuery(async (signal) => request('/agent/status', { signal }),
+    [], { fallbackMessage: '暂时无法读取协作记录' });
   const run = status?.run;
   return <section className="surface" data-testid="guest-agent-results"><SectionHead title="管家协作" link="刷新协作" onClick={load}/>
     {error ? <p role="alert">{error}</p> : !status ? <p>正在读取协作记录…</p> : <>
