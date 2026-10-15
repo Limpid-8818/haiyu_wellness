@@ -15,7 +15,8 @@ const secret = configuredAuthSecret || DEFAULT_AUTH_SECRET;
 function b64(value) { return Buffer.from(value).toString('base64url'); }
 function unb64(value) { return Buffer.from(value, 'base64url').toString('utf8'); }
 export function signToken(user) {
-  const payload = { sub: user.id, role: user.role, exp: Date.now() + 8 * 60 * 60 * 1000 };
+  // G11：签发时写入令牌版本；改密递增版本后旧 token 在鉴权中间件被拒。
+  const payload = { sub: user.id, role: user.role, ver: Number(user.token_version ?? 0), exp: Date.now() + 8 * 60 * 60 * 1000 };
   const body = b64(JSON.stringify(payload));
   const signature = crypto.createHmac('sha256', secret).update(body).digest('base64url');
   return `${body}.${signature}`;

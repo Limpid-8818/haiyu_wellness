@@ -156,19 +156,35 @@ async function awaitSqliteTransaction() {
   await sqliteTransactionTail;
 }
 
+// G22：SQLite 预编译语句缓存。node:sqlite 的 prepare 是每次执行的主要固定开销；
+// 按最终 SQL 文本缓存 StatementSync（线程内复用）。带可变 IN 占位符数量的语句
+// 会按占位符个数产生少量缓存条目，规模受各查询 LIMIT 约束。
+const sqliteStatementCache = new Map();
+function preparedSqliteStatement(sql) {
+  let statement = sqliteStatementCache.get(sql);
+  if (!statement) {
+    statement = sqliteHandle.prepare(sql);
+    sqliteStatementCache.set(sql, statement);
+  }
+  return statement;
+}
+export function sqliteCachedStatementCount() {
+  return sqliteStatementCache.size;
+}
+
 function sqliteStatement(sql) {
   return {
     async get(...params) {
       await awaitSqliteTransaction();
-      return sqliteHandle.prepare(sql).get(...params);
+      return preparedSqliteStatement(sql).get(...params);
     },
     async all(...params) {
       await awaitSqliteTransaction();
-      return sqliteHandle.prepare(sql).all(...params);
+      return preparedSqliteStatement(sql).all(...params);
     },
     async run(...params) {
       await awaitSqliteTransaction();
-      return sqliteHandle.prepare(sql).run(...params);
+      return preparedSqliteStatement(sql).run(...params);
     }
   };
 }
@@ -214,7 +230,10 @@ export const db = {
   },
   async close() {
     if (driver === 'mysql' && mysqlPool) await mysqlPool.end();
-    if (driver === 'sqlite' && sqliteHandle) sqliteHandle.close();
+    if (driver === 'sqlite' && sqliteHandle) {
+      sqliteHandle.close();
+      sqliteStatementCache.clear();
+    }
   }
 };
 
@@ -559,6 +578,13 @@ export async function migrate() {
           CREATE INDEX IF NOT EXISTS idx_medical_advice_guest_status ON medical_advice(guest_id,status);
           CREATE INDEX IF NOT EXISTS idx_agent_runs_client_request ON agent_runs(client_request_id);
           CREATE INDEX IF NOT EXISTS idx_agent_runs_actor_role_created ON agent_runs(actor_id,assistant_role,created_at);`);
+      } },
+      { version: 29, name: 'user-token-version', up: async () => {
+        // G11：令牌版本号。修改密码时递增，使该用户已签发的旧 token 立即失效。
+        const columns = await db.prepare('PRAGMA table_info(users)').all();
+        if (!columns.some(column => column.name === 'token_version')) {
+          await db.exec('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0');
+        }
       } }
     ];
     for (const migration of migrations) {
@@ -831,6 +857,12 @@ export async function migrate() {
         'CREATE INDEX idx_agent_runs_client_request ON agent_runs(client_request_id)');
       await ensureIndex('agent_runs', 'idx_agent_runs_actor_role_created',
         'CREATE INDEX idx_agent_runs_actor_role_created ON agent_runs(actor_id,assistant_role,created_at)');
+    } },
+    { version: 29, name: 'user-token-version', up: async () => {
+      // G11：令牌版本号。修改密码时递增，使该用户已签发的旧 token 立即失效。
+      const column = await db.prepare(`SELECT COLUMN_NAME AS name FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='token_version'`).get();
+      if (!column) await db.exec('ALTER TABLE users ADD COLUMN token_version INT NOT NULL DEFAULT 0');
     } }
   ];
   for (const migration of migrations) {

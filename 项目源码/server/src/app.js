@@ -90,6 +90,10 @@ async function auth(req, _res, next) {
   if (!payload) throw new AppError(401, 'AUTH_REQUIRED', '登录已失效，请重新登录');
   const user = await db.prepare("SELECT * FROM users WHERE id=? AND status='active'").get(payload.sub);
   if (!user) throw new AppError(401, 'ACCOUNT_INACTIVE', '账号不存在或已停用');
+  // G11：令牌版本不匹配说明密码已更改或凭证已被吊销。
+  if (Number(payload.ver ?? 0) !== Number(user.token_version ?? 0)) {
+    throw new AppError(401, 'AUTH_TOKEN_REVOKED', '登录凭证已失效，请重新登录');
+  }
   req.user = user;
   next();
 }
@@ -105,6 +109,9 @@ async function optionalAuth(req, _res, next) {
   if (!payload) throw new AppError(401, 'AUTH_INVALID', '登录凭证无效，请重新登录');
   req.user = await db.prepare("SELECT * FROM users WHERE id=? AND status='active'").get(payload.sub) || null;
   if (!req.user) throw new AppError(401, 'ACCOUNT_INACTIVE', '账号不存在或已停用');
+  if (Number(payload.ver ?? 0) !== Number(req.user.token_version ?? 0)) {
+    throw new AppError(401, 'AUTH_TOKEN_REVOKED', '登录凭证已失效，请重新登录');
+  }
   next();
 }
 
@@ -277,7 +284,8 @@ async function authorizeQueryGuest(req) {
 
 routes.get('/api/health', async (req, res) => res.json({ ok: true, service: 'seaside-wellness-community', time: now() }));
 routes.get('/api/news', async (req, res) => {
-  const rows = await db.prepare('SELECT id,category,title,summary,body,cover,published_at AS publishedAt,pinned FROM news ORDER BY pinned DESC,published_at DESC').all();
+  // G13：公开列表加 LIMIT，防止表随运营增长后全量下发；首页只需置顶+少量条目。
+  const rows = await db.prepare('SELECT id,category,title,summary,body,cover,published_at AS publishedAt,pinned FROM news ORDER BY pinned DESC,published_at DESC LIMIT 50').all();
   res.json(rows);
 });
 routes.get('/api/news/:id', async (req, res) => {
@@ -785,10 +793,13 @@ routes.post('/api/me/password', auth, async (req, res) => {
     throw new AppError(400, 'PASSWORD_NEW_INVALID', '新密码长度应为 8 至 128 位');
   }
   await transaction(async () => {
-    await db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(hashPassword(newPassword), req.user.id);
+    // G11：递增令牌版本吊销该用户全部已签发 token（含当前会话），随后向下发新 token 保持本会话。
+    await db.prepare('UPDATE users SET password_hash=?,token_version=token_version+1 WHERE id=?')
+      .run(hashPassword(newPassword), req.user.id);
     await log(req.user.id, 'password.change', 'user', req.user.id, '修改登录密码');
   });
-  res.json({ ok: true });
+  const updated = await db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
+  res.json({ ok: true, token: signToken(updated) });
 });
 
 routes.get('/api/me/health', auth, async (req, res) => {
@@ -1147,12 +1158,20 @@ routes.get('/api/staff/overview', auth, staffOnly, operationsSummaryOnly, async 
 routes.get('/api/dean/staff', auth, staffManagementOnly, async (req, res) => {
   const rows = await db.prepare(`SELECT id,name,username,phone,status,job_type AS jobType,created_at AS createdAt
     FROM users WHERE role='staff' ORDER BY name`).all();
-  const result = await Promise.all(rows.map(async row => ({
+  // G24：两条 GROUP BY 聚合替代每员工 2 次计数的 2N+1 查询；IN 走 actor/author 索引前导列。
+  const staffIds = rows.map(row => row.id);
+  const placeholders = staffIds.map(() => '?').join(',');
+  const viewRows = staffIds.length ? await db.prepare(`SELECT actor_id AS actorId, COUNT(*) AS count
+    FROM audit_logs WHERE action='guest.view' AND actor_id IN (${placeholders}) GROUP BY actor_id`).all(...staffIds) : [];
+  const adviceRows = staffIds.length ? await db.prepare(`SELECT author_id AS authorId, COUNT(*) AS count
+    FROM medical_advice WHERE author_id IN (${placeholders}) GROUP BY author_id`).all(...staffIds) : [];
+  const viewCounts = new Map(viewRows.map(row => [row.actorId, Number(row.count)]));
+  const adviceCounts = new Map(adviceRows.map(row => [row.authorId, Number(row.count)]));
+  res.json(rows.map(row => ({
     ...publicStaffRow(row),
-    guestViews: Number((await db.prepare("SELECT COUNT(*) AS count FROM audit_logs WHERE actor_id=? AND action='guest.view'").get(row.id)).count),
-    adviceCount: Number((await db.prepare("SELECT COUNT(*) AS count FROM medical_advice WHERE author_id=?").get(row.id)).count)
+    guestViews: viewCounts.get(row.id) || 0,
+    adviceCount: adviceCounts.get(row.id) || 0
   })));
-  res.json(result);
 });
 routes.post('/api/dean/staff', auth, staffManagementOnly, async (req, res) => {
   const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};

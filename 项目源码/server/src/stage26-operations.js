@@ -74,11 +74,22 @@ export async function listOrganizationGuests({ query = '', date = '' } = {}) {
       AND (?='' OR p.check_in=?) ORDER BY p.check_in DESC,u.name,u.id LIMIT 200`).all(
     needle, match, match, match, dateFilter, dateFilter);
   const today = systemBusinessClock.dateKey();
+  // G24：一次性取回本页客人的待核实自述（每客人取 revision 最高的一条），替代逐行 N+1 查询。
+  const guestIds = rows.map(row => row.id);
+  const pendingByGuest = new Map();
+  if (guestIds.length) {
+    const intakePlaceholders = guestIds.map(() => '?').join(',');
+    const pendingRows = await db.prepare(`SELECT guest_id, risk_level AS riskLevel FROM health_intakes
+      WHERE status='pending' AND guest_id IN (${intakePlaceholders})
+      ORDER BY guest_id, revision DESC, id DESC`).all(...guestIds);
+    for (const pending of pendingRows) {
+      if (!pendingByGuest.has(pending.guest_id)) pendingByGuest.set(pending.guest_id, pending);
+    }
+  }
   return await Promise.all(rows.map(async row => {
     const chronic = json(row.chronicJson, []);
     const allergies = json(row.allergiesJson, []);
-    const latestPending = await db.prepare(`SELECT risk_level AS riskLevel FROM health_intakes
-      WHERE guest_id=? AND status='pending' ORDER BY revision DESC,id DESC LIMIT 1`).get(row.id);
+    const latestPending = pendingByGuest.get(row.id);
     const riskFlags = [];
     if (chronic.length) riskFlags.push('慢病记录');
     if (allergies.length) riskFlags.push('过敏或忌口');

@@ -285,9 +285,35 @@ export async function getReplanEventDetail(guestId, eventId) {
 }
 
 export async function listReplanEvents(guestId) {
-  const rows = await db.prepare('SELECT id FROM wellness_replan_events WHERE guest_id=? ORDER BY created_at DESC,id DESC LIMIT 100').all(guestId);
+  // G24：一次性取回事件全行（不再逐条回查 id），同一草案在多条来源事件间复用
+  // getWellnessDraft 的原有逻辑按 draftId 记忆化，避免重复加载同一草案。
+  const { getWellnessDraft } = await import('./wellness-planner.js');
+  const rows = await db.prepare(`SELECT id,guest_id AS guestId,source_type AS sourceType,source_id AS sourceId,
+    source_version AS sourceVersion,source_label AS sourceLabel,source_snapshot_json AS sourceSnapshotJson,
+    trigger_reason AS triggerReason,requires_attention AS requiresAttention,status,
+    baseline_draft_id AS baselineDraftId,candidate_draft_id AS candidateDraftId,
+    created_at AS createdAt,updated_at AS updatedAt
+    FROM wellness_replan_events WHERE guest_id=? ORDER BY created_at DESC,id DESC LIMIT 100`).all(guestId);
+  const draftCache = new Map();
+  const loadDraft = draftId => {
+    if (!draftCache.has(draftId)) draftCache.set(draftId, getWellnessDraft(guestId, draftId).catch(() => null));
+    return draftCache.get(draftId);
+  };
   const items = [];
-  for (const row of rows) items.push(await getReplanEventDetail(guestId, row.id));
+  for (const row of rows) {
+    const baseline = row.baselineDraftId ? await loadDraft(row.baselineDraftId) : null;
+    const candidate = row.candidateDraftId ? await loadDraft(row.candidateDraftId) : null;
+    const activeReservations = row.baselineDraftId ? await db.prepare(`SELECT id,slot_id AS slotId,status
+      FROM reservations WHERE wellness_draft_id=? AND status='confirmed' ORDER BY id`).all(row.baselineDraftId) : [];
+    const event = { ...row, sourceVersion: Number(row.sourceVersion), requiresAttention: Boolean(row.requiresAttention),
+      sourceSnapshot: jsonValue(row.sourceSnapshotJson), baseline, candidate,
+      candidateStatus: candidate?.reviewStatus || null, activeReservations,
+      changes: planDiff(baseline, candidate) };
+    if (candidate?.reviewStatus === 'active' || candidate?.reviewStatus === 'auto_activated') event.status = 'active';
+    else if (candidate?.reviewStatus === 'pending_review') event.status = 'pending_review';
+    delete event.sourceSnapshotJson;
+    items.push(event);
+  }
   return { items, total: items.length };
 }
 
