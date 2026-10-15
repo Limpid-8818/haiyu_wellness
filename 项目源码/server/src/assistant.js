@@ -376,13 +376,16 @@ async function createAssistantRun({ user, role, sessionId, text, guestId, client
   const agentInput = role === 'guest' && coordinationTask === WELLNESS_DRAFT_COORDINATION_TASK
     ? JSON.stringify({ coordinationTask })
     : q20ReadOnlyGraph ? JSON.stringify({ q20ReadOnlyGraph: true }) : JSON.stringify({});
-  await db.prepare(`INSERT INTO agent_runs
-    (id,session_id,actor_id,assistant_role,client_request_id,intent_category,status,input_text,created_at,updated_at,agent_input_json)
-    VALUES(?,?,?,?,?,?,'queued',?,?,?,?)`)
-    .run(runId, row.id, user?.id || null, role, requestId, intent.category, value, timestamp, timestamp, agentInput);
-  await db.prepare('INSERT INTO assistant_messages(session_id,user_id,role,content,created_at,run_id) VALUES(?,?,?,?,?,?)')
-    .run(row.id, user?.id || null, 'user', value, timestamp, runId);
-  await db.prepare('UPDATE assistant_sessions SET last_message_at=? WHERE id=?').run(timestamp, row.id);
+  // G25：run/用户消息/会话时间戳三条写入原子化，避免部分写入后失败留下半截运行。
+  await transaction(async () => {
+    await db.prepare(`INSERT INTO agent_runs
+      (id,session_id,actor_id,assistant_role,client_request_id,intent_category,status,input_text,created_at,updated_at,agent_input_json)
+      VALUES(?,?,?,?,?,?,'queued',?,?,?,?)`)
+      .run(runId, row.id, user?.id || null, role, requestId, intent.category, value, timestamp, timestamp, agentInput);
+    await db.prepare('INSERT INTO assistant_messages(session_id,user_id,role,content,created_at,run_id) VALUES(?,?,?,?,?,?)')
+      .run(row.id, user?.id || null, 'user', value, timestamp, runId);
+    await db.prepare('UPDATE assistant_sessions SET last_message_at=? WHERE id=?').run(timestamp, row.id);
+  });
   // Coordination prompts are generated from persisted source records. They are
   // not guest-authored statements and must not become new pending health intake.
   if (!coordinationTask) await recordGuestHealthIntake({ user, sessionId: row.id, text: value });
