@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Loading, PageTitle } from '../../shared/ui.jsx';
 import { OperationsWorkbench } from './OperationsWorkbench.jsx';
 import { StaffDailySchedule } from './DailySchedule.jsx';
@@ -7,7 +7,9 @@ import { DietitianMealWorkbench } from './dietitian-workbench.jsx';
 import { StaffGuests, StaffOverview, StaffAccount } from './guests.jsx';
 import { ProjectAdmin, RulesWorkbench } from './admin-projects.jsx';
 import { StaffManagement, CapabilitiesMatrix, StayManagement, AssignmentManagement } from './admin-org.jsx';
-import { DeanTeam } from '../dean/DeanTeam.jsx';
+
+// G18：院长意见页按需加载。
+const DeanTeam = lazy(() => import('../dean/DeanTeam.jsx').then(m => ({ default: m.DeanTeam })));
 
 export function StaffView({ section, me, notify, onGuestChange, go, reviewDraftId = '', onReviewDraftOpened, operationsSource = null }) {
   useEffect(() => {
@@ -25,7 +27,7 @@ export function StaffView({ section, me, notify, onGuestChange, go, reviewDraftI
   }
   if (section === 'wellness-review' && canReview) return <WellnessReviewWorkbench notify={notify} initialDraftId={reviewDraftId} onInitialDraftOpened={onReviewDraftOpened}/>;
   if (section === 'wellness-history' && (canReview || canManage)) return <WellnessHistoryWorkbench canOpenDetails={canReview} notify={notify}/>;
-  if (section === 'team') return <DeanTeam notify={notify}/>;
+  if (section === 'team') return <Suspense fallback={<Loading/>}><DeanTeam notify={notify}/></Suspense>;
   if (section === 'staff-admin' && canManage) return <StaffManagement me={me} notify={notify}/>;
   if (section === 'projects-admin' && canManage) return <ProjectAdmin notify={notify}/>;
   if (section === 'capabilities' && canManage) return <CapabilitiesMatrix notify={notify}/>;

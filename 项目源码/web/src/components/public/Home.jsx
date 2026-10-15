@@ -1,10 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { fmtDate } from '../../lib/date.js';
 import { businessText } from '../../../../shared/release-presentation.js';
 import { QueryState } from '../../shared/ui.jsx';
 import { Brand } from '../../shared/branding.jsx';
-import { AssistantWidget } from '../assistant/AssistantWidget.jsx';
+
+// G18：首页助手按需加载，首屏不拉取对话逻辑。
+const AssistantWidget = lazy(() => import('../assistant/AssistantWidget.jsx').then(m => ({ default: m.AssistantWidget })));
 
 function PublicHeader({ onHome }) {
   return <header className="public-header"><Brand/><nav><button type="button" className="text-btn" onClick={onHome}>首页</button><a href="#news">社区动态</a><a href="#about">关于海屿</a></nav><div className="header-status"><span className="status-dot"/>服务正常</div></header>;
@@ -50,7 +52,7 @@ export function Home({ onEnter }) {
     <section className="news-section" id="news"><div className="section-heading"><div><div className="eyebrow">COMMUNITY JOURNAL</div><h2>社区动态</h2></div><button type="button" className="link-btn" onClick={() => document.getElementById('news-grid')?.scrollIntoView({ behavior: 'smooth' })}>查看全部 <span>↗</span></button></div><div className="featured-news">{featured ? <><div className="featured-image"><span>{featured.category}</span><div className="feature-symbol">{featured.category === '健康管理' ? '◒' : featured.category === '滨海活动' ? '≈' : '✣'}</div></div><div className="featured-copy"><div className="news-meta"><span className="tag">置顶</span><span>{featured.category}</span><span>{fmtDate(featured.publishedAt)}</span></div><h3>{featured.title}</h3><p>{featured.summary}</p><button type="button" className="read-btn" onClick={() => setSelected(featured)}>阅读全文 <span>→</span></button></div></> : <div className="news-empty">{newsState}</div>}</div><div className="news-grid" id="news-grid">{news.slice(1).map(item => <article className="news-card" key={item.id} role="button" tabIndex="0" onClick={() => setSelected(item)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelected(item); } }}><div className="card-top"><span className="category-dot"/>{item.category}<time>{fmtDate(item.publishedAt)}</time></div><h3>{item.title}</h3><p>{businessText(item.summary)}</p><span className="card-arrow">↗</span></article>)}</div></section>
     <section className="entry-section"><div className="entry-copy"><div className="eyebrow">YOUR SPACE</div><h2>从这里，进入<br/><em>属于你的空间</em></h2><p>不同的身份，不同的工作台。选择身份后，我们会把你需要的内容放在最顺手的位置。</p></div><div className="entry-cards"><button type="button" onClick={() => onEnter('guest')}><span className="entry-icon blue">⌂</span><span><strong>我是客人</strong><small>查看我的资料、健康与医嘱</small></span><b>→</b></button><button type="button" onClick={() => onEnter('staff')}><span className="entry-icon orange">✚</span><span><strong>我是工作人员</strong><small>管理负责客人并提供专业建议</small></span><b>→</b></button><button type="button" onClick={() => onEnter('dean')}><span className="entry-icon orange">♜</span><span><strong>院长管理入口</strong><small>查看团队记录并留下管理意见</small></span><b>→</b></button></div></section>
     <section className="about-section" id="about"><div className="about-number">01</div><div><div className="eyebrow">ABOUT HAIYU</div><h2>让信息更有边界，<br/>让照护更有温度。</h2></div><p>海屿不是把所有信息堆在一起的管理后台，而是一座有公共客厅、个人房间和专业工作台的社区。首页属于所有人，档案只属于被授权的人。</p></section>
-  </main><footer><Brand compact/><span>© 2026 海屿康养社区 · 面向康养服务场景的数字化平台</span><span>隐私政策　服务说明</span></footer>{selected && <NewsModal item={selected} onClose={() => setSelected(null)}/>}<AssistantWidget role="public"/></div>;
+  </main><footer><Brand compact/><span>© 2026 海屿康养社区 · 面向康养服务场景的数字化平台</span><span>隐私政策　服务说明</span></footer>{selected && <NewsModal item={selected} onClose={() => setSelected(null)}/>}<Suspense fallback={null}><AssistantWidget role="public"/></Suspense></div>;
 }
 
 function NewsModal({ item, onClose }) {
