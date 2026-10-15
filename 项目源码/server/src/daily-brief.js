@@ -1,8 +1,11 @@
 import { db, id, json } from './db.js';
 import { systemBusinessClock } from './clock.js';
-import { readCurrentEnvironmentSnapshot } from './environment.js';
+import { readCurrentEnvironmentSnapshot, cleanupExpiredEnvironmentSnapshots } from './environment.js';
 import { briefEnvironment } from './environment-resolution.js';
 import { createNotificationOnce, syncCareSignals } from './wellness-notifications.js';
+
+// 环境快照清理的每日执行备忘（模块级，进程重启后首个 tick 会再执行一次，幂等无害）。
+let environmentCleanupLastDate = null;
 
 const DAILY_BRIEF_HOUR = 7;
 const REMINDER_LEAD_MS = 15 * 60 * 1000;
@@ -156,10 +159,14 @@ export async function runStage25Tick(instant = systemBusinessClock.instant(), cl
     const guests = await db.prepare(`SELECT id FROM users WHERE role='guest' AND status='active' ORDER BY id`).all();
     for (const guest of guests) {
       try {
+        // 已有当日简报则跳过：saveDailyBrief→briefView 会为“当前对照”重建整份快照
+        // （每客人 7+ 次查询），调度器每分钟全量重建是主要的周期性卡顿来源（G08）。
         const existing = await db.prepare(`SELECT id FROM daily_briefs WHERE guest_id=? AND business_date=?`)
           .get(guest.id, businessDate);
-        await saveDailyBrief(guest.id, businessDate, at.toISOString());
-        if (!existing) briefsCreated += 1;
+        if (!existing) {
+          await saveDailyBrief(guest.id, businessDate, at.toISOString());
+          briefsCreated += 1;
+        }
         const signals = await syncCareSignals(guest.id, at.toISOString());
         careSignals += signals.moodFocusCount + signals.correctedReviewCount;
       } catch (error) {
@@ -183,8 +190,15 @@ export async function runStage25Tick(instant = systemBusinessClock.instant(), cl
       notificationType: 'reminder', createdAt: at.toISOString() });
     if (notification.created) remindersCreated += 1;
   }
+  // G09：每日首个 tick 清理一次过期超过 90 天的环境快照（追加式表此前永不清理）。
+  let environmentCleaned = 0;
+  if (environmentCleanupLastDate !== businessDate) {
+    environmentCleanupLastDate = businessDate;
+    try { environmentCleaned = await cleanupExpiredEnvironmentSnapshots(); }
+    catch (error) { guestFailures.push({ guestId: 'environment-cleanup', code: String(error?.code || 'CLEANUP_FAILED').slice(0, 64) }); }
+  }
   return { businessDate, localTime: `${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`,
-    briefsCreated, remindersCreated, careSignals, guestFailures };
+    briefsCreated, remindersCreated, careSignals, environmentCleaned, guestFailures };
 }
 
 export function startStage25Scheduler({ clock = systemBusinessClock, intervalMs = 60_000, onInitialTick = () => {}, onError = error => {

@@ -96,11 +96,23 @@ function slotMatchesCurrentWindow(project, slot) {
 export async function ensureProjectSlots(project, { startDate = systemBusinessClock.dateKey(), days = 7 } = {}) {
   if (!Number.isInteger(days) || days < 1 || days > 7) throw new AppError(400, 'SLOT_RANGE_INVALID', '一次最多生成未来七天的时段');
   if (!project?.active) return { generated: 0, slotCount: 0 };
+  // 先在内存中算出应有时段、一次查询既有行，只补缺失部分：读路径不再产生
+  // 成百上千次注定冲突的 INSERT，也不在无需写入时开启写事务（G07）。
+  const expected = [];
+  for (let offset = 0; offset < days; offset += 1) {
+    const date = dateOffset(startDate, offset);
+    for (const slot of slotWindowsForDate(project, date)) expected.push(slot);
+  }
+  const existingRows = await db.prepare(`SELECT id FROM activity_slots
+    WHERE project_id=? AND business_date>=? AND business_date<?`).all(
+    project.id, startDate, dateOffset(startDate, days)
+  );
+  const existing = new Set(existingRows.map(row => row.id));
+  const missing = expected.filter(slot => !existing.has(slot.id));
   let generated = 0;
-  await transaction(async () => {
-    for (let offset = 0; offset < days; offset += 1) {
-      const date = dateOffset(startDate, offset);
-      for (const slot of slotWindowsForDate(project, date)) {
+  if (missing.length) {
+    await transaction(async () => {
+      for (const slot of missing) {
         try {
           const result = await db.prepare(`INSERT INTO activity_slots
             (id,project_id,business_date,starts_at,ends_at,local_start,local_end,capacity,is_closed,created_at,updated_at)
@@ -113,8 +125,8 @@ export async function ensureProjectSlots(project, { startDate = systemBusinessCl
           if (!isDuplicate(error)) throw error;
         }
       }
-    }
-  });
+    });
+  }
   const count = Number((await db.prepare(`SELECT COUNT(*) AS count FROM activity_slots
     WHERE project_id=? AND business_date>=? AND business_date<?`).get(
     project.id, startDate, dateOffset(startDate, days)
@@ -367,6 +379,12 @@ export async function createReservation({ guestId, slotId: requestedSlotId, idem
     throw new AppError(400, 'IDEMPOTENCY_KEY_INVALID', '预约请求缺少有效的幂等标识');
   }
   const fingerprint = crypto.createHash('sha256').update(requestedSlotId).digest('hex');
+  // 环境快照在 live 冷缓存时可能触发外部 HTTP（三域串行最坏数十秒）。
+  // 必须在开事务前取好，避免期间占用 SQLite 全局事务串行链 / MySQL 行锁（G03）。
+  const slotDateRow = await db.prepare('SELECT business_date FROM activity_slots WHERE id=?').get(requestedSlotId);
+  const prefetchedSnapshot = slotDateRow
+    ? await getEnvironmentSnapshot(String(slotDateRow.business_date).slice(0, 10))
+    : null;
   const create = async () => {
     const guest = await db.prepare(`SELECT id FROM users WHERE id=? AND role='guest' AND status='active'${lockSuffix()}`).get(guestId);
     if (!guest) throw new AppError(409, 'GUEST_INACTIVE', '客人账号不存在或已停用');
@@ -401,7 +419,7 @@ export async function createReservation({ guestId, slotId: requestedSlotId, idem
       throw new AppError(409, 'SLOT_WINDOW_CHANGED', '项目开放窗口已调整，此时段不再开放预约。', { slotId: requestedSlotId });
     }
     const health = await bookingHealthState(guestId);
-    const snapshot = await getEnvironmentSnapshot(String(slot.business_date).slice(0, 10));
+    const snapshot = prefetchedSnapshot;
     const rules = await listRules();
     const availability = await evaluateSlot({
       project, slot, guestId, profileState: health, legacyProfile: health.profile, rules, snapshot

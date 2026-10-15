@@ -494,15 +494,19 @@ function GuestMeals({ me, notify }) {
   const [editingId, setEditingId] = useState('');
   const [swap, setSwap] = useState({ dishId: '', reason: '' });
 
+  const loadGeneration = useRef(0);
   const load = useCallback(async () => {
+    // 快速切换日期时，晚到的旧响应不再覆盖新数据（G20）
+    const generation = ++loadGeneration.current;
     setLoading(true); setError('');
     try {
       const [menu, catalog] = await Promise.all([
         request(`/meals/menu?date=${encodeURIComponent(date)}`), request('/meals/dishes')
       ]);
+      if (generation !== loadGeneration.current) return;
       setData(menu); setDishes(catalog.items || []);
-    } catch (loadError) { setError(loadError.message || '餐单暂时无法加载'); }
-    finally { setLoading(false); }
+    } catch (loadError) { if (generation === loadGeneration.current) setError(loadError.message || '餐单暂时无法加载'); }
+    finally { if (generation === loadGeneration.current) setLoading(false); }
   }, [date]);
   useEffect(() => { load(); }, [load]);
 
@@ -625,7 +629,7 @@ function ProjectDetail({ project, onBack, go }) {
       <div className="project-detail-footnote"><strong>{project.isDemo ? '演示预约' : '预约说明'}</strong><span>{project.isDemo ? '时段与容量为演示数据。预约仅用于本地演示，不代表真实服务安排。' : '提交前由服务端重新核对入住区间、容量、环境和健康规则。'}</span></div>
     </section>
     <ProjectBooking project={project} go={go}/>
-    <EnvironmentPanel projectId={project.id}/>
+    <EnvironmentPanel projectId={project.id} requestApi={request}/>
   </>;
 }
 
@@ -664,17 +668,21 @@ function ProjectBooking({ project, go }) {
   const [reservation, setReservation] = useState(null);
   const submitLock = useRef(false);
   const idempotency = useRef({ slotId: '', key: '' });
+  const slotsGeneration = useRef(0);
 
   const loadSlots = useCallback(async () => {
+    const generation = ++slotsGeneration.current;
     setLoading(true);
     setError('');
     try {
       const result = await request(`/projects/${encodeURIComponent(project.id)}/slots?date=${encodeURIComponent(date)}`);
+      if (generation !== slotsGeneration.current) return;
       setSlots(result.slots || []);
     } catch (requestError) {
+      if (generation !== slotsGeneration.current) return;
       setError(requestError.message || '预约时段暂时无法加载');
       setSlots([]);
-    } finally { setLoading(false); }
+    } finally { if (generation === slotsGeneration.current) setLoading(false); }
   }, [project.id, date]);
 
   useEffect(() => { loadSlots(); }, [loadSlots]);
@@ -829,7 +837,9 @@ function GuestSchedule({ me, onSelectResource }) {
   const stayStart = String(profile.checkIn || profile.check_in || '').slice(0, 10);
   const stayEnd = String(profile.checkOut || profile.check_out || '').slice(0, 10);
   const stayValid = /^\d{4}-\d{2}-\d{2}$/.test(stayStart) && /^\d{4}-\d{2}-\d{2}$/.test(stayEnd) && stayEnd > stayStart;
+  const scheduleGeneration = useRef(0);
   const load = useCallback(async () => {
+    const generation = ++scheduleGeneration.current;
     setLoading(true); setError('');
     try {
       const [nextTimeline, nextDrafts, nextNotifications, nextCheckins, nextReplanEvents] = await Promise.all([
@@ -837,10 +847,11 @@ function GuestSchedule({ me, onSelectResource }) {
         request(`/me/therapy-drafts${stayValid ? `?stayStart=${encodeURIComponent(stayStart)}&stayEnd=${encodeURIComponent(stayEnd)}` : ''}`),
         request('/me/wellness-notifications'), request('/me/checkins'), request('/me/replanning-events')
       ]);
+      if (generation !== scheduleGeneration.current) return;
       setTimeline(nextTimeline); setDrafts(nextDrafts.items || []); setNotifications(nextNotifications.items || []);
       setCheckins(nextCheckins.items || []); setReplanEvents(nextReplanEvents.items || []);
-    } catch (requestError) { setError(requestError.message || '日程暂时无法加载'); }
-    finally { setLoading(false); }
+    } catch (requestError) { if (generation === scheduleGeneration.current) setError(requestError.message || '日程暂时无法加载'); }
+    finally { if (generation === scheduleGeneration.current) setLoading(false); }
   }, [stayStart, stayEnd, stayValid]);
   useEffect(() => { load(); }, [load]);
 
@@ -1379,7 +1390,7 @@ function GuestDailyBrief({ me, go }) {
 
 function GuestOverview({ me, go }) {
   const profile = me.profile || {};
-  return <><PageTitle eyebrow="PERSONAL SPACE" title={`你好，${me.name}`} desc="这里是你的康养主页，重要的信息都会在这里清晰呈现。"/><GuestDailyBrief me={me} go={go}/><div className="welcome-banner"><div><span className="banner-kicker">今日状态</span><h2>把今天过得松弛一点</h2><p>你的个人资料和健康信息已安全保存。需要帮助时，工作人员会在这里留下新的建议。</p></div><div className="banner-orb">海</div></div><div className="metric-grid"><Metric label="入住状态" value={admissionLabel(me.admissionStatus)} hint={profile.roomNo ? `房间 ${profile.roomNo}` : '等待机构办理入住'} tone="teal"/><button type="button" className="metric-card blue metric-button" onClick={() => go('health')}><span>健康记录</span><strong>{`${me.health?.length || 0} 条`}</strong><small>点击查看详情　→</small></button><button type="button" className="metric-card orange metric-button" onClick={() => go('advice')}><span>当前医嘱</span><strong>{`${me.advice?.length || 0} 条`}</strong><small>点击查看详情　→</small></button></div><EnvironmentPanel/><GuestAgentResults/><div className="two-col"><section className="surface"><SectionHead title="我的健康概览" link="查看全部" onClick={() => go('health')}/><div className="health-glance"><div className="health-icon">⌁</div><div><strong>{me.health?.[0]?.type || '还没有健康记录'}</strong><p>{me.health?.[0] ? `${me.health[0].value} ${me.health[0].unit} · ${fmtDate(me.health[0].recordedAt)}` : '可以在“我的健康”中查看工作人员记录。'}</p></div><span className="health-status">已记录</span></div></section><section className="surface"><SectionHead title="最近的医嘱" link="查看全部" onClick={() => go('advice')}/><div className="advice-preview">{me.advice?.[0] ? <><div className="advice-priority important">重要</div><strong>{me.advice[0].title}</strong><p>{me.advice[0].content}</p><small>{me.advice[0].authorName || '工作人员'} · {fmtDate(me.advice[0].createdAt)}</small></> : <Empty text="暂无新的医嘱"/>}</div></section></div></>;
+  return <><PageTitle eyebrow="PERSONAL SPACE" title={`你好，${me.name}`} desc="这里是你的康养主页，重要的信息都会在这里清晰呈现。"/><GuestDailyBrief me={me} go={go}/><div className="welcome-banner"><div><span className="banner-kicker">今日状态</span><h2>把今天过得松弛一点</h2><p>你的个人资料和健康信息已安全保存。需要帮助时，工作人员会在这里留下新的建议。</p></div><div className="banner-orb">海</div></div><div className="metric-grid"><Metric label="入住状态" value={admissionLabel(me.admissionStatus)} hint={profile.roomNo ? `房间 ${profile.roomNo}` : '等待机构办理入住'} tone="teal"/><button type="button" className="metric-card blue metric-button" onClick={() => go('health')}><span>健康记录</span><strong>{`${me.health?.length || 0} 条`}</strong><small>点击查看详情　→</small></button><button type="button" className="metric-card orange metric-button" onClick={() => go('advice')}><span>当前医嘱</span><strong>{`${me.advice?.length || 0} 条`}</strong><small>点击查看详情　→</small></button></div><EnvironmentPanel requestApi={request}/><GuestAgentResults/><div className="two-col"><section className="surface"><SectionHead title="我的健康概览" link="查看全部" onClick={() => go('health')}/><div className="health-glance"><div className="health-icon">⌁</div><div><strong>{me.health?.[0]?.type || '还没有健康记录'}</strong><p>{me.health?.[0] ? `${me.health[0].value} ${me.health[0].unit} · ${fmtDate(me.health[0].recordedAt)}` : '可以在“我的健康”中查看工作人员记录。'}</p></div><span className="health-status">已记录</span></div></section><section className="surface"><SectionHead title="最近的医嘱" link="查看全部" onClick={() => go('advice')}/><div className="advice-preview">{me.advice?.[0] ? <><div className="advice-priority important">重要</div><strong>{me.advice[0].title}</strong><p>{me.advice[0].content}</p><small>{me.advice[0].authorName || '工作人员'} · {fmtDate(me.advice[0].createdAt)}</small></> : <Empty text="暂无新的医嘱"/>}</div></section></div></>;
 }
 
 const HEALTH_PROFILE_FIELDS = [
@@ -2237,7 +2248,15 @@ function StaffDailySchedule({ jobType, notify }) {
   const [date, setDate] = useState(businessToday);
   const [data, setData] = useState(null); const [error, setError] = useState('');
   const [notes, setNotes] = useState({}); const [busy, setBusy] = useState('');
-  const load = useCallback(async () => { setError(''); try { setData(await request(`/staff/schedule?date=${encodeURIComponent(date)}`)); } catch (err) { setError(err.message); } }, [date]);
+  const scheduleLoadGeneration = useRef(0);
+  const load = useCallback(async () => {
+    const generation = ++scheduleLoadGeneration.current;
+    setError('');
+    try {
+      const next = await request(`/staff/schedule?date=${encodeURIComponent(date)}`);
+      if (generation === scheduleLoadGeneration.current) setData(next);
+    } catch (err) { if (generation === scheduleLoadGeneration.current) setError(err.message); }
+  }, [date]);
   useEffect(() => { void load(); }, [load]);
   async function record(item, status) {
     setBusy(item.reservationId);
@@ -3406,6 +3425,8 @@ function AssistantWidget({ role = 'public', user = null, guestId = '', onAuthExp
     const startedAt = Date.now();
     for (;;) {
       if (controller.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      // G21：服务端状态卡在 running 时不再无限轮询，120 秒后转入可读的失败提示。
+      if (Date.now() - startedAt > 120_000) throw new Error('处理时间过长，已停止自动刷新；结果可稍后在历史记录中查看。');
       const data = await request(`/assistant/runs/${encodeURIComponent(runId)}?role=${encodeURIComponent(role)}`, { signal: controller.signal });
       if (generation !== generationRef.current || identityRef.current !== identityKey) return data;
       const steps = data.steps || [];
@@ -3783,6 +3804,22 @@ function Loading() {
   return <div className="loading" role="status"><span className="loader"/>正在载入你的空间…</div>;
 }
 
+// G19：渲染异常不再整站白屏，给出可操作的恢复入口并保留技术详情供排查。
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidCatch(error) { console.error('[web] render error:', error); }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return <div className="error-boundary" role="alert">
+      <h1>页面出现了一点问题</h1>
+      <p>内容渲染遇到异常。你可以刷新页面重试；如果反复出现，请联系工作人员或开发者。</p>
+      <details className="release-details"><summary>技术详情</summary><pre>{String(this.state.error?.stack || this.state.error)}</pre></details>
+      <button type="button" className="primary-btn" onClick={() => window.location.reload()}>刷新页面</button>
+    </div>;
+  }
+}
+
 function Root() {
   const [mode, setMode] = useState('home');
   const [user, setUser] = useState(() => {
@@ -3816,4 +3853,4 @@ function Root() {
   return <Home onEnter={(role) => setMode(`login-${role}`)}/>;
 }
 
-createRoot(document.getElementById('root')).render(<Root/>);
+createRoot(document.getElementById('root')).render(<ErrorBoundary><Root/></ErrorBoundary>);

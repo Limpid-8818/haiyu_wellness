@@ -16,12 +16,25 @@ const stage25Scheduler = startStage25Scheduler({
   }))
 });
 let shuttingDown = false;
+// G26：未捕获的 Promise 拒绝此前会让进程以默认行为崩溃且无上下文日志。
+process.on('unhandledRejection', reason => {
+  console.error(`[community] unhandled rejection: ${String(reason?.stack || reason).slice(0, 1000)}`);
+});
 
 function shutdown() {
   if (shuttingDown) return;
   shuttingDown = true;
   const schedulerDrained = stage25Scheduler.stop();
+  // G26：keep-alive 连接会让 server.close 的回调永不触发，进程挂起到被强杀、
+  // 跳过 db.close()；加超时兜底并主动断开存量连接。
+  const forceExit = setTimeout(() => {
+    console.error('[community] graceful shutdown timed out after 10s; forcing exit');
+    server.closeAllConnections?.();
+    void db.close().catch(() => {}).finally(() => process.exit(1));
+  }, 10_000);
+  forceExit.unref?.();
   server.close(() => {
+    clearTimeout(forceExit);
     schedulerDrained.then(() => db.close()).then(() => process.exit(0), error => {
       console.error(`database pool shutdown failed: ${error.message}`);
       process.exit(1);
