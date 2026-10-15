@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
 
+# G32：同一分支/PR 的新提交取消仍在跑的旧 CI，避免双触发全量跑两遍。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
