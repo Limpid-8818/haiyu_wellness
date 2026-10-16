@@ -1,4 +1,4 @@
-import { db, id, json } from './db.js';
+import { db, id, isUniqueViolation, json } from './db.js';
 import { systemBusinessClock } from './clock.js';
 import { readCurrentEnvironmentSnapshot, cleanupExpiredEnvironmentSnapshots } from './environment.js';
 import { briefEnvironment } from './environment-resolution.js';
@@ -126,7 +126,7 @@ async function saveDailyBrief(guestId,businessDate,at) {
     const briefId=id('daily_brief');
     try{await db.prepare('INSERT INTO daily_briefs(id,guest_id,business_date,brief_json,generated_at,updated_at) VALUES(?,?,?,?,?,?)')
       .run(briefId,guestId,businessDate,JSON.stringify(snapshot),at,at);}
-    catch(error){const duplicate=error?.code==='ER_DUP_ENTRY'||error?.errno===1062||String(error?.code||'').startsWith('SQLITE_CONSTRAINT')||/UNIQUE constraint failed/i.test(String(error?.message||''));if(!duplicate)throw error;}
+    catch(error){if(!isUniqueViolation(error))throw error;}
     row=await db.prepare('SELECT * FROM daily_briefs WHERE guest_id=? AND business_date=?').get(guestId,businessDate);
     if(!row)throw new Error('daily brief creation has no persisted row');
     await createNotificationOnce({guestId,sourceType:'daily_brief',sourceId:businessDate,

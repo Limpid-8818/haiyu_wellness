@@ -1,10 +1,8 @@
-import { db, id, now, transaction } from './db.js';
+import { db, id, mysqlLockSuffix, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { authorizeGuestAccess, isAssignmentEffective } from './authorization.js';
 import { jobTypeFor } from './staffing.js';
 import { systemBusinessClock } from './clock.js';
-
-const LOCK = db.driver === 'mysql' ? ' FOR UPDATE' : '';
 
 export async function reservationExecutions(reservationId) {
   return db.prepare(`SELECT e.id,e.reservation_id AS reservationId,e.job_type AS jobType,e.status,e.note,
@@ -22,12 +20,12 @@ export async function recordStaffExecution({ user, reservationId, status, note, 
     const basic = await db.prepare('SELECT slot_id,guest_id FROM reservations WHERE id=?').get(reservationId);
     if (!basic) throw new AppError(404, 'RESERVATION_NOT_FOUND', '预约不存在');
     await authorizeGuestAccess(user, basic.guest_id);
-    await db.prepare(`SELECT id FROM activity_slots WHERE id=?${LOCK}`).get(basic.slot_id);
+    await db.prepare(`SELECT id FROM activity_slots WHERE id=?${mysqlLockSuffix()}`).get(basic.slot_id);
     const assignment = await db.prepare(`SELECT id FROM stage26_staff_slot_assignments
-      WHERE slot_id=? AND staff_id=? AND job_type=? AND status='active'${LOCK}`).get(basic.slot_id, user.id, jobType);
+      WHERE slot_id=? AND staff_id=? AND job_type=? AND status='active'${mysqlLockSuffix()}`).get(basic.slot_id, user.id, jobType);
     if (!assignment) throw new AppError(403, 'SERVICE_NOT_ASSIGNED', '当前时段没有你的有效岗位分工');
     const reservation = await db.prepare(`SELECT r.status,s.starts_at,s.ends_at FROM reservations r JOIN activity_slots s ON s.id=r.slot_id
-      WHERE r.id=?${LOCK}`).get(reservationId);
+      WHERE r.id=?${mysqlLockSuffix()}`).get(reservationId);
     const prior = (await reservationExecutions(reservationId)).find(row => row.jobType === jobType);
     if (prior) {
       if (prior.status !== status || prior.note !== note.trim()) throw new AppError(409, 'SERVICE_ALREADY_RECORDED', '服务结果已记录，不能重复改写');

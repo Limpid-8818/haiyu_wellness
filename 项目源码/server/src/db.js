@@ -272,6 +272,26 @@ export function hasActiveTransaction() {
   return Boolean(transactionContext.getStore());
 }
 
+// G44：以下三个基础设施工具此前在 9+ 个业务模块各有一份本地拷贝且语义漂移，统一于此导出。
+// 已处于事务内则加入当前事务，否则开启新事务执行 callback。
+export function inTransaction(callback) {
+  return hasActiveTransaction() ? callback() : transaction(callback);
+}
+
+// MySQL 侧行锁后缀；SQLite 依赖全局事务串行链，无需 FOR UPDATE。
+export function mysqlLockSuffix() {
+  return driver === 'mysql' ? ' FOR UPDATE' : '';
+}
+
+// 仅把唯一键/主键冲突识别为“重复”（SQLITE_CONSTRAINT_UNIQUE、SQLite errcode 2067/1555、
+// MySQL ER_DUP_ENTRY/1062，外加 better-sqlite3 风格消息）。外键/CHECK/NOT NULL 等
+// SQLITE_CONSTRAINT_* 兄弟错误不属于重复，必须原样抛出，不允许被幂等路径吞掉。
+export function isUniqueViolation(error) {
+  return error?.code === 'SQLITE_CONSTRAINT_UNIQUE' || error?.code === 'ER_DUP_ENTRY'
+    || error?.errcode === 2067 || error?.errcode === 1555 || error?.errno === 1062
+    || /UNIQUE constraint failed/i.test(String(error?.message || ''));
+}
+
 async function migrationRecord(version) {
   return db.prepare('SELECT version FROM schema_migrations WHERE version=?').get(version);
 }
