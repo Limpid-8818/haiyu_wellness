@@ -6,6 +6,7 @@ import { Login } from '../src/components/public/Login.jsx';
 import { GuestMeals } from '../src/components/guest/meals.jsx';
 import { DeanTeam } from '../src/components/dean/DeanTeam.jsx';
 import { OperationsWorkbench } from '../src/components/staff/OperationsWorkbench.jsx';
+import { WellnessHistoryWorkbench } from '../src/components/staff/wellness-workbench.jsx';
 
 const originalFetch = globalThis.fetch;
 
@@ -90,5 +91,24 @@ describe('页面渲染冒烟（G14 web）', () => {
     await waitFor(() => expect(screen.getByText('在住客人')).toBeDefined());
     expect(screen.getByText('住客检索')).toBeDefined();
     await waitFor(() => expect(screen.getAllByText(/水疗 SPA/).length).toBeGreaterThan(0));
+  });
+  it('WellnessHistoryWorkbench 首帧（接口未返回）不崩溃并显示 0 条（G20 迁移回归）', () => {
+    globalThis.fetch = vi.fn(() => new Promise(() => {})); // 永不决断，锁定首帧 null 数据
+    render(<WellnessHistoryWorkbench canOpenDetails={false} notify={() => {}}/>);
+    expect(screen.getByText('审核事件')).toBeDefined();
+    expect(screen.getByText('0 条')).toBeDefined();
+  });
+
+  it('WellnessHistoryWorkbench 渲染审核历史条目', async () => {
+    routeFetch((url) => {
+      if (url.includes('/staff/therapy-review-history')) {
+        return { items: [{ id: 1, action: 'approved', guestName: '林海宁', actorName: '王医生', actorRole: 'clinician', reason: '资料已核对', draftId: 'wd1', createdAt: '2026-10-16T01:00:00Z', fromVersion: 1, toVersion: 2 }], total: 1 };
+      }
+      if (url.includes('/staff/therapy-review-attention')) return { items: [] };
+      return {};
+    });
+    render(<WellnessHistoryWorkbench canOpenDetails={false} notify={() => {}}/>);
+    await waitFor(() => expect(screen.getByText('1 条')).toBeDefined());
+    expect(screen.getByText(/林海宁 · 王医生/)).toBeDefined();
   });
 });

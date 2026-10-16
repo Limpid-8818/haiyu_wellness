@@ -188,8 +188,9 @@ export function WellnessHistoryWorkbench({ canOpenDetails, notify }) {
     fallbackMessage: '',
     onError: (loadError) => notify(loadError?.message || '审核历史暂时无法加载')
   });
-  // 与原实现一致：加载失败时清空结果列表（错误提示经 notify 呈现）。
-  const result = error ? { items: [], total: 0 } : historyData;
+  // 与原实现一致：初始未加载与加载失败都呈现空结果（G20 迁移曾丢失首帧空对象，
+  // 使 result 为 null 并在读取 result.total 时崩溃）。
+  const result = (error || !historyData) ? { items: [], total: 0 } : historyData;
 
   async function openVersion(draftId) {
     try { setSelectedDetail(await request(`/staff/therapy-drafts/${encodeURIComponent(draftId)}`)); }
