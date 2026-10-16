@@ -6,6 +6,13 @@ function asDate(value) {
   return date;
 }
 
+// 纯业务日期键运算，与时区无关；各业务模块不再各自复制这份实现。
+export function shiftDateKey(dateKey, days) {
+  const [year, month, day] = String(dateKey).split('-').map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1, day + days));
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}-${String(shifted.getUTCDate()).padStart(2, '0')}`;
+}
+
 export function createBusinessClock({ timeZone = DEFAULT_BUSINESS_TIME_ZONE, now = () => new Date() } = {}) {
   if (typeof now !== 'function') throw new TypeError('business clock source must be a function');
   const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -29,6 +36,19 @@ export function createBusinessClock({ timeZone = DEFAULT_BUSINESS_TIME_ZONE, now
     timeKey: (value = now()) => {
       const parts = localParts(value);
       return `${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`;
+    },
+    // 业务墙钟时间（本时区的某日某刻）转 UTC ISO；两轮校正兼容夏令时时区，替代各处硬编码的固定偏移。
+    localToUtc: (dateKey, timeKey = '00:00') => {
+      const [year, month, day] = String(dateKey).split('-').map(Number);
+      const [hour = 0, minute = 0] = String(timeKey).split(':').map(Number);
+      const wallAsUtc = Date.UTC(year, month - 1, day, hour, minute);
+      let stamp = wallAsUtc;
+      for (let pass = 0; pass < 2; pass += 1) {
+        const parts = localParts(stamp);
+        const observed = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+        stamp = wallAsUtc - (observed - stamp);
+      }
+      return new Date(stamp).toISOString();
     }
   });
 }

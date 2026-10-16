@@ -1,6 +1,6 @@
 import { AppError } from './errors.js';
 import { performance } from 'node:perf_hooks';
-import { db, guestProfile, json, now } from './db.js';
+import { db, guestProfile, json } from './db.js';
 import { authorizeGuestAccess } from './authorization.js';
 import { listProjects, getProject, listKnowledge, listRules } from './catalog.js';
 import { listGuestSchedule } from './booking.js';
@@ -12,6 +12,7 @@ import { evaluateProjectRules } from './rules-engine.js';
 import { proposeGuestAction } from './assistant-actions.js';
 import { searchOperationsCapacity, searchStaffReviewContext } from './stage26-operations.js';
 import { readCurrentEnvironmentSnapshot } from './environment.js';
+import { systemBusinessClock } from './clock.js';
 
 const allRoles = ['public', 'guest', 'staff', 'dean'];
 const privateRoles = ['guest', 'staff', 'dean'];
@@ -32,11 +33,7 @@ export function isRealCalendarDate(value) {
 }
 
 function shanghaiDate() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).formatToParts(new Date(now()));
-  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
-  return `${values.year}-${values.month}-${values.day}`;
+  return systemBusinessClock.dateKey();
 }
 
 function uniqueSources(items) {

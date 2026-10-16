@@ -5,26 +5,16 @@ import { effectiveHealthConstraints, normalizeHealthProfile } from './health-pro
 import { AppError } from './errors.js';
 import { getEnvironmentSnapshot } from './environment.js';
 import { assessEnvironmentWindow } from './environment-availability.js';
-import { systemBusinessClock } from './clock.js';
+import { shiftDateKey, systemBusinessClock } from './clock.js';
 import { isDateOnly } from './staffing.js';
 
 const SLOT_MINUTES = 60;
-const BUSINESS_TIME_ZONE = 'Asia/Shanghai';
 const DAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 const lockSuffix = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
 const inTransaction = callback => hasActiveTransaction() ? callback() : transaction(callback);
 
-function dateOffset(date, amount) {
-  const value = new Date(`${date}T12:00:00Z`);
-  value.setUTCDate(value.getUTCDate() + amount);
-  return value.toISOString().slice(0, 10);
-}
-
 function localDateTimeToUtc(date, time) {
-  const [year, month, day] = date.split('-').map(Number);
-  const [hour, minute] = time.split(':').map(Number);
-  // Asia/Shanghai has used UTC+08:00 without daylight-saving changes.
-  return new Date(Date.UTC(year, month - 1, day, hour - 8, minute)).toISOString();
+  return systemBusinessClock.localToUtc(date, time);
 }
 
 function dateDay(date) {
@@ -100,12 +90,12 @@ export async function ensureProjectSlots(project, { startDate = systemBusinessCl
   // 成百上千次注定冲突的 INSERT，也不在无需写入时开启写事务（G07）。
   const expected = [];
   for (let offset = 0; offset < days; offset += 1) {
-    const date = dateOffset(startDate, offset);
+    const date = shiftDateKey(startDate, offset);
     for (const slot of slotWindowsForDate(project, date)) expected.push(slot);
   }
   const existingRows = await db.prepare(`SELECT id FROM activity_slots
     WHERE project_id=? AND business_date>=? AND business_date<?`).all(
-    project.id, startDate, dateOffset(startDate, days)
+    project.id, startDate, shiftDateKey(startDate, days)
   );
   const existing = new Set(existingRows.map(row => row.id));
   const missing = expected.filter(slot => !existing.has(slot.id));
@@ -129,7 +119,7 @@ export async function ensureProjectSlots(project, { startDate = systemBusinessCl
   }
   const count = Number((await db.prepare(`SELECT COUNT(*) AS count FROM activity_slots
     WHERE project_id=? AND business_date>=? AND business_date<?`).get(
-    project.id, startDate, dateOffset(startDate, days)
+    project.id, startDate, shiftDateKey(startDate, days)
   )).count || 0);
   return { generated, slotCount: count };
 }
@@ -265,7 +255,7 @@ async function slotRows(projectId, date) {
 
 function withinNextSevenDays(date) {
   const today = systemBusinessClock.dateKey();
-  return isDateOnly(date) && date >= today && date <= dateOffset(today, 6);
+  return isDateOnly(date) && date >= today && date <= shiftDateKey(today, 6);
 }
 
 async function guestProjectSlots(project, date, guestId) {
@@ -295,7 +285,7 @@ async function guestProjectSlots(project, date, guestId) {
     result.push({ ...slot, remaining, status, available: status === 'available', bookable: status === 'available',
       reason, environment: { ...environment, reason: environment.reason }, isDemo: Boolean(project.isDemo || environment.isDemo) });
   }
-  return { projectId, projectName: project.name, date, timeZone: BUSINESS_TIME_ZONE, isDemo: project.isDemo, slots: result };
+  return { projectId, projectName: project.name, date, timeZone: systemBusinessClock.timeZone, isDemo: project.isDemo, slots: result };
 }
 
 export async function inspectGuestProjectSlots(projectId, date, guestId) {

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { shiftDateKey, systemBusinessClock } from './clock.js';
 
 export const HOUSEHOLD_AGENT = Object.freeze({
   agentId: 'household.concierge',
@@ -268,10 +269,5 @@ export function validateCoordinatorSelection(content, allowedIds) {
 
 export function nextBusinessDate(nowIso) {
   const source = nowIso ? new Date(nowIso) : new Date();
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).formatToParts(source);
-  const date = Object.fromEntries(parts.map(part => [part.type, part.value]));
-  const shifted = new Date(Date.UTC(Number(date.year), Number(date.month) - 1, Number(date.day) + 1));
-  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}-${String(shifted.getUTCDate()).padStart(2, '0')}`;
+  return shiftDateKey(systemBusinessClock.dateKey(source), 1);
 }
