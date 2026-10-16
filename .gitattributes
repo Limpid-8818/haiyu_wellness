@@ -1,2 +1,6 @@
 # Historical Markdown reports use two trailing spaces for intentional line breaks.
 wangshanchong/*.md whitespace=-blank-at-eol
+
+# Synthesized demo audio assets are binary
+*.wav binary
+*.ogg binary
