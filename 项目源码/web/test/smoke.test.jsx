@@ -7,6 +7,7 @@ import { GuestMeals } from '../src/components/guest/meals.jsx';
 import { DeanTeam } from '../src/components/dean/DeanTeam.jsx';
 import { OperationsWorkbench } from '../src/components/staff/OperationsWorkbench.jsx';
 import { WellnessHistoryWorkbench } from '../src/components/staff/wellness-workbench.jsx';
+import { ClinicianHealthReview } from '../src/components/staff/guests.jsx';
 
 const originalFetch = globalThis.fetch;
 
@@ -92,6 +93,15 @@ describe('页面渲染冒烟（G14 web）', () => {
     expect(screen.getByText('住客检索')).toBeDefined();
     await waitFor(() => expect(screen.getAllByText(/水疗 SPA/).length).toBeGreaterThan(0));
   });
+  it('ClinicianHealthReview 加载失败时不崩溃并显示空队列（存量同型缺陷回归）', async () => {
+    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ error: '服务器内部错误', code: 'INTERNAL_ERROR' }), { status: 500 }));
+    const notices = [];
+    render(<ClinicianHealthReview guestId="guest_001" notify={(message) => notices.push(message)} onGuestRefresh={() => {}}/>);
+    await waitFor(() => expect(notices.length).toBeGreaterThan(0));
+    expect(screen.getByText('当前没有待核实采集')).toBeDefined();
+    expect(screen.getByText(/正式档案版本 0/)).toBeDefined();
+  });
+
   it('WellnessHistoryWorkbench 首帧（接口未返回）不崩溃并显示 0 条（G20 迁移回归）', () => {
     globalThis.fetch = vi.fn(() => new Promise(() => {})); // 永不决断，锁定首帧 null 数据
     render(<WellnessHistoryWorkbench canOpenDetails={false} notify={() => {}}/>);
