@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { db, now, guestProfile, guestSummary, log, transaction, json } from './db.js';
+import { stableJson } from './stable-json.js';
 import { collaborationState, healthDisclosure } from './agent-presentation.js';
 import { authorizeGuestAccess } from './authorization.js';
 import { AppError } from './errors.js';
@@ -306,12 +307,6 @@ function normalizedClientRequestId(value) {
     throw new AppError(400, 'ASSISTANT_REQUEST_ID_INVALID', '请求编号格式不正确');
   }
   return value;
-}
-
-function stableJson(value) {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
-  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
-  return JSON.stringify(value);
 }
 
 function estimatedModelCost(inputTokens, outputTokens, model) {

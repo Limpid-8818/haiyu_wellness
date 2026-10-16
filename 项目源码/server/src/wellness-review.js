@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { db, id, json, log, now, transaction } from './db.js';
+import { db, id, json, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { createReservation, evaluateExistingDraftSlot } from './booking.js';
 import { getProject } from './catalog.js';
@@ -8,7 +8,6 @@ import { canManageStaff, isDateOnly, jobTypeFor } from './staffing.js';
 import { getWellnessDraft } from './wellness-planner.js';
 import { createCareFollowUpTask, createNotificationOnce } from './wellness-notifications.js';
 
-const lock = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
 const MAX_REASON = 1000;
 
 function text(value, limit = MAX_REASON) {
@@ -17,7 +16,7 @@ function text(value, limit = MAX_REASON) {
 
 function draftRow(draftId, forUpdate = false) {
   return db.prepare(`SELECT d.*,u.name AS guest_name FROM wellness_drafts d
-    JOIN users u ON u.id=d.guest_id WHERE d.id=?${forUpdate ? lock() : ''}`).get(draftId);
+    JOIN users u ON u.id=d.guest_id WHERE d.id=?${forUpdate ? mysqlLockSuffix() : ''}`).get(draftId);
 }
 
 function activitySlotSource(item) {
@@ -195,7 +194,7 @@ async function copyVersion({ actor, source, edits, reason, requestKey, requestFi
         p.active AS project_active,p.slug,p.activity_tag,p.open_windows_json,p.capacity_per_window,p.category,p.intensity,
         p.sea_entry,p.outdoor,p.suitable_people,p.contraindications,p.description,p.source_reference,p.updated_at AS project_updated_at,
         (SELECT COUNT(*) FROM reservations r WHERE r.slot_id=s.id AND r.status='confirmed') AS booked
-      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.id=?${lock()}`).get(slotId);
+      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.id=?${mysqlLockSuffix()}`).get(slotId);
     if (!slotRow) throw new AppError(409, 'WELLNESS_SLOT_UNAVAILABLE', '所选时段不存在或已下架');
     const project = await getProject(slotRow.project_id);
     if (!project?.active) throw new AppError(409, 'WELLNESS_SLOT_UNAVAILABLE', '所选项目已停用');
@@ -496,7 +495,7 @@ export async function correctActiveWellnessDraft({ actor, draftId, version, edit
       throw new AppError(409, 'WELLNESS_REVIEW_STATE', '只有已激活版本可以纠正');
     }
     const oldReservations = await db.prepare(`SELECT r.id FROM reservations r JOIN activity_slots s ON s.id=r.slot_id
-      WHERE r.wellness_draft_id=? AND r.status='confirmed' AND s.starts_at>?${lock()}`).all(source.id, now());
+      WHERE r.wellness_draft_id=? AND r.status='confirmed' AND s.starts_at>?${mysqlLockSuffix()}`).all(source.id, now());
     for (const reservation of oldReservations) {
       await db.prepare(`UPDATE reservations SET status='cancelled',cancelled_at=?,cancellation_reason='wellness_corrected'
         WHERE id=? AND status='confirmed'`).run(now(), reservation.id);

@@ -1,10 +1,4 @@
-import { db, id, now } from './db.js';
-
-function duplicateConstraint(error) {
-  return error?.code === 'ER_DUP_ENTRY' || error?.errno === 1062
-    || String(error?.code || '').startsWith('SQLITE_CONSTRAINT')
-    || /UNIQUE constraint failed/i.test(String(error?.message || ''));
-}
+import { db, id, isUniqueViolation, now } from './db.js';
 
 export async function createNotificationOnce({ guestId, sourceType, sourceId, message, targetType,
   targetId = '', targetUrl, notificationType = 'update', draftId = null, createdAt = now() }) {
@@ -26,7 +20,7 @@ export async function createNotificationOnce({ guestId, sourceType, sourceId, me
       notificationType);
     created = true;
   } catch (error) {
-    if (!duplicateConstraint(error)) throw error;
+    if (!isUniqueViolation(error)) throw error;
   }
   const row = await db.prepare(`SELECT id,guest_id AS guestId,source_type AS sourceType,source_id AS sourceId,
     target_type AS targetType,target_id AS targetId,target_url AS targetUrl,notification_type AS notificationType,
@@ -74,7 +68,7 @@ export async function createCareFollowUpTask({ guestId, sourceType, sourceId, ti
       VALUES(?,?,?,?,?,?,?,'open',?,?)`).run(id('care_task'), guestId, assignment.assigneeId,
       sourceType, source, String(title).slice(0, 180), String(detail).slice(0, 1200), at, at);
   } catch (error) {
-    if (!duplicateConstraint(error)) throw error;
+    if (!isUniqueViolation(error)) throw error;
   }
   const task = await db.prepare(`SELECT id,status,assignee_id AS assigneeId FROM care_follow_up_tasks
     WHERE guest_id=? AND source_type=? AND source_id=?`).get(guestId, sourceType, source);

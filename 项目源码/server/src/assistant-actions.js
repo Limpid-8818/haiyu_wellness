@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
-import { db, guestProfile, hasActiveTransaction, id, json, log, now, transaction } from './db.js';
+import { db, guestProfile, id, inTransaction, json, log, mysqlLockSuffix, now, transaction } from './db.js';
+import { stableJson } from './stable-json.js';
 import { AppError } from './errors.js';
 import { authorizeGuestAccess } from './authorization.js';
 import { getProject } from './catalog.js';
@@ -13,17 +14,6 @@ import { mealDeliveryTiming } from './meal-policy.js';
 const ACTION_TTL_MS = 10 * 60 * 1000;
 const ACTION_TYPES = new Set(['book_program','cancel_booking','book_meal','swap_dish','record_metric','rest_change']);
 const OPEN_STATUSES = ['needs_input','pending_confirmation'];
-const LOCK = db.driver === 'mysql' ? ' FOR UPDATE' : '';
-const inTransaction = callback => hasActiveTransaction() ? callback() : transaction(callback);
-
-function stableJson(value) {
-  if (value instanceof Date) return JSON.stringify(value.toISOString());
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
-  if (value && typeof value === 'object') {
-    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
-  }
-  return JSON.stringify(value);
-}
 
 function digest(value) { return crypto.createHash('sha256').update(value).digest('hex'); }
 function safeText(value, max = 160) { return typeof value === 'string' ? value.trim().slice(0, max) : ''; }
@@ -379,10 +369,10 @@ export async function proposeGuestAction({ actionType, parameters, user, role, g
   let createdId;
   let stalePreviousAction = false;
   await inTransaction(async () => {
-    await db.prepare(`SELECT id FROM assistant_sessions WHERE id=? AND user_id=? AND assistant_role='guest'${LOCK}`)
+    await db.prepare(`SELECT id FROM assistant_sessions WHERE id=? AND user_id=? AND assistant_role='guest'${mysqlLockSuffix()}`)
       .get(sessionId, user.id);
     const previous = await db.prepare(`SELECT * FROM assistant_action_cards WHERE guest_id=? AND session_id=?
-      AND action_type=? AND status IN ('needs_input','pending_confirmation') ORDER BY created_at DESC,id DESC LIMIT 1${LOCK}`)
+      AND action_type=? AND status IN ('needs_input','pending_confirmation') ORDER BY created_at DESC,id DESC LIMIT 1${mysqlLockSuffix()}`)
       .get(guestId, sessionId, actionType);
     if (expectedPreviousCard) {
       const expired = previous?.expires_at && Date.parse(previous.expires_at) <= Date.parse(now());
@@ -575,13 +565,13 @@ export async function confirmAssistantAction({ user, actionId, sessionId, versio
   let outcome;
   try {
     outcome = await inTransaction(async () => {
-      const row = await db.prepare(`SELECT * FROM assistant_action_cards WHERE id=? AND guest_id=? AND session_id=?${LOCK}`)
+      const row = await db.prepare(`SELECT * FROM assistant_action_cards WHERE id=? AND guest_id=? AND session_id=?${mysqlLockSuffix()}`)
         .get(actionId, user.id, sessionId);
       if (!row) throw new AppError(404, 'ASSISTANT_ACTION_NOT_FOUND', '助手操作卡不存在');
       if (row.status === 'confirmed') return { card: await currentPublicAction(row) };
       if (Number(row.version) !== Number(version)) throw new AppError(409, 'ASSISTANT_ACTION_VERSION_STALE', '确认卡版本已变化，请重新加载当前确认卡');
       if (row.status !== 'pending_confirmation') return { card: await currentPublicAction(row) };
-      const session = await db.prepare(`SELECT * FROM assistant_sessions WHERE id=?${LOCK}`).get(sessionId);
+      const session = await db.prepare(`SELECT * FROM assistant_sessions WHERE id=?${mysqlLockSuffix()}`).get(sessionId);
       if (!session || session.user_id !== user.id || session.assistant_role !== 'guest'
         || session.related_guest_id !== user.id || session.status !== 'active'
         || Date.parse(session.expires_at) <= Date.parse(now())) {

@@ -6,7 +6,7 @@ Object.assign(process.env, {
   ENVIRONMENT_MODE: 'unavailable', ENVIRONMENT_LIVE: '0'
 });
 const { app } = await import('../src/app.js');
-const { db, transaction, hashPassword, now, sqliteCachedStatementCount } = await import('../src/db.js');
+const { db, transaction, hashPassword, now, sqliteCachedStatementCount, isUniqueViolation } = await import('../src/db.js');
 const { initializeDemoTeam } = await import('../src/demo-team.js');
 await initializeDemoTeam({ database: db, transact: transaction, hashPassword, stamp: now() });
 const server = app.listen(0, '127.0.0.1');
@@ -92,4 +92,25 @@ test('G22: repeated statements reuse the prepared-statement cache without growth
   assert.equal(sqliteCachedStatementCount(), sizeAfterFirst, 'same SQL must not grow the cache');
   await db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get();
   assert.equal(sqliteCachedStatementCount(), sizeAfterFirst + 1, 'a new SQL text adds exactly one cache entry');
+});
+
+test('G44: isUniqueViolation only treats unique/PK conflicts as duplicates — FK and CHECK failures must propagate', async () => {
+  // 唯一键冲突（通知表的 guest_id+source_type+source_id 唯一键）必须识别为重复
+  const insertNotification = () => db.prepare(`INSERT INTO wellness_local_notifications
+    (id,guest_id,draft_id,event_key,message,created_at,source_type,source_id,target_type,target_id,target_url,notification_type,read_at)
+    VALUES('g44dup','guest_001',NULL,'g44-key','重复','2030-01-01T00:00:00.000Z','daily_brief','2030-01-01','daily_brief','x','caretaker','brief',NULL)`).run();
+  await insertNotification();
+  const duplicate = await insertNotification().then(() => null, error => error);
+  assert.ok(duplicate, 'second insert with same unique key must fail');
+  assert.equal(isUniqueViolation(duplicate), true);
+
+  // 外键失败不属于重复：插入引用不存在客人的档案行，错误必须原样可抛出
+  const foreignKey = await db.prepare(`INSERT INTO guest_profiles
+    (user_id,gender,birth_date,room_no,check_in,check_out,emergency_contact,chronic_json,allergies_json,mobility)
+    VALUES('user_missing_g44','女',NULL,NULL,NULL,NULL,'','[]','[]','')`).run()
+    .then(() => null, error => error);
+  assert.ok(foreignKey, 'FK-violating insert must fail');
+  assert.equal(isUniqueViolation(foreignKey), false, 'FK failure swallowed as duplicate would mask data corruption');
+  assert.ok(foreignKey?.errcode === 787 || /FOREIGN KEY/i.test(String(foreignKey?.message || foreignKey?.code || '')),
+    `expected an FK-specific error, got errcode=${foreignKey?.errcode} code=${foreignKey?.code}`);
 });

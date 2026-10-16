@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AppError } from './errors.js';
-import { db, now } from './db.js';
+import { db, isUniqueViolation, now } from './db.js';
 import { shiftDateKey, systemBusinessClock } from './clock.js';
 import { recordReplanSourceEvent } from './wellness-followup.js';
 
@@ -296,8 +296,7 @@ export async function recordMoodResourcePlay({ guestId, resourceId, eventId }) {
       VALUES(?,?,?,?)`).run(guestId, resourceId, eventId, playedAt);
     return { id: Number(result.lastInsertRowid), resourceId, eventId, playedAt, duplicate: false };
   } catch (error) {
-    if (error?.code !== 'SQLITE_CONSTRAINT_UNIQUE' && error?.errcode !== 2067 && error?.errcode !== 1555
-      && error?.code !== 'ER_DUP_ENTRY' && error?.errno !== 1062) throw error;
+    if (!isUniqueViolation(error)) throw error;
     const row = await db.prepare(`SELECT id,resource_id AS resourceId,event_id AS eventId,played_at AS playedAt
       FROM mood_resource_events WHERE guest_id=? AND event_id=?`).get(guestId, eventId);
     return { id: Number(row.id), resourceId: row.resourceId ?? row.resource_id, eventId: row.eventId ?? row.event_id,

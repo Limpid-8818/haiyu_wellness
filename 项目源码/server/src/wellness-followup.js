@@ -1,10 +1,9 @@
-import { db, hasActiveTransaction, id, log, now, transaction } from './db.js';
+import { db, id, inTransaction, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { systemBusinessClock } from './clock.js';
 import {checkinAvailability} from '../../shared/release-presentation.js';
 
 const FEELINGS = new Set(['comfortable', 'general', 'uncomfortable']);
-const lockSuffix = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
 
 function jsonValue(value, fallback = {}) {
   if (value && typeof value === 'object') return value;
@@ -79,7 +78,7 @@ export async function recordReplanSourceEvent({ guestId, sourceType, sourceId, s
     }
     return await db.prepare('SELECT * FROM wellness_replan_events WHERE id=?').get(eventId);
   };
-  return hasActiveTransaction() ? persist() : transaction(persist);
+  return inTransaction(persist);
 }
 
 async function reservationForGuest(guestId, reservationId, forUpdate = false) {
@@ -87,7 +86,7 @@ async function reservationForGuest(guestId, reservationId, forUpdate = false) {
       s.id AS slotId,s.business_date AS businessDate,s.starts_at AS startsAt,s.ends_at AS endsAt,
       s.local_start AS localStart,s.local_end AS localEnd,p.name AS projectName,p.location
     FROM reservations r JOIN activity_slots s ON s.id=r.slot_id JOIN projects p ON p.id=s.project_id
-    WHERE r.id=? AND r.guest_id=?${forUpdate ? lockSuffix() : ''}`).get(reservationId, guestId);
+    WHERE r.id=? AND r.guest_id=?${forUpdate ? mysqlLockSuffix() : ''}`).get(reservationId, guestId);
 }
 
 export async function listGuestCheckins(guestId) {
@@ -175,7 +174,7 @@ export async function createGuestFeedback({ guestId, reservationId, body, clock 
   return await transaction(async () => {
     const reservation = await reservationForGuest(guestId, reservationId, true);
     if (!reservation) throw new AppError(404, 'RESERVATION_NOT_FOUND', '没有找到本人预约');
-    const checkin = await db.prepare(`SELECT id FROM wellness_checkins WHERE reservation_id=? AND guest_id=?${lockSuffix()}`)
+    const checkin = await db.prepare(`SELECT id FROM wellness_checkins WHERE reservation_id=? AND guest_id=?${mysqlLockSuffix()}`)
       .get(reservationId, guestId);
     if (!checkin) throw new AppError(409, 'FEEDBACK_CHECKIN_REQUIRED', '请先完成本人预约签到，再提交项目感受');
     const existing = await db.prepare('SELECT * FROM wellness_feedback WHERE reservation_id=?').get(reservationId);
@@ -206,7 +205,7 @@ export async function updateGuestFeedback({ guestId, feedbackId, body, clock = s
   }
   const input = feedbackInput(body);
   return await transaction(async () => {
-    const current = await db.prepare(`SELECT * FROM wellness_feedback WHERE id=? AND guest_id=?${lockSuffix()}`)
+    const current = await db.prepare(`SELECT * FROM wellness_feedback WHERE id=? AND guest_id=?${mysqlLockSuffix()}`)
       .get(feedbackId, guestId);
     if (!current) throw new AppError(404, 'WELLNESS_FEEDBACK_NOT_FOUND', '本人反馈不存在');
     const businessDate = dateText(current.business_date);

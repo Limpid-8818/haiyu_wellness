@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { db, guestProfile, id, json, now, log, transaction, hasActiveTransaction } from './db.js';
+import { db, guestProfile, id, inTransaction, json, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { effectiveHealthConstraints, normalizeHealthProfile } from './health-profile.js';
 import { isDateOnly, stayStatus, jobTypeFor } from './staffing.js';
@@ -8,8 +8,6 @@ import { chooseMenuDish, MEAL_RECOMMENDATION_POLICY, mealDeliveryTiming } from '
 
 const MEALS = ['breakfast', 'lunch', 'dinner'];
 const SLOTS = ['main', 'side', 'soup'];
-const LOCK = db.driver === 'mysql' ? ' FOR UPDATE' : '';
-const inTransaction = callback => hasActiveTransaction() ? callback() : transaction(callback);
 
 function decode(value, fallback = []) {
   const parsed = json(value, fallback);
@@ -81,12 +79,12 @@ function safeJsonProfile(value) {
 
 async function healthState(guestId, { lock = false } = {}) {
   const profileRow = await db.prepare(`SELECT user_id,health_profile_json,health_profile_version,allergies_json,
-      check_in,check_out,room_no FROM guest_profiles WHERE user_id=?${lock ? LOCK : ''}`).get(guestId);
+      check_in,check_out,room_no FROM guest_profiles WHERE user_id=?${lock ? mysqlLockSuffix() : ''}`).get(guestId);
   if (!profileRow) throw new AppError(409, 'PROFILE_NOT_READY', '客人档案尚未建立，暂不能生成餐单');
   const profile = safeJsonProfile(profileRow.health_profile_json);
   const legacyAllergies = decode(profileRow.allergies_json, []);
   const pendingRows = await db.prepare(`SELECT id,source,structured_json AS structuredJson FROM health_intakes
-    WHERE guest_id=? AND status='pending' ORDER BY revision DESC,id DESC${lock ? LOCK : ''}`).all(guestId);
+    WHERE guest_id=? AND status='pending' ORDER BY revision DESC,id DESC${lock ? mysqlLockSuffix() : ''}`).all(guestId);
   const pendingIntakes = pendingRows.map(row => ({
     id: row.id,
     source: row.source || 'pending-intake',
@@ -338,7 +336,7 @@ function hash(value) {
 }
 
 async function menuForGuest(guestId, businessDate, { lock = false } = {}) {
-  const row = await db.prepare(`SELECT * FROM meal_menus WHERE guest_id=? AND business_date=?${lock ? LOCK : ''}`)
+  const row = await db.prepare(`SELECT * FROM meal_menus WHERE guest_id=? AND business_date=?${lock ? mysqlLockSuffix() : ''}`)
     .get(guestId, businessDate);
   return row || null;
 }
@@ -349,7 +347,7 @@ async function menuItems(menuId, { lock = false } = {}) {
       d.supply_status,d.non_seafood_alternative_id,d.is_demo
     FROM meal_menu_items mi LEFT JOIN dishes d ON d.id=mi.dish_id
     WHERE mi.menu_id=? ORDER BY CASE mi.meal_type WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2 ELSE 3 END,
-      CASE mi.slot WHEN 'main' THEN 1 WHEN 'side' THEN 2 ELSE 3 END${lock ? LOCK : ''}`).all(menuId);
+      CASE mi.slot WHEN 'main' THEN 1 WHEN 'side' THEN 2 ELSE 3 END${lock ? mysqlLockSuffix() : ''}`).all(menuId);
   return rows.map(row => ({
     id: row.id, mealType: row.meal_type, slot: row.slot, dish: decodeDish(row.dish_id ? {
       ...row, id: row.dish_id, slot: row.dish_slot
@@ -514,7 +512,7 @@ export async function reviewGuestMenu({ guestId, menuId: menuIdValue, version })
 }
 
 async function menuById(menuId, { lock = false } = {}) {
-  return db.prepare(`SELECT * FROM meal_menus WHERE id=?${lock ? LOCK : ''}`).get(menuId);
+  return db.prepare(`SELECT * FROM meal_menus WHERE id=?${lock ? mysqlLockSuffix() : ''}`).get(menuId);
 }
 
 function validateDishForSlot(dish, item, mealType, health) {
@@ -537,7 +535,7 @@ function validateDishForSlot(dish, item, mealType, health) {
 }
 
 async function loadOrder(orderId, { lock = false } = {}) {
-  const row = await db.prepare(`SELECT * FROM meal_orders WHERE id=?${lock ? LOCK : ''}`).get(orderId);
+  const row = await db.prepare(`SELECT * FROM meal_orders WHERE id=?${lock ? mysqlLockSuffix() : ''}`).get(orderId);
   return row ? decodeOrder(row) : null;
 }
 
@@ -555,7 +553,7 @@ function decodeOrder(row) {
 }
 
 async function updateReservedOrderSnapshot(menu, mealType, version, health) {
-  const orderRow = await db.prepare(`SELECT * FROM meal_orders WHERE guest_id=? AND business_date=? AND meal_type=?${LOCK}`)
+  const orderRow = await db.prepare(`SELECT * FROM meal_orders WHERE guest_id=? AND business_date=? AND meal_type=?${mysqlLockSuffix()}`)
     .get(menu.guest_id, menu.business_date, mealType);
   if (!orderRow) return;
   const paused = orderRow.status === 'preparing' && (await orderWithReview(orderRow, health)).reviewRequired;
@@ -606,7 +604,7 @@ export async function replaceMenuItem({ guestId, menuId: menuIdValue, itemId, ve
     if (menu.guest_id !== guestId) throw new AppError(403, 'MEAL_MENU_FORBIDDEN', '只能修改本人的餐单');
     if (Number(menu.version) !== version) throw new AppError(409, 'MEAL_MENU_STALE_VERSION', '餐单已更新，请刷新后再替换', { currentVersion: Number(menu.version) });
     dateInStay(health, String(menu.business_date).slice(0, 10));
-    const itemRow = await db.prepare(`SELECT * FROM meal_menu_items WHERE id=? AND menu_id=?${LOCK}`).get(itemId, menu.id);
+    const itemRow = await db.prepare(`SELECT * FROM meal_menu_items WHERE id=? AND menu_id=?${mysqlLockSuffix()}`).get(itemId, menu.id);
     if (!itemRow) throw new AppError(404, 'MEAL_ITEM_NOT_FOUND', '餐位不存在');
     const dishRow = await db.prepare('SELECT * FROM dishes WHERE id=?').get(dishId);
     if (!dishRow) throw new AppError(404, 'MEAL_DISH_NOT_FOUND', '菜品不存在');
@@ -699,7 +697,7 @@ async function lockedOrderHealth(user, orderId) {
   await authorizeGuestAccess(user, target.guest_id);
   // Match menu replacement's lock order to avoid order/profile lock inversion on MySQL.
   const health = await healthState(target.guest_id, { lock: true });
-  const row = await db.prepare(`SELECT * FROM meal_orders WHERE id=?${LOCK}`).get(orderId);
+  const row = await db.prepare(`SELECT * FROM meal_orders WHERE id=?${mysqlLockSuffix()}`).get(orderId);
   return { row, health };
 }
 
@@ -726,10 +724,10 @@ export async function createGuestMealOrder({ guestId, idempotencyKey, menuId: me
       throw new AppError(404, 'MEAL_MENU_NOT_FOUND', '没有找到本人所选日期的已保存餐单');
     }
     const priorRequest = await db.prepare(`SELECT request_fingerprint AS requestFingerprint,order_id AS orderId
-      FROM meal_order_requests WHERE guest_id=? AND idempotency_key=?${LOCK}`).get(guestId, idempotencyKey);
+      FROM meal_order_requests WHERE guest_id=? AND idempotency_key=?${mysqlLockSuffix()}`).get(guestId, idempotencyKey);
     if (priorRequest) {
       if (priorRequest.requestFingerprint !== fingerprint) throw new AppError(409, 'MEAL_IDEMPOTENCY_CONFLICT', '相同幂等键不能用于不同订单请求');
-      const order = await orderWithReview(await db.prepare(`SELECT * FROM meal_orders WHERE id=?${LOCK}`).get(priorRequest.orderId), health);
+      const order = await orderWithReview(await db.prepare(`SELECT * FROM meal_orders WHERE id=?${mysqlLockSuffix()}`).get(priorRequest.orderId), health);
       return { order, replayed: true };
     }
     if (Number(menu.version) !== version) throw new AppError(409, 'MEAL_MENU_STALE_VERSION', '餐单已更新，请刷新后再提交订单', { currentVersion: Number(menu.version) });
@@ -742,7 +740,7 @@ export async function createGuestMealOrder({ guestId, idempotencyKey, menuId: me
     const orderDishes = mealItems.map(item => ({ ...dishSnapshot(item.dish), slot: item.slot }));
     const eligibility = await orderEligibility({ dishes: orderDishes, mealType }, health);
     if (eligibility.length) throw new AppError(409, 'MEAL_ORDER_RESTRICTED', '请先完成健康限制核实再提交订单', { reasons: eligibility });
-    const existing = await db.prepare(`SELECT * FROM meal_orders WHERE guest_id=? AND business_date=? AND meal_type=?${LOCK}`)
+    const existing = await db.prepare(`SELECT * FROM meal_orders WHERE guest_id=? AND business_date=? AND meal_type=?${mysqlLockSuffix()}`)
       .get(guestId, businessDate, mealType);
     if (existing) {
       if (existing.request_fingerprint !== fingerprint) throw new AppError(409, 'MEAL_ORDER_ALREADY_EXISTS', '该日期和餐次已有订单，刷新页面查看当前状态');

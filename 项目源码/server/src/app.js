@@ -3,7 +3,7 @@ import cors from 'cors';
 import crypto from 'node:crypto';
 import {
   db, hashPassword, verifyPassword, now, log, publicUser, guestProfile, guestSummary, transaction, json, id,
-  escapeLikeValue, likeEscapeClause
+  escapeLikeValue, isUniqueViolation, likeEscapeClause
 } from './db.js';
 import { signToken, readToken } from './auth.js';
 import { recordStaffExecution } from './service-execution.js';
@@ -151,11 +151,6 @@ async function operationsSummaryOnly(req, _res, next) {
   return capabilities.operationsSummaryView
     ? next()
     : next(new AppError(403, 'CAPABILITY_FORBIDDEN', '当前岗位未获查看运营汇总的权限'));
-}
-
-function duplicateConstraint(error) {
-  return error?.code === 'SQLITE_CONSTRAINT_UNIQUE' || error?.errcode === 2067 || error?.errcode === 1555
-    || error?.code === 'ER_DUP_ENTRY' || error?.errno === 1062;
 }
 
 function publicStaffRow(row) {
@@ -701,7 +696,7 @@ routes.post('/api/auth/register', async (req, res) => {
       await log(guestId, 'guest.register', 'guest', guestId, '手机号注册，入住状态待办理');
     });
   } catch (error) {
-    if (duplicateConstraint(error)) throw new AppError(409, 'REGISTER_PHONE_TAKEN', '该手机号已注册，请直接登录');
+    if (isUniqueViolation(error)) throw new AppError(409, 'REGISTER_PHONE_TAKEN', '该手机号已注册，请直接登录');
     throw error;
   }
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(guestId);
@@ -843,7 +838,7 @@ routes.post('/api/me/moods', auth, async (req, res) => {
   try {
     record = await transaction(() => createMoodRecord({ guestId: req.user.id, actorId: req.user.id, ...input }));
   } catch (error) {
-    if (!duplicateConstraint(error)) throw error;
+    if (!isUniqueViolation(error)) throw error;
     const existing = await getTodayMood(req.user.id);
     throw new AppError(409, 'MOOD_ALREADY_RECORDED', '今天已经记录过心情，请打开今天的记录并明确修改。', {
       recordId: existing?.id ?? null, businessDate: existing?.businessDate ?? null
@@ -1195,7 +1190,7 @@ routes.post('/api/dean/staff', auth, staffManagementOnly, async (req, res) => {
       await log(req.user.id, 'staff.create', 'staff', staffId, `创建${jobTypeLabel(jobType)}账号 ${username}`);
     });
   } catch (error) {
-    if (duplicateConstraint(error)) throw new AppError(409, 'STAFF_USERNAME_TAKEN', '该账号已存在');
+    if (isUniqueViolation(error)) throw new AppError(409, 'STAFF_USERNAME_TAKEN', '该账号已存在');
     throw error;
   }
   const created = await db.prepare(`SELECT id,name,username,phone,status,job_type AS jobType,created_at AS createdAt
@@ -1330,7 +1325,7 @@ routes.post('/api/dean/guests/:id/assignments', auth, staffManagementOnly, async
       return inserted;
     });
   } catch (error) {
-    if (duplicateConstraint(error)) throw new AppError(409, 'ASSIGNMENT_EXISTS', '该工作人员与客人已有此开始时间的分工');
+    if (isUniqueViolation(error)) throw new AppError(409, 'ASSIGNMENT_EXISTS', '该工作人员与客人已有此开始时间的分工');
     throw error;
   }
   res.status(201).json({ id: Number(assignment.lastInsertRowid), staffId: staff.id, guestId: guest.id, startAt, status: 'active' });
