@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import mysql from 'mysql2/promise';
 import { hashPassword as makePasswordHash, verifyPassword as checkPassword } from './password.js';
-import { systemBusinessClock } from './clock.js';
+import { shiftDateKey, systemBusinessClock } from './clock.js';
 import { mysqlCoreSchema, sqliteCoreSchema } from './schema.js';
 import { mysqlCatalogSchema, sqliteCatalogSchema } from './catalog-schema.js';
 import { mysqlEnvironmentSchema, sqliteEnvironmentSchema } from './environment-schema.js';
@@ -895,9 +895,7 @@ async function seedDemo() {
   const deanId = 'dean_001';
   const stamp = now();
   const demoCheckIn = systemBusinessClock.dateKey();
-  const demoCheckOutDate = new Date(`${demoCheckIn}T12:00:00Z`);
-  demoCheckOutDate.setUTCDate(demoCheckOutDate.getUTCDate() + 14);
-  const demoCheckOut = demoCheckOutDate.toISOString().slice(0, 10);
+  const demoCheckOut = shiftDateKey(demoCheckIn, 14);
   await transaction(async () => {
     await db.prepare('INSERT INTO users(id,username,password_hash,role,name,phone) VALUES(?,?,?,?,?,?)')
       .run(guestId, 'guest_demo', hashPassword('guest2026'), 'guest', '林海宁', '13800000001');

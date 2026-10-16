@@ -1,3 +1,5 @@
+import { systemBusinessClock } from './clock.js';
+
 export const MEAL_RECOMMENDATION_POLICY = Object.freeze({
   version: 'catalog_rotation_v1', method: 'catalog_rules', label: '目录规则推荐',
   description: '先核供应、餐次、餐位与记录限制；早餐优先专用菜，当日优先不重复，按业务日期轮换。保存后不重排；未提交订单不代表点餐。'
@@ -18,10 +20,9 @@ export function chooseMenuDish({ eligible, usedIds, businessDate, mealType, slot
   return { dish, reason: `目录规则推荐：按生成时记录限制筛选（未回答不视为无）；适用${meal}的${position}，合规候选${eligible.length}种。${breakfastOnly.length ? '优先早餐专用菜；' : ''}${fresh.length ? '当日此餐位优先不重复；' : '当日合规候选不足，允许重复；'}偏好标签参与排序，按业务日期轮换。演示供货不是实际库存承诺。` };
 }
 
-export function mealDeliveryTiming(businessDate, mealType, legacyRecordedAt = null) {
+export function mealDeliveryTiming(businessDate, mealType, legacyRecordedAt = null, clock = systemBusinessClock) {
   const hour = ({ breakfast: 8, lunch: 12, dinner: 18 })[mealType];
-  const [year, month, day] = businessDate.split('-').map(Number);
-  const regularServingAt = new Date(Date.UTC(year, month - 1, day, hour - 8)).toISOString();
+  const regularServingAt = clock.localToUtc(businessDate, `${String(hour).padStart(2, '0')}:00`);
   return {
     regularServingAt, expectedDeliveryAt: null, deliveryEstimateStatus: 'unknown',
     expectedDeliveryNote: '预计送达时间未确定；常规供餐时刻不是预计送达，请查看实际备餐与送达状态。',

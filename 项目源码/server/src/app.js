@@ -528,10 +528,7 @@ routes.get('/api/rules', async (req, res) => {
 });
 routes.get('/api/environment', auth, async (req, res) => {
   if (req.user.role !== 'guest') throw new AppError(403, 'GUEST_REQUIRED', '仅客人可查看本人环境与项目时段信息');
-  const defaultDate = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date(now()));
-  const targetDate = typeof req.query.date === 'string' && req.query.date ? req.query.date : defaultDate;
+  const targetDate = typeof req.query.date === 'string' && req.query.date ? req.query.date : systemBusinessClock.dateKey();
   if (!isDateOnly(targetDate)) throw new AppError(400, 'ENVIRONMENT_DATE_INVALID', '日期必须是有效的 YYYY-MM-DD');
   let mockScenario;
   if (req.query.mockScenario !== undefined) {

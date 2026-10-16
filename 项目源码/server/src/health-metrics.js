@@ -1,6 +1,6 @@
 import { AppError } from './errors.js';
 import { db, log, now, transaction } from './db.js';
-import { systemBusinessClock } from './clock.js';
+import { shiftDateKey, systemBusinessClock } from './clock.js';
 import { recordReplanSourceEvent } from './wellness-followup.js';
 
 export const HEALTH_METRIC_RULE_VERSION = 'health-metric-v1';
@@ -248,12 +248,6 @@ export async function retractHealthRecord({ guestId, actorId, recordId, reason, 
     await log(actorId, 'health_record.retract', 'health_record', String(recordId), reason.trim());
     return { id: row.id, voidedAt: retractedAt, voidedBy: actorId, voidReason: reason.trim() };
   });
-}
-
-function shiftDateKey(dateKey, days) {
-  const [year, month, day] = dateKey.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day + days));
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
 }
 
 function businessDateStartUtc(dateKey) {

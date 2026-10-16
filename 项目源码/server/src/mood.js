@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AppError } from './errors.js';
 import { db, now } from './db.js';
-import { systemBusinessClock } from './clock.js';
+import { shiftDateKey, systemBusinessClock } from './clock.js';
 import { recordReplanSourceEvent } from './wellness-followup.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -173,12 +173,6 @@ export async function updateMoodRecord({ guestId, actorId, recordId, score, note
     triggerReason: record.score <= 2 ? '心情记录为较低分值，需把该来源交由人工核对。' : '',
     requiresAttention: record.score <= 2 });
   return record;
-}
-
-function shiftDateKey(dateKey, days) {
-  const [year, month, day] = dateKey.split('-').map(Number);
-  const shifted = new Date(Date.UTC(year, month - 1, day + days));
-  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}-${String(shifted.getUTCDate()).padStart(2, '0')}`;
 }
 
 export async function getMoodTrend(guestId, days, clock = systemBusinessClock) {
