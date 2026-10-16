@@ -38,25 +38,25 @@ const MOOD_LABELS = Object.freeze({
 const RESOURCES = Object.freeze([
   {
     id: 'breathing', category: 'guided', title: '慢慢呼吸', subtitle: '一段轻柔的呼吸放松练习',
-    durationSeconds: 82.326, audioFile: 'breathing.wav', coverFile: 'breathing.svg',
+    durationSeconds: 82.326, audioFile: 'breathing.ogg', coverFile: 'breathing.svg',
     source: '海屿康养社区原创脚本；本机 macOS Tingting 普通话系统语音合成演示音频。',
     license: '脚本文字为项目原创；合成音频随本地演示使用，不声明系统语音音色的外部分发权。正式对外使用前需替换为取得明确许可的录音。'
   },
   {
     id: 'body-scan', category: 'guided', title: '身体扫描', subtitle: '从头到脚留意身体的感受',
-    durationSeconds: 103.855, audioFile: 'body-scan.wav', coverFile: 'body-scan.svg',
+    durationSeconds: 103.855, audioFile: 'body-scan.ogg', coverFile: 'body-scan.svg',
     source: '海屿康养社区原创脚本；本机 macOS Tingting 普通话系统语音合成演示音频。',
     license: '脚本文字为项目原创；合成音频随本地演示使用，不声明系统语音音色的外部分发权。正式对外使用前需替换为取得明确许可的录音。'
   },
   {
     id: 'seaside-meditation', category: 'guided', title: '海边片刻', subtitle: '以想象中的海风和潮声安顿片刻',
-    durationSeconds: 99.366, audioFile: 'seaside-meditation.wav', coverFile: 'seaside-meditation.svg',
+    durationSeconds: 99.366, audioFile: 'seaside-meditation.ogg', coverFile: 'seaside-meditation.svg',
     source: '海屿康养社区原创脚本；本机 macOS Tingting 普通话系统语音合成演示音频。',
     license: '脚本文字为项目原创；合成音频随本地演示使用，不声明系统语音音色的外部分发权。正式对外使用前需替换为取得明确许可的录音。'
   },
   {
     id: 'ocean-waves', category: 'ambient', title: '海浪声', subtitle: '原创合成的柔和浪涌环境声',
-    durationSeconds: 60, audioFile: 'ocean-waves.wav', coverFile: 'ocean-waves.svg',
+    durationSeconds: 60, audioFile: 'ocean-waves.ogg', coverFile: 'ocean-waves.svg',
     source: '项目内本地程序合成的立体声浪涌环境音；未使用外部录音或采样。',
     license: '由项目代码生成的原创演示音频，不含第三方素材；可随本项目演示使用。'
   }

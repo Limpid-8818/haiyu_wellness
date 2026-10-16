@@ -45,3 +45,6 @@ Desktop.ini
 output/
 .playwright-cli
 项目源码/server/output
+
+# Local synthesized demo audio: only compressed copies are tracked; original WAVs stay on disk for re-encoding (G15)
+项目源码/server/media/mood/*.wav

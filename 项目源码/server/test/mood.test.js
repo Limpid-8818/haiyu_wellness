@@ -43,6 +43,18 @@ test('放松资源目录只暴露 URL 与说明字段，不暴露服务端文件
   }
 });
 
+test('音频路由提供 opus/ogg 压缩音频，未知资源 404', async () => {
+  for (const id of ['breathing', 'body-scan', 'seaside-meditation', 'ocean-waves']) {
+    const response = await fetch(`${base}/mood/resources/${id}/audio`);
+    assert.equal(response.status, 200, id);
+    assert.match(response.headers.get('content-type') || '', /audio\/ogg/, id);
+    assert.equal(response.headers.get('cache-control'), 'public, max-age=3600');
+    const bytes = await response.arrayBuffer();
+    assert.ok(bytes.byteLength > 100_000, `${id} 应返回实际音频内容`);
+  }
+  assert.equal((await call(null, '/mood/resources/nope/audio', 'GET', undefined, 404)).code, 'MOOD_RESOURCE_NOT_FOUND');
+});
+
 test('心情录入校验：档位、未知字段、备注长度逐项拒绝', async () => {
   assert.equal((await call(guest, '/me/moods', 'POST', { score: 0 }, 400)).code, 'MOOD_SCORE_INVALID');
   assert.equal((await call(guest, '/me/moods', 'POST', { score: 6 }, 400)).code, 'MOOD_SCORE_INVALID');
