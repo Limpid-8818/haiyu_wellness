@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+// G18 阶段 2：助手样式随分包就近加载（原经 styles/index.css 顶层 @import 全量进首屏）。
+import '../../styles/assistant.css';
 import { request } from '../../lib/request.js';
 import { WELLNESS_NOTIFICATION_EVENT, publishWellnessNotificationUpdate } from '../guest/brief.jsx';
 import { wellnessTargetSection } from '../../app/navigation.js';

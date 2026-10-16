@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+// G18 阶段 2：智能协作台样式随 StaffView 分包就近加载（.metric-button 例外，客人主页使用，已并入 base.css）。
+import '../../styles/agent.css';
 import { request } from '../../lib/request.js';
 import { fmtDate, fmtDateTime, mealLocalTime } from '../../lib/date.js';
 import { initials, normalizeGuestSummary, normalizeGuestList } from '../../lib/normalize.js';
