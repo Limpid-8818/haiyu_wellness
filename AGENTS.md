@@ -1,3 +1,59 @@
+# 当前工程整合：G04已验产品合main，第113轮文稿与普通push收尾（2026-10-17）
+
+Source111独验server176/176、web34/34、lint0及production build70/485ms通过；原App `01a14959-a61a-7f83-9dba-97428dc4ae08 / local` 按Source单LF格式例外（独立addendum）将environment-budget.js仅删末尾1个LF，其余16件及其余字节保持，node/staged diff检查0。17产品/测试原子提交 `803b7f3a945788be54cc9214946b84896f9450cf`，main正常merge `fadac0224f03e10438a7285d1104e4d18fcf0588`，main逐件blob等于已验指纹/唯一格式例外。112阻塞/旧整合封包/108—111原件完整保留，不用整合成功抹去检查遗漏。
+
+原工程G04已完成仅运行包边界/显式预算合同；预存未知owner锁仍立即拒绝、不自动恢复，显式账本同步哈希/fsync成本保持，未配账本原本零账本I/O不变。旧工具/root shared/package/lock及所需node_modules保。当前仅10份必要文稿docs提交后普通push；最终HEAD/origin/实际远端SHA、push退出和main干净收据以本ID ignored `integration-repair01-final-packet.json` 与一次App回源为准，不循环填写报告自己的SHA。
+
+本轮无新受管Session/服务，不重复测试/构建或全历史审计，只有限核双方G04既有23实例736事件201准确身份79组158路径。Source复核整合后才可另派3，当前3—10未派；无新模型/天气/秘密.env/Key/用户库/MySQL/scheduler/browser/安装/CI。业务U01/V03/V04、历史109未全验/NOT_FINAL_ACCEPTED/旧FAIL例外保持。整合完成/阻塞一次主动回Source后停；以下协调和失败历史全文保留。
+
+---
+
+# 当前工程收尾阻塞：G04暂存空白检查与已验SHA约束待Source决定（2026-10-17）
+
+原G04 App `01a14959-a61a-7f83-9dba-97428dc4ae08 / local` 第112轮核17产品/测试及旧保护文件SHA完全一致，远端仍a1dc3a4、本main/阶段HEAD仍bf9d092。仅暂存17文件后，`git diff --cached --check`发现新增environment-budget.js末尾多一个空行，exit2；此前working-tree diff检查未涵盖该untracked新文件。commit尚未执行，不能在冻结17SHA要求下擅改产品字节。
+
+已将自身17份暂存恢复为空index（只git restore --staged，未reset/stash/clean），工作文件及17已验SHA保持。ignored根备好仅删最后1个LF的未应用补丁和原/拟新SHA，详112；请求Source对这一个格式变更明确续办。未commit/merge/push，G04未标完成、不改111独验PASS事实。有限重核双方23实例736事件201身份79组158路径仍全清，无新Session/服务、未重测。完成一次主动回源后停，3—10未派；108—111/失败原件与业务未验状态保持。下方完整历史保留。
+
+---
+
+# 当前工程阶段：G04 Source111独验PASS，仅原任务整合（2026-10-17）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核17产品/测试、24变更/61证据及旧保护文件SHA保持，自己新independent01受管server176/176、web34/34、lint0/原44warning、production build70模块485ms/演示密码不在产物；包边界118模块462边和隔离5小源码、旧新合成预算合同全过。Source未再安装依赖，不真实模型/天气/用户库/MySQL/Windows/browser/scheduler/CI。
+
+双方本G04有限审计和自身后核：23实例736事件201准确身份79组158自身路径全清、句柄/退出缺口0，旧108失败/两127/109依赖决定保。详第111轮。G04只运行包边界与显式账本合同通过，预存锁不自动恢复、同步账本成本仍在，不能将这两项冒称解决。旧工具/root shared/package/lock字节保持，安装所需node_modules112.4MiB保留、自身临时cache/build清理。
+
+只原App01a14959-a61a-7f83-9dba-97428dc4ae08/local GPT-6.1 Sol/High第112轮收尾：17已验文件refactor(runtime)提交、main正常合入、原G04完成但准确注明边界、docs收据、普通push核三方SHA和main干净；当前HEAD/main仍bf9d092，尚未整合。Source仅新增此协调头和111，108/109/110原件保持，禁止当外来污染清除。无需重复已过全测/web构建或全历史审计，无新运行资源则只有限后核。Source复核整合/资源后才新派3，当前3—10未派；用户授权完成/阻塞一次主动回Source后停。U01/V03/V04、109需求未验/NOT_FINAL_ACCEPTED/旧FAIL例外不变，下方历史完整保留。
+
+---
+
+# 当前工程候选：G04运行包边界离线通过，待Source111独验（2026-10-17）
+
+原独立App `01a14959-a61a-7f83-9dba-97428dc4ae08 / local` 在原G04分支/HEAD bf9d092按Source109单次授权完成npm ci（ignore-scripts/原锁，exit0），package/lock保持，node_modules约112MiB。原108/127/blocked原件保持；新证据仅原ID/resume01。环境最小账本设施落入server，展示纯函数server/web各有包内入口，当前11处生产越界导入全部替换；旧工具/root shared原件不动，无账本原来零I/O仍保持，显式6次/task/baseline/limit/事件哈希与失败计数不取消，未知或遗留锁立即fail-closed、不自动清锁/恢复额度。
+
+最终定向50/50、server全测176/176、web34/34、lint0（既有44warning）及build70模块/812ms退出0；隔离仅5源码约44KiB、生产118模块462相对导入边界/裸依赖已核。新resume14实例490事件137准确身份（含audit自身）全退、50组空、100自身路径无残留；原108的3实例9身份及原件另核仍保持。辅助只读预核解码/后核路径各一次exit1保留并纠正，不掩盖历史失败。
+
+详 `wangshanchong/第110轮报告.md` 与 `docs/G04运行包边界与账本说明_20261017.md`；**仅worker候选PASS，G04未关闭，未暂存/commit/merge/push**。Source111独验后另授权本阶段Git收尾。完成主动一次回本Source后停，第3—10未派；真实模型/天气/私密.env/Key/用户库/MySQL/scheduler/browser/CI0，U01/V03/V04、历史109未全验/NOT_FINAL_ACCEPTED/FAIL例外保持。以下依赖决定与历史全文保留。
+
+---
+
+# 当前工程阶段：G04依赖阻塞已核，仅原任务一次按锁安装后续办（2026-10-17）
+
+原App01a14959-a61a-7f83-9dba-97428dc4ae08/local第108轮BLOCKED_DEPENDENCIES保留，eslint/vitest缺失导致受管lint/test各127，无产品改动。Source109核3文稿SHA、9准确身份退出；Node22.23.1满足锁定工具engines，node_modules真实本地57MiB，磁盘约120GiB，3020/5180无监听。Source本轮只读/文稿0新资源，不把准备阻塞当G04通过。
+
+依据人类继续工程修复授权，只原GPT-6.1 Sol/High任务按docs/G04依赖准备与原任务续办_20261017.md允许一次受管npm ci --ignore-scripts --include=dev --no-audit --no-fund，保持package/lock指纹、无升级/脚本、网络重试0/45秒runner和OS60/8MiB/512MiB；自有临时cache结束清理，实际node_modules为所需产物保留并记大小。失败/超时/新并发服务即BLOCKED回源，不擅自第二次或换版本。此仅覆盖下方本G04零安装禁令的一次必要准备例外，不放开新worktree/复制依赖/模型天气/用户库/MySQL/scheduler/browser/CI修复。
+
+安装成功后版本及基线lint/test通过才按原G04合同实现与验收。108/旧blocked原件冻结，新resume01证据不覆盖，新worker110/Source111。候选Git提交0，G04未修复、3—10未派；所有业务/资源门与一次主动回本Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停不变。Source109/此短头为授权协调追加，不误作非法污染；下方原件全文保留。
+
+---
+
+# 当前工程阻塞：G04本地前端验证依赖缺失，worker108回源（2026-10-17）
+
+独立App `01a14959-a61a-7f83-9dba-97428dc4ae08 / local` 从main `bf9d092`核干净基线，建立 `codex/fix-g04-runtime-package-boundaries-20261017`；只完成静态边界核查和受管前端工具准备检查。`npm run lint -w web`、`npm run test -w web`实际均exit127，分别缺eslint、vitest；本地另缺jsdom/@testing-library/react，锁文件已有版本。按G04合同直接 **BLOCKED_DEPENDENCIES**，未安装/复制依赖、未改产品/测试/锁文件；G04未完成，无候选PASS，新增定向/server全测/build未跑。
+
+详 `wangshanchong/第108轮报告.md`；当前ID独占runtime资源3顺序Session/33事件/9准确身份（含audit自身）全退出，句柄/temp/socket残留0，guardian各exit0。文稿仅未暂存，commit/merge/push0。完成一次App主动回Source后停，由Source判断最小依赖准备；第3—10未派，G41已验状态和业务U01/V03/V04、109未验/NOT_FINAL_ACCEPTED/历史FAIL例外保持。以下原协调及历史完整保留。
+
+---
+
 # 当前工程进度：G41已合main推送并Source107复核，准备仅G04（2026-10-17）
 
 G41产品53dbe26经正常merge0fb82d5、文稿a1dc3a4普通push完成；Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同a1dc3a4150a29787e7df4ed2ed5a9e987a092c92且干净，四已验产品/测试blob一致、105原件保持；8实例78准确身份和自身temp/socket仍退出，整合无新运行资源。工程G41原条目完成，剩11未修+G12部分。
