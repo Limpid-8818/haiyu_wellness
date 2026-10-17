@@ -1,3 +1,29 @@
+# 当前工程整合：G41已验四文件合入main，普通push收尾（2026-10-17）
+
+原worker `01a1494a-9f45-7060-8f70-8952defa778d / local` 按Source105授权完成产品`53dbe26c60b6219a260f6a6ce4333949afe7f74e`，main正常merge`0fb82d5e7765e3b743cf414693351333cba75989`；四已验文件main blob与候选逐件一致。原工程G41已完成，只终态事务和离线故障回滚范围；Source独立server156/156退出0与双方8实例78准确身份全退依据不变，MySQL未实测。104/105完整原件保留，106记录收尾；本次仅Git/文稿与有限精确残留核对，无新增受管Session或服务、不重复全测。
+
+本头和106在普通push前提交；实际最终main/跟踪/远端SHA及push退出以当前worker ignored `integration-final-packet.json`和一次App回源为准，不循环填报告自己的SHA。源复核整合后才可另派第2阶段；当前2—10未派，worker回源后停。U01/V03/V04、109未全验/NOT_FINAL_ACCEPTED、旧FAIL和历史例外保持；不新模型/天气/私密.env/用户库/MySQL/scheduler/browser/CI/worktree/依赖，旧工作树和链接不动。下方全部协调与历史保留。
+
+---
+
+# 当前工程阶段：G41 Source105独验PASS，仅原任务整合（2026-10-17）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local已核worker104的7候选/16证据一致，并在Codes本项目新合成库独立受管server156/156退出0；新增7项真实故障全回滚及既有助手/采纳全覆盖。产品只finishRun复用inTransaction，必要测试API改app.listen避免scheduler，不改产品入口。worker5+Source3共8实例342事件78准确身份含auditor自身全退、句柄/temp/socket/退出缺口0；Source首只读相对路径误解析exit1在资源0时发生并保留，修正后只一次独立全测，旧失败不抹。
+
+详第105轮。现只原App01a1494a-9f45-7060-8f70-8952defa778d/local GPT-6.1 Sol/High进行第106轮同阶段收尾：已验四产品/测试文件SHA保持，fix(server)英文G41提交、main正常合入、原工程G41完成标记、docs收据、普通push核三方SHA。候选分支仍HEAD4608502，尚未整合推送；104/105原件保持。无需重复全测或web构建，不新模型/天气/私密.env/用户库/MySQL/scheduler/browser/worktree/依赖或CI修复。新运行资源如有必须准确退出→句柄→自身temp/socket→audit自身关闭，方可回传。
+
+整合完成/阻塞主动一次回本Source后停；Source核整合/远端/资源后再新派第2阶段G04，当前2—10未派。U01/V03/V04、109未全验/NOT_FINAL_ACCEPTED/旧FAIL及例外不改。下方协调/候选/历史完整保留。
+
+---
+
+# 当前工程候选：G41终态事务已离线通过，待Source105独验（2026-10-17）
+
+唯一worker `01a1494a-9f45-7060-8f70-8952defa778d / local`，本项目目录、分支`codex/fix-g41-assistant-finalization-20261017`，基线`4608502`。finishRun复用inTransaction原子写终态/最终回复/会话投影，新增7项离线回归；定向51/51、server全测156/156，退出0，无失败/跳过。为遵守本轮不启动scheduler，API全测改用专用app.listen fixture；产品index.js不改。
+
+第104轮仅worker候选PASS；G41未关闭，Git暂存/commit/merge/push0，Source105留给源独验。首次资源审计输出路径拒绝exit1原件保留，修正后PASS；5个顺序Session（全测峰值外层+API两Session）、45登记精确身份含审计自身另核均退出，句柄/temp/socket残留0。新证据仅当前任务子目录；现有output/resource-audit链接未改，物理位置和复跑入口见104。无私密.env/真实模型/天气/MySQL/用户库/浏览器/CI；2—10未派，U01/V03/V04、109未全验、NOT_FINAL_ACCEPTED和历史失败不变。一次主动回源后停，不能自行收尾或续派。下方协调与历史完整保留。
+
+---
+
 # 最新人类授权：剩余工程问题串行修复，仅第1阶段G41（2026-10-17）
 
 用户最新要求“开始派发剩下没有做完的工程问题”，commit信息参考Limpid的fix(server)/refactor(web)/docs格式；取代下方10-14不派后续的旧停止状态。本Source仍01a0cbfe-a161-72d0-992d-12fad655d4ef/local，只规划与独验。准备前main/origin/实际远端均af5fb2ba919aa515dae246c6ff0950e4ca394ecd，PR#3同学成果已合入；工程47项中34完成、G12部分、12未修，当前计划只覆盖13开放项。
