@@ -5,7 +5,7 @@ import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { classifyAssistantIntent, runAssistantTool } from './assistant-tools.js';
 import { MAX_MODEL_CALLS, MAX_RUN_COST_USD, MAX_RUN_MS, MAX_RUN_TOKENS, MAX_TOOL_CALLS, TOOL_TIMEOUT_MS, assistantExecutionMode, estimatedModelCost, finiteDurationMs, measuredDurationMs, modelRates, modelTimeoutMs, q19AcceptanceHooksEnabled, safeProviderResponseId } from './assistant-config.js';
-import { db, json, now, transaction } from './db.js';
+import { db, inTransaction, json, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { decideGraphModelReservation, estimateGraphInput, graphBudgetRemaining, releaseGraphCostReservation } from './graph-budget.js';
 import { ModelRequestError, requestChatCompletion } from './model-adapter.js';
@@ -183,17 +183,20 @@ export async function finishRun(runId, { status, output, errorCode = null, stopR
   const timestamp = now();
   const sourceMode = executionMode || (live ? assistantExecutionMode() : (errorCode === 'MODEL_NOT_CONFIGURED' ? 'fallback' : 'safe_guidance'));
   const terminalReason = stopReason || errorCode || (status === 'completed' ? 'RESPONSE_COMPLETED' : status === 'failed' ? 'RUN_FAILED' : null);
-  await db.prepare(`UPDATE agent_runs SET status=?,output_text=?,error_code=?,stop_reason=?,is_live=?,execution_mode=?,model_name=?,provider=?,input_tokens=?,output_tokens=?,estimated_cost_usd=?,updated_at=?,completed_at=? WHERE id=?`)
-    .run(status, output, errorCode, terminalReason, sourceMode === 'live' ? 1 : 0, sourceMode, model, provider,
-      inputTokens, outputTokens, estimatedCost, timestamp, timestamp, runId);
-  const run = await db.prepare('SELECT session_id,actor_id,assistant_role FROM agent_runs WHERE id=?').get(runId);
-  if (output) {
-    await db.prepare('INSERT INTO assistant_messages(session_id,user_id,role,content,created_at,run_id) VALUES(?,?,?,?,?,?)')
-      .run(run.session_id, run.actor_id, 'assistant', output, timestamp, runId);
-    await db.prepare('UPDATE assistant_sessions SET last_message_at=?,mode=?,model_name=? WHERE id=?')
-      .run(timestamp, sourceMode, model, run.session_id);
-  }
-  return await db.prepare('SELECT * FROM agent_runs WHERE id=?').get(runId);
+  // G41: keep the terminal run, final reply and session projection in one commit.
+  return await inTransaction(async () => {
+    await db.prepare(`UPDATE agent_runs SET status=?,output_text=?,error_code=?,stop_reason=?,is_live=?,execution_mode=?,model_name=?,provider=?,input_tokens=?,output_tokens=?,estimated_cost_usd=?,updated_at=?,completed_at=? WHERE id=?`)
+      .run(status, output, errorCode, terminalReason, sourceMode === 'live' ? 1 : 0, sourceMode, model, provider,
+        inputTokens, outputTokens, estimatedCost, timestamp, timestamp, runId);
+    const run = await db.prepare('SELECT session_id,actor_id,assistant_role FROM agent_runs WHERE id=?').get(runId);
+    if (output) {
+      await db.prepare('INSERT INTO assistant_messages(session_id,user_id,role,content,created_at,run_id) VALUES(?,?,?,?,?,?)')
+        .run(run.session_id, run.actor_id, 'assistant', output, timestamp, runId);
+      await db.prepare('UPDATE assistant_sessions SET last_message_at=?,mode=?,model_name=? WHERE id=?')
+        .run(timestamp, sourceMode, model, run.session_id);
+    }
+    return await db.prepare('SELECT * FROM agent_runs WHERE id=?').get(runId);
+  });
 }
 
 export class GraphBudgetError extends Error {

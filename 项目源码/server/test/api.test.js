@@ -15,7 +15,8 @@ import { ResourceSession } from '../../scripts/resources/resource-runtime.js';
 const serverDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const projectDir = path.resolve(serverDir, '..');
 const resourceSession = process.env.HAIYU_RESOURCE_MANAGED === '1'
-  ? await ResourceSession.create({ taskId: process.env.CODEX_TASK_ID, projectRoot: projectDir, tempParent: '/tmp' })
+  ? await ResourceSession.create({ taskId: process.env.CODEX_TASK_ID, projectRoot: projectDir, tempParent: '/tmp',
+    auditRoot: process.env.HAIYU_API_TEST_AUDIT_ROOT })
   : null;
 
 after(async () => {
@@ -80,7 +81,7 @@ async function startApi(dbPath, extraEnv = {}) {
     }
     const resource = await resourceSession.startProcess({
       label: 'server-api-integration-fixture', kind: 'api', role: 'api', command: process.execPath,
-      args: ['src/index.js'], cwd: serverDir, port,
+      args: ['test/support/api-fixture.js'], cwd: serverDir, port,
       env: {
         PATH: process.env.PATH || '', NODE_NO_WARNINGS: '1', DB_DRIVER: 'sqlite', DEMO_SEED: '1',
         DB_PATH: dbPath, PORT: String(port), AUTH_SECRET: 'integration-test-secret',
@@ -92,7 +93,7 @@ async function startApi(dbPath, extraEnv = {}) {
     await waitForManagedService(resource.id, /API running at http:\/\/localhost:\d+\/api/, 'API fixture');
     return { resourceId: resource.id, base: `http://127.0.0.1:${port}/api` };
   }
-  const child = spawn(process.execPath, ['src/index.js'], {
+  const child = spawn(process.execPath, ['test/support/api-fixture.js'], {
     cwd: serverDir,
     env: {
       ...process.env,
