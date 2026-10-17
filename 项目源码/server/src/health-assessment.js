@@ -1,10 +1,9 @@
 import crypto from 'node:crypto';
-import { db, guestProfile, json, log, now, transaction } from './db.js';
+import { db, guestProfile, json, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { HEALTH_PROFILE_FIELDS, emptyHealthProfile, normalizeHealthProfile } from './health-profile.js';
 import { requestChatCompletion, ModelRequestError } from './model-adapter.js';
 
-const guestLock = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
 const listFields = new Set(['chronic', 'allergies', 'dietaryRestrictions', 'audienceTags']);
 const textFields = new Set(['sleep', 'skin']);
 const extractionFields = new Set(['chronic', 'allergies', 'dietaryRestrictions', 'sleep', 'skin', 'mobility']);
@@ -111,7 +110,7 @@ export async function saveHealthAssessmentAnswer(guestId, body) {
   const { field, answer, sessionId } = validateAssessmentAnswer(body);
   const linkedSessionId = await validateGuestSession(guestId, sessionId);
   return await transaction(async () => {
-    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${guestLock()}`).get(guestId);
+    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${mysqlLockSuffix()}`).get(guestId);
     const existing = await db.prepare('SELECT answers_json,version,created_at,updated_at,source_session_id FROM health_assessment_progress WHERE guest_id=?')
       .get(guestId);
     const version = Number(existing?.version || 0);
@@ -374,7 +373,7 @@ export async function confirmHealthExtraction({ guestId, extractionId, decisions
     : confirmedCount === candidates.length ? 'confirmed' : 'partially_confirmed';
   let result;
   await transaction(async () => {
-    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${guestLock()}`).get(guestId);
+    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${mysqlLockSuffix()}`).get(guestId);
     const row = await db.prepare('SELECT * FROM health_extraction_drafts WHERE id=? AND guest_id=?').get(extractionId, guestId);
     if (!row) throw new AppError(404, 'HEALTH_EXTRACTION_NOT_FOUND', '健康自述提取记录不存在');
     if (row.status !== 'pending_confirmation') {

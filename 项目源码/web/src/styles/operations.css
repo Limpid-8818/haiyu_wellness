@@ -1,0 +1,72 @@
+.stage26-operations { width: min(100%, 1500px); margin: 0 auto; padding-bottom: 34px; }
+.stage26-filter-row { display: flex; align-items: end; justify-content: space-between; gap: 18px; padding: 16px 20px; margin-bottom: 18px; }
+.stage26-filter-row label, .stage26-search label, .stage26-weather-controls label, .stage26-job-filter label, .stage26-confirm label { display: grid; gap: 6px; color: #60787b; font-size: 12px; }
+.stage26-filter-row input, .stage26-search input, .stage26-weather-controls input, .stage26-job-filter select, .stage26-confirm select { min-width: 0; border: 1px solid #dce9e5; border-radius: 9px; padding: 9px 11px; color: #284b51; background: #fff; }
+.stage26-filter-row > span { color: #829696; font-size: 12px; }
+.stage26-error { margin: 0 0 16px; padding: 12px 15px; border: 1px solid #f0d2ca; border-radius: 10px; background: #fff8f5; color: #9d4c3e; font-size: 13px; }
+.stage26-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin: 0 0 18px; }
+.stage26-metric { display: grid; gap: 7px; padding: 18px; }
+.stage26-metric > span { color: #78908e; font-size: 12px; }
+.stage26-metric > strong { color: #1e5d65; font-size: 27px; line-height: 1.1; }
+.stage26-metric button { width: fit-content; padding: 0; background: none; color: #087c82; font-size: 12px; }
+.stage26-grid { display: grid; grid-template-columns: minmax(280px, .86fr) minmax(440px, 1.4fr); gap: 16px; align-items: start; margin-bottom: 16px; }
+.stage26-panel { min-width: 0; padding: 20px; margin-bottom: 16px; }
+.stage26-panel > header { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 16px; }
+.stage26-panel > header h2 { margin: 3px 0 0; color: #24545a; font-size: 19px; }
+.stage26-panel > header small { color: #849795; font-size: 11px; }
+.stage26-search { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(120px, .7fr) auto; gap: 9px; align-items: end; }
+.stage26-search input { width: 100%; }
+.stage26-guest-list, .stage26-detail-list, .stage26-reservations, .stage26-slot-list { display: grid; gap: 0; }
+.stage26-guest-list { margin-top: 14px; }
+.stage26-guest-list article, .stage26-reservations > article, .stage26-slot-list > article, .stage26-detail-list > button, .stage26-incident { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid #edf2f0; }
+.stage26-detail-list > button { width: 100%; border-right: 0; border-bottom: 0; border-left: 0; background: transparent; text-align: left; cursor: pointer; }
+.stage26-detail-list > button:hover { background: #f6fbf8; }
+.stage26-guest-list article > div, .stage26-reservations article > div:first-child, .stage26-incident > div { min-width: 0; display: grid; gap: 4px; }
+.stage26-guest-list strong, .stage26-reservations strong, .stage26-detail-list > button { color: #345b60; font-size: 13px; }
+.stage26-guest-list small, .stage26-reservations small, .stage26-slot-list small, .stage26-detail-list small, .stage26-incident small { display: block; color: #849491; font-size: 11px; overflow-wrap: anywhere; }
+.stage26-history, .stage26-confirm { margin-top: 14px; padding: 14px; border: 1px solid #dcebe5; border-radius: 11px; background: #f6fbf8; color: #46656a; font-size: 12px; }
+.stage26-history p { margin: 7px 0; }
+.stage26-history small, .stage26-confirm p { color: #718584; }
+.stage26-slot-list { max-height: 540px; overflow: auto; padding-right: 3px; }
+.stage26-slot-list > article { align-items: center; }
+.stage26-slot-list > article.closed { opacity: .65; }
+.stage26-slot-list > article > input { flex: 0 0 auto; accent-color: #0b7a80; }
+.stage26-slot-main { min-width: 120px; flex: 1; }
+.stage26-slot-main strong { color: #345b60; font-size: 12px; }
+.stage26-slot-list > article > span { white-space: nowrap; color: #597477; font-size: 11px; }
+.stage26-slot-list select { width: 112px; border: 1px solid #e1ebe8; background: #fff; border-radius: 8px; padding: 7px; color: #597477; font-size: 11px; }
+.stage26-weather-controls { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto; gap: 10px; align-items: end; margin-top: 16px; padding-top: 15px; border-top: 1px solid #e8efed; }
+.stage26-weather-controls input { width: 100%; }
+.stage26-confirm strong { display: block; color: #2f5d5e; }
+.stage26-confirm ul { padding-left: 20px; }
+.stage26-confirm label { margin: 12px 0; }
+.stage26-job-filter { display: flex; align-items: end; gap: 8px; }
+.stage26-reservation-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin: 0 0 12px; }
+.stage26-reservation-filters > div { display: flex; gap: 6px; }
+.stage26-reservation-filters button, .stage26-reservation-filters select { border: 1px solid #dce9e5; border-radius: 8px; background: #fff; color: #41696b; padding: 8px 10px; }
+.stage26-reservation-filters button[aria-pressed="true"] { border-color: #72b8a4; background: #eff9f5; color: #167e72; }
+.stage26-reservation-filters label { display: grid; gap: 5px; color: #60787b; font-size: 11px; }
+.stage26-selected-detail { display: grid; gap: 4px; margin-top: 12px; padding: 12px; border: 1px solid #dcebe5; border-radius: 10px; background: #f6fbf8; color: #345b60; }
+.stage26-selected-detail small { color: #718584; font-size: 11px; overflow-wrap: anywhere; }
+.stage26-row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.stage26-incident { align-items: flex-start; }
+.stage26-incident p { margin: 4px 0; color: #597477; font-size: 12px; }
+.stage26-muted { color: #839593; font-size: 12px; }
+.stage26-advice-trigger { margin-top: 8px; }
+/* .stage26-advice-draft / .stage26-draft-trigger 规则已于 G18 阶段 2 并入 styles/assistant.css（仅助手组件渲染）。 */
+@media (max-width: 1180px) {
+  .stage26-grid { grid-template-columns: 1fr; }
+  .stage26-slot-list { max-height: 460px; }
+}
+@media (max-width: 760px) {
+  .stage26-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage26-filter-row, .stage26-panel > header { align-items: flex-start; flex-direction: column; }
+  .stage26-search { grid-template-columns: 1fr; }
+  .stage26-weather-controls { grid-template-columns: 1fr; }
+  .stage26-slot-list > article { flex-wrap: wrap; }
+  .stage26-slot-list > article > span { margin-left: 24px; }
+  .stage26-slot-list select { margin-left: auto; }
+  .stage26-reservations > article { align-items: flex-start; flex-direction: column; }
+  .stage26-job-filter { flex-wrap: wrap; }
+  .stage26-reservation-filters { align-items: stretch; flex-direction: column; }
+}

@@ -1,10 +1,9 @@
-import { db, hasActiveTransaction, id, log, now, transaction } from './db.js';
+import { db, id, inTransaction, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { systemBusinessClock } from './clock.js';
 import {checkinAvailability} from '../../shared/release-presentation.js';
 
 const FEELINGS = new Set(['comfortable', 'general', 'uncomfortable']);
-const lockSuffix = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
 
 function jsonValue(value, fallback = {}) {
   if (value && typeof value === 'object') return value;
@@ -79,7 +78,7 @@ export async function recordReplanSourceEvent({ guestId, sourceType, sourceId, s
     }
     return await db.prepare('SELECT * FROM wellness_replan_events WHERE id=?').get(eventId);
   };
-  return hasActiveTransaction() ? persist() : transaction(persist);
+  return inTransaction(persist);
 }
 
 async function reservationForGuest(guestId, reservationId, forUpdate = false) {
@@ -87,7 +86,7 @@ async function reservationForGuest(guestId, reservationId, forUpdate = false) {
       s.id AS slotId,s.business_date AS businessDate,s.starts_at AS startsAt,s.ends_at AS endsAt,
       s.local_start AS localStart,s.local_end AS localEnd,p.name AS projectName,p.location
     FROM reservations r JOIN activity_slots s ON s.id=r.slot_id JOIN projects p ON p.id=s.project_id
-    WHERE r.id=? AND r.guest_id=?${forUpdate ? lockSuffix() : ''}`).get(reservationId, guestId);
+    WHERE r.id=? AND r.guest_id=?${forUpdate ? mysqlLockSuffix() : ''}`).get(reservationId, guestId);
 }
 
 export async function listGuestCheckins(guestId) {
@@ -175,7 +174,7 @@ export async function createGuestFeedback({ guestId, reservationId, body, clock 
   return await transaction(async () => {
     const reservation = await reservationForGuest(guestId, reservationId, true);
     if (!reservation) throw new AppError(404, 'RESERVATION_NOT_FOUND', '没有找到本人预约');
-    const checkin = await db.prepare(`SELECT id FROM wellness_checkins WHERE reservation_id=? AND guest_id=?${lockSuffix()}`)
+    const checkin = await db.prepare(`SELECT id FROM wellness_checkins WHERE reservation_id=? AND guest_id=?${mysqlLockSuffix()}`)
       .get(reservationId, guestId);
     if (!checkin) throw new AppError(409, 'FEEDBACK_CHECKIN_REQUIRED', '请先完成本人预约签到，再提交项目感受');
     const existing = await db.prepare('SELECT * FROM wellness_feedback WHERE reservation_id=?').get(reservationId);
@@ -206,7 +205,7 @@ export async function updateGuestFeedback({ guestId, feedbackId, body, clock = s
   }
   const input = feedbackInput(body);
   return await transaction(async () => {
-    const current = await db.prepare(`SELECT * FROM wellness_feedback WHERE id=? AND guest_id=?${lockSuffix()}`)
+    const current = await db.prepare(`SELECT * FROM wellness_feedback WHERE id=? AND guest_id=?${mysqlLockSuffix()}`)
       .get(feedbackId, guestId);
     if (!current) throw new AppError(404, 'WELLNESS_FEEDBACK_NOT_FOUND', '本人反馈不存在');
     const businessDate = dateText(current.business_date);
@@ -285,9 +284,35 @@ export async function getReplanEventDetail(guestId, eventId) {
 }
 
 export async function listReplanEvents(guestId) {
-  const rows = await db.prepare('SELECT id FROM wellness_replan_events WHERE guest_id=? ORDER BY created_at DESC,id DESC LIMIT 100').all(guestId);
+  // G24：一次性取回事件全行（不再逐条回查 id），同一草案在多条来源事件间复用
+  // getWellnessDraft 的原有逻辑按 draftId 记忆化，避免重复加载同一草案。
+  const { getWellnessDraft } = await import('./wellness-planner.js');
+  const rows = await db.prepare(`SELECT id,guest_id AS guestId,source_type AS sourceType,source_id AS sourceId,
+    source_version AS sourceVersion,source_label AS sourceLabel,source_snapshot_json AS sourceSnapshotJson,
+    trigger_reason AS triggerReason,requires_attention AS requiresAttention,status,
+    baseline_draft_id AS baselineDraftId,candidate_draft_id AS candidateDraftId,
+    created_at AS createdAt,updated_at AS updatedAt
+    FROM wellness_replan_events WHERE guest_id=? ORDER BY created_at DESC,id DESC LIMIT 100`).all(guestId);
+  const draftCache = new Map();
+  const loadDraft = draftId => {
+    if (!draftCache.has(draftId)) draftCache.set(draftId, getWellnessDraft(guestId, draftId).catch(() => null));
+    return draftCache.get(draftId);
+  };
   const items = [];
-  for (const row of rows) items.push(await getReplanEventDetail(guestId, row.id));
+  for (const row of rows) {
+    const baseline = row.baselineDraftId ? await loadDraft(row.baselineDraftId) : null;
+    const candidate = row.candidateDraftId ? await loadDraft(row.candidateDraftId) : null;
+    const activeReservations = row.baselineDraftId ? await db.prepare(`SELECT id,slot_id AS slotId,status
+      FROM reservations WHERE wellness_draft_id=? AND status='confirmed' ORDER BY id`).all(row.baselineDraftId) : [];
+    const event = { ...row, sourceVersion: Number(row.sourceVersion), requiresAttention: Boolean(row.requiresAttention),
+      sourceSnapshot: jsonValue(row.sourceSnapshotJson), baseline, candidate,
+      candidateStatus: candidate?.reviewStatus || null, activeReservations,
+      changes: planDiff(baseline, candidate) };
+    if (candidate?.reviewStatus === 'active' || candidate?.reviewStatus === 'auto_activated') event.status = 'active';
+    else if (candidate?.reviewStatus === 'pending_review') event.status = 'pending_review';
+    delete event.sourceSnapshotJson;
+    items.push(event);
+  }
   return { items, total: items.length };
 }
 

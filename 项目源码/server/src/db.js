@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import mysql from 'mysql2/promise';
 import { hashPassword as makePasswordHash, verifyPassword as checkPassword } from './password.js';
-import { systemBusinessClock } from './clock.js';
+import { shiftDateKey, systemBusinessClock } from './clock.js';
 import { mysqlCoreSchema, sqliteCoreSchema } from './schema.js';
 import { mysqlCatalogSchema, sqliteCatalogSchema } from './catalog-schema.js';
 import { mysqlEnvironmentSchema, sqliteEnvironmentSchema } from './environment-schema.js';
@@ -30,6 +30,15 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.resolve(here, '../data');
 export const driver = String(process.env.DB_DRIVER || 'sqlite').toLowerCase();
 if (!['sqlite', 'mysql'].includes(driver)) throw new Error(`Unsupported DB_DRIVER: ${driver}`);
+
+// G40：LIKE 通配符转义。用户输入中的 %/_/\ 不再被当作通配符；
+// SQLite 必须带显式 ESCAPE 子句反斜杠转义才生效（MySQL 默认即支持，子句同样兼容）。
+export function escapeLikeValue(value) {
+  return `%${String(value ?? '').replace(/[\\%_]/g, char => `\\${char}`)}%`;
+}
+export function likeEscapeClause() {
+  return driver === 'mysql' ? " ESCAPE '\\\\'" : " ESCAPE '\\'";
+}
 
 const transactionContext = new AsyncLocalStorage();
 let sqliteHandle;
@@ -147,19 +156,35 @@ async function awaitSqliteTransaction() {
   await sqliteTransactionTail;
 }
 
+// G22：SQLite 预编译语句缓存。node:sqlite 的 prepare 是每次执行的主要固定开销；
+// 按最终 SQL 文本缓存 StatementSync（线程内复用）。带可变 IN 占位符数量的语句
+// 会按占位符个数产生少量缓存条目，规模受各查询 LIMIT 约束。
+const sqliteStatementCache = new Map();
+function preparedSqliteStatement(sql) {
+  let statement = sqliteStatementCache.get(sql);
+  if (!statement) {
+    statement = sqliteHandle.prepare(sql);
+    sqliteStatementCache.set(sql, statement);
+  }
+  return statement;
+}
+export function sqliteCachedStatementCount() {
+  return sqliteStatementCache.size;
+}
+
 function sqliteStatement(sql) {
   return {
     async get(...params) {
       await awaitSqliteTransaction();
-      return sqliteHandle.prepare(sql).get(...params);
+      return preparedSqliteStatement(sql).get(...params);
     },
     async all(...params) {
       await awaitSqliteTransaction();
-      return sqliteHandle.prepare(sql).all(...params);
+      return preparedSqliteStatement(sql).all(...params);
     },
     async run(...params) {
       await awaitSqliteTransaction();
-      return sqliteHandle.prepare(sql).run(...params);
+      return preparedSqliteStatement(sql).run(...params);
     }
   };
 }
@@ -205,7 +230,10 @@ export const db = {
   },
   async close() {
     if (driver === 'mysql' && mysqlPool) await mysqlPool.end();
-    if (driver === 'sqlite' && sqliteHandle) sqliteHandle.close();
+    if (driver === 'sqlite' && sqliteHandle) {
+      sqliteHandle.close();
+      sqliteStatementCache.clear();
+    }
   }
 };
 
@@ -242,6 +270,26 @@ export async function transaction(callback) {
 
 export function hasActiveTransaction() {
   return Boolean(transactionContext.getStore());
+}
+
+// G44：以下三个基础设施工具此前在 9+ 个业务模块各有一份本地拷贝且语义漂移，统一于此导出。
+// 已处于事务内则加入当前事务，否则开启新事务执行 callback。
+export function inTransaction(callback) {
+  return hasActiveTransaction() ? callback() : transaction(callback);
+}
+
+// MySQL 侧行锁后缀；SQLite 依赖全局事务串行链，无需 FOR UPDATE。
+export function mysqlLockSuffix() {
+  return driver === 'mysql' ? ' FOR UPDATE' : '';
+}
+
+// 仅把唯一键/主键冲突识别为“重复”（SQLITE_CONSTRAINT_UNIQUE、SQLite errcode 2067/1555、
+// MySQL ER_DUP_ENTRY/1062，外加 better-sqlite3 风格消息）。外键/CHECK/NOT NULL 等
+// SQLITE_CONSTRAINT_* 兄弟错误不属于重复，必须原样抛出，不允许被幂等路径吞掉。
+export function isUniqueViolation(error) {
+  return error?.code === 'SQLITE_CONSTRAINT_UNIQUE' || error?.code === 'ER_DUP_ENTRY'
+    || error?.errcode === 2067 || error?.errcode === 1555 || error?.errno === 1062
+    || /UNIQUE constraint failed/i.test(String(error?.message || ''));
 }
 
 async function migrationRecord(version) {
@@ -541,7 +589,23 @@ export async function migrate() {
       { version: 26, name: 'meal-restriction-and-order-review', up: async () => {
         await db.exec(sqliteMealReviewSchema);
       } },
-      { version: 27, name: 'staff-service-execution', up: async () => { await db.exec(sqliteServiceSchema); } }
+      { version: 27, name: 'staff-service-execution', up: async () => { await db.exec(sqliteServiceSchema); } },
+      { version: 28, name: 'hot-query-performance-indexes', up: async () => {
+        // G09/G13：environment_snapshots 按 target_date 的查询此前只有 (location_id,…) 前导索引可用；
+        // audit_logs / medical_advice / agent_runs 在 SQLite 建表时无索引（MySQL 已有）。
+        await db.exec(`CREATE INDEX IF NOT EXISTS idx_environment_target_date ON environment_snapshots(target_date,domain,updated_at);
+          CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_created ON audit_logs(actor_id,created_at);
+          CREATE INDEX IF NOT EXISTS idx_medical_advice_guest_status ON medical_advice(guest_id,status);
+          CREATE INDEX IF NOT EXISTS idx_agent_runs_client_request ON agent_runs(client_request_id);
+          CREATE INDEX IF NOT EXISTS idx_agent_runs_actor_role_created ON agent_runs(actor_id,assistant_role,created_at);`);
+      } },
+      { version: 29, name: 'user-token-version', up: async () => {
+        // G11：令牌版本号。修改密码时递增，使该用户已签发的旧 token 立即失效。
+        const columns = await db.prepare('PRAGMA table_info(users)').all();
+        if (!columns.some(column => column.name === 'token_version')) {
+          await db.exec('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0');
+        }
+      } }
     ];
     for (const migration of migrations) {
       if (await migrationRecord(migration.version)) continue;
@@ -795,7 +859,31 @@ export async function migrate() {
     { version: 26, name: 'meal-restriction-and-order-review', up: async () => {
       for (const statement of mysqlMealReviewSchema) await db.exec(statement);
     } },
-    { version: 27, name: 'staff-service-execution', up: async () => { await db.exec(mysqlServiceSchema); } }
+    { version: 27, name: 'staff-service-execution', up: async () => { await db.exec(mysqlServiceSchema); } },
+    { version: 28, name: 'hot-query-performance-indexes', up: async () => {
+      const indexExists = async (table, indexName) => Number((await db.prepare(
+        `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND INDEX_NAME=?`
+      ).get(table, indexName)).n || 0) > 0;
+      const ensureIndex = async (table, indexName, ddl) => {
+        if (!(await indexExists(table, indexName))) await db.exec(ddl);
+      };
+      await ensureIndex('environment_snapshots', 'idx_environment_target_date',
+        'CREATE INDEX idx_environment_target_date ON environment_snapshots(target_date,domain,updated_at)');
+      await ensureIndex('audit_logs', 'idx_audit_logs_actor_created',
+        'CREATE INDEX idx_audit_logs_actor_created ON audit_logs(actor_id,created_at)');
+      await ensureIndex('medical_advice', 'idx_medical_advice_guest_status',
+        'CREATE INDEX idx_medical_advice_guest_status ON medical_advice(guest_id,status)');
+      await ensureIndex('agent_runs', 'idx_agent_runs_client_request',
+        'CREATE INDEX idx_agent_runs_client_request ON agent_runs(client_request_id)');
+      await ensureIndex('agent_runs', 'idx_agent_runs_actor_role_created',
+        'CREATE INDEX idx_agent_runs_actor_role_created ON agent_runs(actor_id,assistant_role,created_at)');
+    } },
+    { version: 29, name: 'user-token-version', up: async () => {
+      // G11：令牌版本号。修改密码时递增，使该用户已签发的旧 token 立即失效。
+      const column = await db.prepare(`SELECT COLUMN_NAME AS name FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='token_version'`).get();
+      if (!column) await db.exec('ALTER TABLE users ADD COLUMN token_version INT NOT NULL DEFAULT 0');
+    } }
   ];
   for (const migration of migrations) {
     if (await migrationRecord(migration.version)) continue;
@@ -827,9 +915,7 @@ async function seedDemo() {
   const deanId = 'dean_001';
   const stamp = now();
   const demoCheckIn = systemBusinessClock.dateKey();
-  const demoCheckOutDate = new Date(`${demoCheckIn}T12:00:00Z`);
-  demoCheckOutDate.setUTCDate(demoCheckOutDate.getUTCDate() + 14);
-  const demoCheckOut = demoCheckOutDate.toISOString().slice(0, 10);
+  const demoCheckOut = shiftDateKey(demoCheckIn, 14);
   await transaction(async () => {
     await db.prepare('INSERT INTO users(id,username,password_hash,role,name,phone) VALUES(?,?,?,?,?,?)')
       .run(guestId, 'guest_demo', hashPassword('guest2026'), 'guest', '林海宁', '13800000001');

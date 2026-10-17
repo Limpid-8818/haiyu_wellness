@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { db, driver, now, json } from './db.js';
+import { systemBusinessClock } from './clock.js';
 import { createCachedLoader } from './environment-cache.js';
 import { makeEnvironmentMockSnapshot } from './environment-mock.js';
 import {
@@ -73,6 +74,14 @@ export async function readCurrentEnvironmentSnapshot(targetDate, options = {}) {
   const context = environmentContext(targetDate, options);
   const rows = await db.prepare('SELECT * FROM environment_snapshots WHERE target_date=? ORDER BY updated_at DESC,snapshot_key DESC').all(targetDate);
   return resolveEnvironmentRecords(rows, context);
+}
+
+// G09：快照按 contentHash 追加且此前无任何清理，长期运行会让按日期的查询持续变慢。
+// 只删除已过期超过 90 天的行；历史草案/预约保存的是快照编号字符串，不受外键影响。
+export async function cleanupExpiredEnvironmentSnapshots(retentionDays = 90, instant = systemBusinessClock.utc()) {
+  const cutoff = new Date(instant.getTime() - retentionDays * 86400e3).toISOString();
+  const result = await db.prepare('DELETE FROM environment_snapshots WHERE expires_at<?').run(cutoff);
+  return Number(result.changes || 0);
 }
 
 export async function saveEnvironmentSnapshot({

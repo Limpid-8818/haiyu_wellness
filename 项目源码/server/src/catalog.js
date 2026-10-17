@@ -1,4 +1,4 @@
-import { db, json, log, now } from './db.js';
+import { db, json, log, now, escapeLikeValue, likeEscapeClause } from './db.js';
 import { AppError } from './errors.js';
 
 export const PROJECT_CATEGORIES = Object.freeze([
@@ -63,8 +63,9 @@ export async function listProjects({ category = '', search = '', includeInactive
   if (!includeInactive) filters.push('active=1');
   if (category) { filters.push('category=?'); params.push(category); }
   if (query) {
-    filters.push('(name LIKE ? OR description LIKE ? OR suitable_people LIKE ?)');
-    params.push(`%${query}%`, `%${query}%`, `%${query}%`);
+    const esc = likeEscapeClause();
+    filters.push(`(name LIKE ?${esc} OR description LIKE ?${esc} OR suitable_people LIKE ?${esc})`);
+    params.push(escapeLikeValue(query), escapeLikeValue(query), escapeLikeValue(query));
   }
   const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
   const rows = await db.prepare(`SELECT * FROM projects ${where} ORDER BY
@@ -140,8 +141,9 @@ export async function listKnowledge({ domain = '', search = '' } = {}) {
   const params = [];
   if (domain) { filters.push('domain=?'); params.push(domain); }
   if (query) {
-    filters.push('(title LIKE ? OR summary LIKE ? OR body LIKE ? OR source_name LIKE ? OR keywords_json LIKE ?)');
-    for (let i = 0; i < 5; i++) params.push(`%${query}%`);
+    const esc = likeEscapeClause();
+    filters.push(`(title LIKE ?${esc} OR summary LIKE ?${esc} OR body LIKE ?${esc} OR source_name LIKE ?${esc} OR keywords_json LIKE ?${esc})`);
+    for (let i = 0; i < 5; i++) params.push(escapeLikeValue(query));
   }
   const rows = await db.prepare(`SELECT * FROM domain_knowledge WHERE ${filters.join(' AND ')} ORDER BY domain,title`).all(...params);
   return rows.map(row => ({
@@ -163,8 +165,9 @@ export async function listRules({ search = '' } = {}) {
   const params = [];
   let where = 'WHERE active=1';
   if (query) {
-    where += ' AND (rule_id LIKE ? OR title LIKE ? OR scope LIKE ? OR trigger_condition LIKE ? OR source_reference LIKE ? OR demo_note LIKE ?)';
-    for (let i = 0; i < 6; i++) params.push(`%${query}%`);
+    const esc = likeEscapeClause();
+    where += ` AND (rule_id LIKE ?${esc} OR title LIKE ?${esc} OR scope LIKE ?${esc} OR trigger_condition LIKE ?${esc} OR source_reference LIKE ?${esc} OR demo_note LIKE ?${esc})`;
+    for (let i = 0; i < 6; i++) params.push(escapeLikeValue(query));
   }
   const rows = await db.prepare(`SELECT * FROM safety_rules ${where} ORDER BY rule_id`).all(...params);
   return rows.map(row => ({

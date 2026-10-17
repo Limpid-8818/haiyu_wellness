@@ -1,8 +1,8 @@
-> 2026-10-15补充：业务清单之外的四方向工程审计发现（安全/性能/前端/工程配置共40项，G01—G40）已单独登记于[待修复工程问题清单](待修复工程问题清单.md)，两清单互不替代；本清单F/U/V/R/D系列不变。
+> 2026-10-15补充：业务清单之外的四方向工程审计发现（安全/性能/前端/工程配置共40项，G01—G40）已单独登记于[待修复工程问题清单](待修复工程问题清单.md)，两清单互不替代；本清单F/U/V/R/D系列不变。2026-10-16后端复审与代码组织专项补充G41—G47，见该清单。
 
-> Source101交付复核（2026-10-14）：main合并/远端与96文件一致，Source main98/98和旧60/新8资源退出通过；以下V03/V04与U01范围缺口如实保留，未新增真实模型终验或关闭109未验项。详见[第101轮](wangshanchong/第101轮报告.md)。
+> Source101交付复核（2026-10-14）：main合并/远端与96文件一致，Source main98/98和旧60/新8资源退出通过；以下V03/V04与U01范围缺口如实保留，未新增真实模型终验或关闭109未验项。详见[第101轮](archive/wangshanchong/第101轮报告.md)。
 
-> 2026-10-14阶段6优先交付：U01/U07/U08/U09/D01核心整改已合入；U01仅核心页面，V03 Source独立新live终验待补，新增V04/P3验收图像遗留，CI延期及109未全验/NOT_FINAL_ACCEPTED保持。详见[第100轮](wangshanchong/第100轮报告.md)。以下原发现与历史状态保留。
+> 2026-10-14阶段6优先交付：U01/U07/U08/U09/D01核心整改已合入；U01仅核心页面，V03 Source独立新live终验待补，新增V04/P3验收图像遗留，CI延期及109未全验/NOT_FINAL_ACCEPTED保持。详见[第100轮](archive/wangshanchong/第100轮报告.md)。以下原发现与历史状态保留。
 
 # 海屿康养社区待修复 BUG 列表
 
@@ -347,7 +347,7 @@
 - **已做**：worker98最多两次免费完整15图序列。原resize诊断这次未再复现，不能否定旧异常；像素校准可在旧图y1035识别重复品牌。v06固定初始viewport新只读context原生捕获15图，实际源文本/控件/source IDs哈希一致、逐张亲看无底条，15contexts精确关闭，没有图像编辑或裁异常区。
 - **方法边界**：v06把当前真实原page时点HTML/CSS/控件/scroll仅内存传到about:blank只读显示页，移除scripts防重初始化；这是有溯源DOM显示快照，不是再次认证的交互业务page，不能用它代替原page真实交互/HTTP/SQL或根因定位。1024/1440长详情图不直接完整显示JSON，实际展开原文与几何由DOM证据支持。
 - **未做/后续验证**：Source独立免费完整native原page/稳定帧/PNG像素与DOM对照、捕获机制根因定位、随后Source新live完整终验。本次按人类先交付后置；未来另行授权新源合成会话，重复规定完整viewport/角色序列，记录viewport/scroll/rect/唯一控件及原PNG，对比原native与只读快照，不能只fresh两图或编辑异常图后称通过。必要付费仍按最新受控预算及资源门，不复用已耗尽worker图额度。
-- **证据**：[第96轮](wangshanchong/第96轮报告.md)、[第98轮](wangshanchong/第98轮报告.md)、[Source99先交付决策](wangshanchong/第99轮报告.md)。ignored原PNG/raw包只在原本机保全，不入Git。
+- **证据**：[第96轮](archive/wangshanchong/第96轮报告.md)、[第98轮](archive/wangshanchong/第98轮报告.md)、[Source99先交付决策](archive/wangshanchong/第99轮报告.md)。ignored原PNG/raw包只在原本机保全，不入Git。
 
 ## 6. 建议修复顺序（本轮不执行）
 
@@ -377,18 +377,18 @@
 | `assistant-budget-and-existing-trace.json` | 当前状态API、历史真实四领域/8工具、失败断言和预算差异 |
 | `evidence-manifest.json` | 可见证据字节/SHA256与本轮复核源码指纹 |
 
-既有真实协作原件：[第56轮报告](wangshanchong/第56轮报告.md)和 `项目源码/output/resource-audit/post-merge-acceptance-20261011/execution-fourdomain/01a12ff5-7c0c-7e52-b4a2-792e7230498c/source-core3b1-fourdomain-independent-20261013-05/business.json`（SHA256 `865027c3eaed3b839ff5658dfb48c7397f6fc205d567cf8fc5333582dd8caf7c`）。原失败、旧截图、历史例外均保留。
+既有真实协作原件：[第56轮报告](archive/wangshanchong/第56轮报告.md)和 `项目源码/output/resource-audit/post-merge-acceptance-20261011/execution-fourdomain/01a12ff5-7c0c-7e52-b4a2-792e7230498c/source-core3b1-fourdomain-independent-20261013-05/business.json`（SHA256 `865027c3eaed3b839ff5658dfb48c7397f6fc205d567cf8fc5333582dd8caf7c`）。原失败、旧截图、历史例外均保留。
 
-收尾及本轮限制见[第59轮报告](wangshanchong/第59轮报告.md)。
+收尾及本轮限制见[第59轮报告](archive/wangshanchong/第59轮报告.md)。
 
 ## 2026-10-13 阶段1候选修复（待 Source 独验）
 
 执行者 `01a1338e-aa7b-7412-8a56-21ea74142270 / local` 在 d42c 隔离工作树完成 F01/F02/F03/F11 候选修复。正式摘要来源统一；未映射限制有负责医护人工分类、转交和历史；订单新增限制后两端共享暂停结论并由服务端拒绝推进，合规更换及负责配餐复核后恢复；生成时与当前限制分开展示。原 BUG 记录保持，尚未正式关闭。
 
-worker 六项新定向用例与七项既有回归 13/13、网页构建通过；三个网页 case 36 项断言通过，有实际 HTTP 拒绝、同订单回读、SQLite 只读及截图证据。详见[第63轮报告](wangshanchong/第63轮报告.md)及[Source 复验命令](docs/阶段1健康膳食限制复验_20261013.md)。阶段2未执行，CI/真实模型/MySQL/真实用户业务/109项全验未运行；旧失败与整体 NOT_FINAL_ACCEPTED 保持。
+worker 六项新定向用例与七项既有回归 13/13、网页构建通过；三个网页 case 36 项断言通过，有实际 HTTP 拒绝、同订单回读、SQLite 只读及截图证据。详见[第63轮报告](archive/wangshanchong/第63轮报告.md)及[Source 复验命令](archive/docs/阶段1健康膳食限制复验_20261013.md)。阶段2未执行，CI/真实模型/MySQL/真实用户业务/109项全验未运行；旧失败与整体 NOT_FINAL_ACCEPTED 保持。
 
 ## 2026-10-13 阶段2候选与网页阻塞
 
 执行者01a133be-2f9d-7160-8150-1d322bc07cf7/local在已验d42c树补充F05/V02候选：显式专用新库五岗初始化、正常员工配置说明、教练/理疗师导航及服务记录、同预约签到/反馈和客人回读。初始化实际首次新增4/重复0，保留旧医护；17项定向测试及构建通过。唯一网页尝试在正常停止API的验收状态判断处失败，后半段网页旅程未运行，修正后未重跑worker业务。
 
-F05仅配置候选通过；V02仍未完整验收，不正式关闭。详见[第65轮报告](wangshanchong/第65轮报告.md)、[配置及Source复验](docs/五岗位演示配置与阶段2复验_20261013.md)。阶段1Source已验状态保留，阶段3未进入；旧失败/历史例外/109未全验保持。
+F05仅配置候选通过；V02仍未完整验收，不正式关闭。详见[第65轮报告](archive/wangshanchong/第65轮报告.md)、[配置及Source复验](archive/docs/五岗位演示配置与阶段2复验_20261013.md)。阶段1Source已验状态保留，阶段3未进入；旧失败/历史例外/109未全验保持。

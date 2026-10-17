@@ -1,0 +1,42 @@
+/*
+ * 全站样式单一入口（G16 阶段 3；G18 阶段 2 完成就近拆分）。
+ * 层叠顺序与拆分前一致。阶段样式文件已按语义重命名：
+ *   org-stage11.css → health-review.css   stage13.css → project-admin.css
+ *   stage15.css     → booking.css         stage16.css → meals.css
+ *   stage21.css     → health-workspace.css stage22.css → wellness-review.css
+ *   stage24.css     → checkin-feedback.css stage25.css → daily-brief.css
+ *   stage26.css     → operations.css      styles.css  → base.css
+ *   web-layout.css  → layout.css
+ *
+ * G18 阶段 2（2026-10-16）：随组件拆分的 CSS 已移入对应 chunk，由组件就近导入——
+ *   agent.css      → components/staff/guests.jsx（StaffView 分包；仅 staff/guests 使用，
+ *                    .metric-button 两条约 230B 为客人主页使用，已并入 base.css）
+ *   assistant.css  → components/assistant/AssistantWidget.jsx（助手分包；仅助手组件使用，
+ *                    .assistant-sources 区块为客人主页 GuestAgentResults 共用，已并入 base.css，
+ *                    operations.css 的 .stage26-advice-draft/.stage26-draft-trigger 助手专用规则并入本文件）
+ *   operations.css → components/staff/OperationsWorkbench.jsx（StaffView 分包；DailySchedule 同 chunk 共用）
+ * 拆分经 scripts/css-conflict-check.mjs（同名选择器逐属性）与
+ * scripts/css-shorthand-conflict-check.mjs（简写展开，检出 .assistant-input input 的
+ * font:inherit 简写在 lazy 层反超 layout.css 字号的隐患，已剪除）全量层叠评估：三个文件与保留在 eager 层的文件之间
+ * 共 19 处顺序敏感声明冲突（layout.css/release.css 的字号抬升与 FAB 定位覆盖），
+ * 已按"今天的生效值"剪掉移动文件中的死声明（详见两文件内的 G18 注释），计算样式零变化；
+ * 修改前后逐页计算样式与截图对照核验通过。
+ * 未随包拆分的文件均为 eager 客人主线与 lazy 员工端共用的混合文件
+ * （health-review/project-admin/wellness-review/booking 等），规则级再拆分另行立项。
+ * environment.css 仍由 EnvironmentPanel.jsx 就近导入（原状）。
+ */
+@import './base.css';
+@import './overrides.css';
+@import './layout.css';
+@import './age-friendly.css';
+@import './health-review.css';
+@import './project-admin.css';
+@import './booking.css';
+@import './meals.css';
+@import './health-workspace.css';
+@import './wellness-review.css';
+@import './checkin-feedback.css';
+@import './daily-brief.css';
+@import './health-metrics.css';
+@import './mood.css';
+@import './release.css';

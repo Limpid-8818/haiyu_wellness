@@ -2,12 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './environment.css';
 import {businessTime} from '../../shared/release-presentation.js';
 import {SourceDetails} from './SourceDetails.jsx';
-
-function businessDateKey() {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date());
-}
+import { businessToday as businessDateKey } from './lib/date.js';
 
 function showValue(value, unit = '') {
   return !(typeof value === 'number' || (typeof value === 'string' && value.trim())) || !Number.isFinite(Number(value)) ? '暂无数据' : String(value) + unit;
@@ -46,7 +41,7 @@ function TideCurve({ hourly = [], events = [], modeled = false }) {
   </div>;
 }
 
-export default function EnvironmentPanel({ projectId = '' }) {
+export default function EnvironmentPanel({ projectId = '', requestApi = null }) {
   const [date] = useState(businessDateKey);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,15 +53,19 @@ export default function EnvironmentPanel({ projectId = '' }) {
     const query = new URLSearchParams({ date });
     if (projectId) query.set('projectId', projectId);
     if (mockScenario) query.set('mockScenario', mockScenario);
-    const token = localStorage.getItem('community_token');
     setLoading(true);
-    fetch('/api/environment?' + query.toString(), {
-      headers: token ? { Authorization: 'Bearer ' + token } : {}
-    }).then(async response => {
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body.error || '环境信息暂时无法加载');
-      return body;
-    }).then(result => {
+    // 优先使用注入的统一 request 封装（路径不带 /api 前缀，由封装添加）：
+    // 401 过期登出、网络错误文案与全站一致（G21）。
+    const pending = requestApi
+      ? requestApi('/environment?' + query.toString())
+      : fetch('/api/environment?' + query.toString(), {
+        headers: (() => { const token = localStorage.getItem('community_token'); return token ? { Authorization: 'Bearer ' + token } : {}; })()
+      }).then(async response => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.error || '环境信息暂时无法加载');
+        return body;
+      });
+    pending.then(result => {
       if (!current) return;
       setData(result);
       setError('');
@@ -78,7 +77,7 @@ export default function EnvironmentPanel({ projectId = '' }) {
       if (current) setLoading(false);
     });
     return () => { current = false; };
-  }, [date, projectId, refresh, mockScenario]);
+  }, [date, projectId, refresh, mockScenario, requestApi]);
   const statusLabel = data?.mock ? data.mock.label
     : data?.providerFixture?.mode === 'offline_fixture' ? data.providerFixture.label
     : data && data.status === 'demo' ? '合成演示资料 · 非实时'

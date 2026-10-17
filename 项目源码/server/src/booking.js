@@ -1,30 +1,18 @@
 import crypto from 'node:crypto';
-import { db, guestProfile, hasActiveTransaction, id, json, log, now, transaction } from './db.js';
+import { db, guestProfile, id, inTransaction, isUniqueViolation, json, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { decodeProject, getProject, listProjects, listRules } from './catalog.js';
 import { effectiveHealthConstraints, normalizeHealthProfile } from './health-profile.js';
 import { AppError } from './errors.js';
 import { getEnvironmentSnapshot } from './environment.js';
 import { assessEnvironmentWindow } from './environment-availability.js';
-import { systemBusinessClock } from './clock.js';
+import { shiftDateKey, systemBusinessClock } from './clock.js';
 import { isDateOnly } from './staffing.js';
 
 const SLOT_MINUTES = 60;
-const BUSINESS_TIME_ZONE = 'Asia/Shanghai';
 const DAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-const lockSuffix = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
-const inTransaction = callback => hasActiveTransaction() ? callback() : transaction(callback);
-
-function dateOffset(date, amount) {
-  const value = new Date(`${date}T12:00:00Z`);
-  value.setUTCDate(value.getUTCDate() + amount);
-  return value.toISOString().slice(0, 10);
-}
 
 function localDateTimeToUtc(date, time) {
-  const [year, month, day] = date.split('-').map(Number);
-  const [hour, minute] = time.split(':').map(Number);
-  // Asia/Shanghai has used UTC+08:00 without daylight-saving changes.
-  return new Date(Date.UTC(year, month - 1, day, hour - 8, minute)).toISOString();
+  return systemBusinessClock.localToUtc(date, time);
 }
 
 function dateDay(date) {
@@ -47,12 +35,6 @@ function timeText(totalMinutes) {
 function slotId(projectId, date, start, end) {
   const digest = crypto.createHash('sha256').update(`${projectId}\u0000${date}\u0000${start}\u0000${end}`).digest('hex').slice(0, 32);
   return `slot_${digest}`;
-}
-
-function isDuplicate(error) {
-  return error?.code === 'ER_DUP_ENTRY' || error?.errno === 1062
-    || String(error?.code || '').startsWith('SQLITE_CONSTRAINT')
-    || /UNIQUE constraint failed/i.test(String(error?.message || ''));
 }
 
 export function slotWindowsForDate(project, date) {
@@ -96,11 +78,23 @@ function slotMatchesCurrentWindow(project, slot) {
 export async function ensureProjectSlots(project, { startDate = systemBusinessClock.dateKey(), days = 7 } = {}) {
   if (!Number.isInteger(days) || days < 1 || days > 7) throw new AppError(400, 'SLOT_RANGE_INVALID', '一次最多生成未来七天的时段');
   if (!project?.active) return { generated: 0, slotCount: 0 };
+  // 先在内存中算出应有时段、一次查询既有行，只补缺失部分：读路径不再产生
+  // 成百上千次注定冲突的 INSERT，也不在无需写入时开启写事务（G07）。
+  const expected = [];
+  for (let offset = 0; offset < days; offset += 1) {
+    const date = shiftDateKey(startDate, offset);
+    for (const slot of slotWindowsForDate(project, date)) expected.push(slot);
+  }
+  const existingRows = await db.prepare(`SELECT id FROM activity_slots
+    WHERE project_id=? AND business_date>=? AND business_date<?`).all(
+    project.id, startDate, shiftDateKey(startDate, days)
+  );
+  const existing = new Set(existingRows.map(row => row.id));
+  const missing = expected.filter(slot => !existing.has(slot.id));
   let generated = 0;
-  await transaction(async () => {
-    for (let offset = 0; offset < days; offset += 1) {
-      const date = dateOffset(startDate, offset);
-      for (const slot of slotWindowsForDate(project, date)) {
+  if (missing.length) {
+    await transaction(async () => {
+      for (const slot of missing) {
         try {
           const result = await db.prepare(`INSERT INTO activity_slots
             (id,project_id,business_date,starts_at,ends_at,local_start,local_end,capacity,is_closed,created_at,updated_at)
@@ -110,14 +104,14 @@ export async function ensureProjectSlots(project, { startDate = systemBusinessCl
           );
           generated += Number(result.changes || 0);
         } catch (error) {
-          if (!isDuplicate(error)) throw error;
+          if (!isUniqueViolation(error)) throw error;
         }
       }
-    }
-  });
+    });
+  }
   const count = Number((await db.prepare(`SELECT COUNT(*) AS count FROM activity_slots
     WHERE project_id=? AND business_date>=? AND business_date<?`).get(
-    project.id, startDate, dateOffset(startDate, days)
+    project.id, startDate, shiftDateKey(startDate, days)
   )).count || 0);
   return { generated, slotCount: count };
 }
@@ -253,7 +247,7 @@ async function slotRows(projectId, date) {
 
 function withinNextSevenDays(date) {
   const today = systemBusinessClock.dateKey();
-  return isDateOnly(date) && date >= today && date <= dateOffset(today, 6);
+  return isDateOnly(date) && date >= today && date <= shiftDateKey(today, 6);
 }
 
 async function guestProjectSlots(project, date, guestId) {
@@ -283,7 +277,7 @@ async function guestProjectSlots(project, date, guestId) {
     result.push({ ...slot, remaining, status, available: status === 'available', bookable: status === 'available',
       reason, environment: { ...environment, reason: environment.reason }, isDemo: Boolean(project.isDemo || environment.isDemo) });
   }
-  return { projectId, projectName: project.name, date, timeZone: BUSINESS_TIME_ZONE, isDemo: project.isDemo, slots: result };
+  return { projectId, projectName: project.name, date, timeZone: systemBusinessClock.timeZone, isDemo: project.isDemo, slots: result };
 }
 
 export async function inspectGuestProjectSlots(projectId, date, guestId) {
@@ -367,10 +361,16 @@ export async function createReservation({ guestId, slotId: requestedSlotId, idem
     throw new AppError(400, 'IDEMPOTENCY_KEY_INVALID', '预约请求缺少有效的幂等标识');
   }
   const fingerprint = crypto.createHash('sha256').update(requestedSlotId).digest('hex');
+  // 环境快照在 live 冷缓存时可能触发外部 HTTP（三域串行最坏数十秒）。
+  // 必须在开事务前取好，避免期间占用 SQLite 全局事务串行链 / MySQL 行锁（G03）。
+  const slotDateRow = await db.prepare('SELECT business_date FROM activity_slots WHERE id=?').get(requestedSlotId);
+  const prefetchedSnapshot = slotDateRow
+    ? await getEnvironmentSnapshot(String(slotDateRow.business_date).slice(0, 10))
+    : null;
   const create = async () => {
-    const guest = await db.prepare(`SELECT id FROM users WHERE id=? AND role='guest' AND status='active'${lockSuffix()}`).get(guestId);
+    const guest = await db.prepare(`SELECT id FROM users WHERE id=? AND role='guest' AND status='active'${mysqlLockSuffix()}`).get(guestId);
     if (!guest) throw new AppError(409, 'GUEST_INACTIVE', '客人账号不存在或已停用');
-    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${lockSuffix()}`).get(guestId);
+    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${mysqlLockSuffix()}`).get(guestId);
 
     const previous = await db.prepare('SELECT * FROM reservations WHERE guest_id=? AND idempotency_key=?').get(guestId, idempotencyKey);
     if (previous) {
@@ -382,7 +382,7 @@ export async function createReservation({ guestId, slotId: requestedSlotId, idem
         p.location,p.is_demo AS project_is_demo,p.category,p.intensity,p.activity_tag,p.sea_entry,p.outdoor,
         p.open_windows_json,p.capacity_per_window,p.suitable_people,p.contraindications,p.slug,p.description,
         p.source_reference,p.updated_at AS project_updated_at
-      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.id=?${lockSuffix()}`).get(requestedSlotId);
+      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.id=?${mysqlLockSuffix()}`).get(requestedSlotId);
     if (!slot) throw new AppError(404, 'SLOT_NOT_FOUND', '预约时段不存在，请刷新项目时段');
     if (!Number(slot.project_active)) throw new AppError(409, 'PROJECT_INACTIVE', '项目已停用，不能创建新预约');
     // The joined FOR UPDATE read is a current read in MySQL REPEATABLE READ.
@@ -401,7 +401,7 @@ export async function createReservation({ guestId, slotId: requestedSlotId, idem
       throw new AppError(409, 'SLOT_WINDOW_CHANGED', '项目开放窗口已调整，此时段不再开放预约。', { slotId: requestedSlotId });
     }
     const health = await bookingHealthState(guestId);
-    const snapshot = await getEnvironmentSnapshot(String(slot.business_date).slice(0, 10));
+    const snapshot = prefetchedSnapshot;
     const rules = await listRules();
     const availability = await evaluateSlot({
       project, slot, guestId, profileState: health, legacyProfile: health.profile, rules, snapshot
@@ -420,11 +420,11 @@ export async function createReservation({ guestId, slotId: requestedSlotId, idem
     if (Date.parse(startsAt) <= Date.parse(systemBusinessClock.utc())) throw new AppError(409, 'SLOT_PAST', '时段已开始或结束，不能预约');
 
     const overlap = await db.prepare(`SELECT r.id FROM reservations r JOIN activity_slots other_slot ON other_slot.id=r.slot_id
-      WHERE r.guest_id=? AND r.status='confirmed' AND other_slot.starts_at<? AND other_slot.ends_at>?${lockSuffix()}`)
+      WHERE r.guest_id=? AND r.status='confirmed' AND other_slot.starts_at<? AND other_slot.ends_at>?${mysqlLockSuffix()}`)
       .get(guestId, endsAt, startsAt);
     if (overlap) throw new AppError(409, 'RESERVATION_TIME_CONFLICT', '您已有一条时间重叠的有效预约');
 
-    const activeForSlot = await db.prepare(`SELECT id FROM reservations WHERE slot_id=? AND status='confirmed'${lockSuffix()}`).all(requestedSlotId);
+    const activeForSlot = await db.prepare(`SELECT id FROM reservations WHERE slot_id=? AND status='confirmed'${mysqlLockSuffix()}`).all(requestedSlotId);
     const booked = activeForSlot.length;
     if (Number(slot.is_closed)) throw new AppError(409, 'SLOT_CLOSED', '此时段已关闭预约');
     if (booked >= Number(slot.capacity)) throw new AppError(409, 'SLOT_FULL', '此时段已约满', { capacity: Number(slot.capacity), booked });
@@ -443,7 +443,7 @@ export async function createReservation({ guestId, slotId: requestedSlotId, idem
     await log(guestId, 'reservation.create', 'reservation', reservationId, `项目 ${project.name} · ${slot.business_date} ${slot.local_start}-${slot.local_end}`);
     return { reservation: publicReservation(await reservationById(reservationId, guestId)), replayed: false };
   };
-  return hasActiveTransaction() ? create() : transaction(create);
+  return inTransaction(create);
 }
 
 export async function listGuestReservations(guestId) {
@@ -471,12 +471,12 @@ export async function listGuestSchedule(guestId) {
 
 export async function cancelReservation({ guestId, reservationId }) {
   return inTransaction(async () => {
-    const guest = await db.prepare(`SELECT id FROM users WHERE id=? AND role='guest' AND status='active'${lockSuffix()}`).get(guestId);
+    const guest = await db.prepare(`SELECT id FROM users WHERE id=? AND role='guest' AND status='active'${mysqlLockSuffix()}`).get(guestId);
     if (!guest) throw new AppError(409, 'GUEST_INACTIVE', '客人账号不存在或已停用');
     const basic = await db.prepare('SELECT id,slot_id,status FROM reservations WHERE id=? AND guest_id=?').get(reservationId, guestId);
     if (!basic) throw new AppError(404, 'RESERVATION_NOT_FOUND', '预约不存在');
-    await db.prepare(`SELECT id FROM activity_slots WHERE id=?${lockSuffix()}`).get(basic.slot_id);
-    const current = await db.prepare(`SELECT * FROM reservations WHERE id=? AND guest_id=?${lockSuffix()}`).get(reservationId, guestId);
+    await db.prepare(`SELECT id FROM activity_slots WHERE id=?${mysqlLockSuffix()}`).get(basic.slot_id);
+    const current = await db.prepare(`SELECT * FROM reservations WHERE id=? AND guest_id=?${mysqlLockSuffix()}`).get(reservationId, guestId);
     if (current.status === 'cancelled') return publicReservation(await reservationById(current.id, guestId));
     const slot = await db.prepare('SELECT starts_at FROM activity_slots WHERE id=?').get(current.slot_id);
     if (Date.parse(slot.starts_at) <= Date.parse(systemBusinessClock.utc())) {
@@ -500,9 +500,9 @@ export async function updateProjectSlot({ actorId, projectId, slotId: requestedS
   if (patch.closed !== undefined && typeof patch.closed !== 'boolean') throw new AppError(400, 'SLOT_CLOSED_INVALID', '关闭状态必须是布尔值');
   return transaction(async () => {
     const slot = await db.prepare(`SELECT s.*,p.location,p.active AS project_active,p.is_demo AS project_is_demo,p.name AS project_name
-      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.id=? AND s.project_id=?${lockSuffix()}`).get(requestedSlotId, projectId);
+      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.id=? AND s.project_id=?${mysqlLockSuffix()}`).get(requestedSlotId, projectId);
     if (!slot) throw new AppError(404, 'SLOT_NOT_FOUND', '排期时段不存在');
-    const activeReservations = await db.prepare(`SELECT id FROM reservations WHERE slot_id=? AND status='confirmed'${lockSuffix()}`).all(requestedSlotId);
+    const activeReservations = await db.prepare(`SELECT id FROM reservations WHERE slot_id=? AND status='confirmed'${mysqlLockSuffix()}`).all(requestedSlotId);
     if (patch.capacity !== undefined && patch.capacity < activeReservations.length) {
       throw new AppError(409, 'CAPACITY_BELOW_BOOKED', '容量不能低于当前有效预约数', { booked: activeReservations.length, requestedCapacity: patch.capacity });
     }

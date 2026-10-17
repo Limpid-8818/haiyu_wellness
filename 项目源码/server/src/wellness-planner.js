@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { db, guestProfile, id, json, log, now, transaction, hasActiveTransaction } from './db.js';
+import { db, guestProfile, id, inTransaction, json, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { chatWithAssistant, getAssistantRun } from './assistant.js';
 import { WELLNESS_DRAFT_COORDINATION_TASK } from './assistant-agents.js';
 import { evaluateExistingDraftSlot } from './booking.js';
@@ -25,7 +25,6 @@ const MEALS = [
   { key: 'lunch', label: '午餐' },
   { key: 'dinner', label: '晚餐' }
 ];
-const guestLock = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
 
 function hash(value) { return crypto.createHash('sha256').update(value).digest('hex'); }
 
@@ -704,7 +703,7 @@ export async function createWellnessDraft({ user, body, requestKey }) {
   const draftId = id('wellness_draft');
   let createdRow;
   await transaction(async () => {
-    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${guestLock()}`).get(user.id);
+    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${mysqlLockSuffix()}`).get(user.id);
     const previous = await db.prepare('SELECT * FROM wellness_drafts WHERE guest_id=? AND request_key=?').get(user.id, requestKey);
     if (previous) { createdRow = previous; return; }
     const latest = await db.prepare('SELECT COALESCE(MAX(version),0) AS version,MAX(created_at) AS latest_created_at FROM wellness_drafts WHERE guest_id=?').get(user.id);
@@ -832,7 +831,7 @@ export async function adoptWellnessDraft({ user, body, requestKey }) {
   const draftId = id('wellness_draft');
   let createdRow;
   await transaction(async () => {
-    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${guestLock()}`).get(user.id);
+    await db.prepare(`SELECT user_id FROM guest_profiles WHERE user_id=?${mysqlLockSuffix()}`).get(user.id);
     const previous = await db.prepare('SELECT * FROM wellness_drafts WHERE guest_id=? AND request_key=?').get(user.id, requestKey);
     if (previous) { checkAdoptionReplay(previous, input); createdRow = previous; return; }
     const latest = await db.prepare('SELECT COALESCE(MAX(version),0) AS version,MAX(created_at) AS latest_created_at FROM wellness_drafts WHERE guest_id=?').get(user.id);
@@ -948,7 +947,7 @@ export async function createRestChangeDraft({ user, reservationId, sessionId, so
       `客人提出休息调整；关联已取消预约 ${reservation.id}；待医护审核`);
     return { draftId, replayed: false };
   };
-  const result = hasActiveTransaction() ? await create() : await transaction(create);
+  const result = await inTransaction(create);
   return { ...(await getWellnessDraft(user.id, result.draftId)), deduplicated: result.replayed };
 }
 
@@ -968,8 +967,24 @@ export async function listWellnessDrafts(guestId, { stayStart = null, stayEnd = 
   if (stayStart && stayEnd) { filters.push('stay_start=? AND stay_end=?'); params.push(stayStart, stayEnd); }
   const rows = await db.prepare(`SELECT * FROM wellness_drafts WHERE ${filters.join(' AND ')} ORDER BY version DESC,id DESC LIMIT 50`)
     .all(...params);
+  // G24：一次取回全部草案条目并按 draft_id 分组，替代逐草案 N+1 查询；环境历史仍按草案单独读取。
+  const draftIds = rows.map(row => row.id);
+  const itemsByDraft = new Map();
+  if (draftIds.length) {
+    const itemPlaceholders = draftIds.map(() => '?').join(',');
+    const itemRows = await db.prepare(`SELECT * FROM wellness_draft_items WHERE draft_id IN (${itemPlaceholders})
+      ORDER BY business_date,CASE slot_key WHEN 'breakfast' THEN 1 WHEN 'morning' THEN 2 WHEN 'lunch' THEN 3
+        WHEN 'afternoon' THEN 4 WHEN 'dinner' THEN 5 ELSE 6 END,local_start`).all(...draftIds);
+    for (const item of itemRows) {
+      if (!itemsByDraft.has(item.draft_id)) itemsByDraft.set(item.draft_id, []);
+      itemsByDraft.get(item.draft_id).push(item);
+    }
+  }
   const result = [];
-  for (const row of rows) result.push(await getWellnessDraft(guestId, row.id));
+  for (const row of rows) {
+    const draft = decodeDraft(row, (itemsByDraft.get(row.id) || []).map(decodeItem));
+    result.push({ ...draft, environmentHistory: await draftEnvironmentHistory(draft) });
+  }
   return result;
 }
 

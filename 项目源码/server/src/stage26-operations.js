@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { AppError } from './errors.js';
-import { db, guestProfile, hasActiveTransaction, id, json, log, now, transaction } from './db.js';
+import { db, guestProfile, id, inTransaction, isUniqueViolation, json, log, mysqlLockSuffix, now, transaction, escapeLikeValue, likeEscapeClause } from './db.js';
 import { listAdminProjectSlots, listGuestProjectSlots, createReservation } from './booking.js';
 import { createNotificationOnce } from './wellness-notifications.js';
 import { listProjects } from './catalog.js';
@@ -9,7 +9,6 @@ import { effectiveHealthConstraints, normalizeHealthProfile } from './health-pro
 import { staffServiceDetails } from './service-execution.js';
 
 const SERVICE_JOBS = new Set(['coach', 'therapist', 'dietitian']);
-const lock = () => db.driver === 'mysql' ? ' FOR UPDATE' : '';
 
 function isValidDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -32,12 +31,6 @@ function ageAt(birthDate, date) {
   let age = Number(date.slice(0, 4)) - Number(birth.slice(0, 4));
   if (date.slice(5) < birth.slice(5)) age -= 1;
   return age >= 0 && age <= 125 ? age : null;
-}
-
-function duplicate(error) {
-  return error?.code === 'ER_DUP_ENTRY' || error?.errno === 1062
-    || String(error?.code || '').startsWith('SQLITE_CONSTRAINT')
-    || /UNIQUE constraint failed/i.test(String(error?.message || ''));
 }
 
 function requireIdempotencyKey(value, label) {
@@ -63,20 +56,33 @@ export async function listOrganizationGuests({ query = '', date = '' } = {}) {
   const needle = String(query || '').trim().slice(0, 100);
   const dateFilter = String(date || '').trim();
   if (dateFilter && !isValidDate(dateFilter)) throw new AppError(400, 'GUEST_SEARCH_DATE_INVALID', '入住日期格式无效');
-  const match = `%${needle.replace(/[\\%_]/g, value => `\\${value}`)}%`;
+  // G40：改用统一转义助手，并补上此前缺失、导致 SQLite 下转义无效的 ESCAPE 子句。
+  const match = escapeLikeValue(needle);
+  const matchEsc = likeEscapeClause();
   const rows = await db.prepare(`SELECT u.id,u.name,u.status AS accountStatus,u.created_at AS createdAt,
       p.gender,p.birth_date AS birthDate,p.room_no AS roomNo,p.check_in AS checkIn,p.check_out AS checkOut,
       p.chronic_json AS chronicJson,p.allergies_json AS allergiesJson,p.health_profile_json AS healthProfileJson
     FROM users u JOIN guest_profiles p ON p.user_id=u.id
-    WHERE u.role='guest' AND (?='' OR u.name LIKE ? OR p.room_no LIKE ? OR p.check_in LIKE ?)
+    WHERE u.role='guest' AND (?='' OR u.name LIKE ?${matchEsc} OR p.room_no LIKE ?${matchEsc} OR p.check_in LIKE ?${matchEsc})
       AND (?='' OR p.check_in=?) ORDER BY p.check_in DESC,u.name,u.id LIMIT 200`).all(
     needle, match, match, match, dateFilter, dateFilter);
   const today = systemBusinessClock.dateKey();
+  // G24：一次性取回本页客人的待核实自述（每客人取 revision 最高的一条），替代逐行 N+1 查询。
+  const guestIds = rows.map(row => row.id);
+  const pendingByGuest = new Map();
+  if (guestIds.length) {
+    const intakePlaceholders = guestIds.map(() => '?').join(',');
+    const pendingRows = await db.prepare(`SELECT guest_id, risk_level AS riskLevel FROM health_intakes
+      WHERE status='pending' AND guest_id IN (${intakePlaceholders})
+      ORDER BY guest_id, revision DESC, id DESC`).all(...guestIds);
+    for (const pending of pendingRows) {
+      if (!pendingByGuest.has(pending.guest_id)) pendingByGuest.set(pending.guest_id, pending);
+    }
+  }
   return await Promise.all(rows.map(async row => {
     const chronic = json(row.chronicJson, []);
     const allergies = json(row.allergiesJson, []);
-    const latestPending = await db.prepare(`SELECT risk_level AS riskLevel FROM health_intakes
-      WHERE guest_id=? AND status='pending' ORDER BY revision DESC,id DESC LIMIT 1`).get(row.id);
+    const latestPending = pendingByGuest.get(row.id);
     const riskFlags = [];
     if (chronic.length) riskFlags.push('慢病记录');
     if (allergies.length) riskFlags.push('过敏或忌口');
@@ -166,7 +172,7 @@ export async function markReservationNoShow({ reservationId, actorId }) {
     const row = await db.prepare(`SELECT r.id,r.status,s.starts_at AS startsAt,s.project_id AS projectId,
         p.name AS projectName,u.name AS guestName
       FROM reservations r JOIN activity_slots s ON s.id=r.slot_id JOIN projects p ON p.id=s.project_id
-      JOIN users u ON u.id=r.guest_id WHERE r.id=?${lock()}`).get(reservationId);
+      JOIN users u ON u.id=r.guest_id WHERE r.id=?${mysqlLockSuffix()}`).get(reservationId);
     if (!row) throw new AppError(404, 'RESERVATION_NOT_FOUND', '预约不存在');
     if (row.status !== 'confirmed') throw new AppError(409, 'RESERVATION_NOT_ACTIVE', '只有有效预约可以登记未参加');
     if (await db.prepare('SELECT id FROM wellness_checkins WHERE reservation_id=?').get(reservationId)) {
@@ -249,7 +255,7 @@ export async function cancelWeatherAffectedSlots({ actorId, slotIds, snapshotKey
       `${preview.affectedReservations.length} 条预约；来源 ${preview.snapshot.sourceName} · ${preview.snapshot.snapshotKey}`);
     return await weatherBatchResult(batchId, false);
   };
-  return hasActiveTransaction() ? action() : transaction(action);
+  return inTransaction(action);
 }
 
 async function weatherBatchResult(batchId, replayed) {
@@ -309,7 +315,7 @@ export async function confirmWeatherReschedule({ reservationId, guestId, actorId
   const action = async () => {
     const original = await db.prepare(`SELECT r.id,r.guest_id AS guestId,r.status,r.cancellation_reason AS cancellationReason,
         s.project_id AS projectId
-      FROM reservations r JOIN activity_slots s ON s.id=r.slot_id WHERE r.id=?${lock()}`).get(reservationId);
+      FROM reservations r JOIN activity_slots s ON s.id=r.slot_id WHERE r.id=?${mysqlLockSuffix()}`).get(reservationId);
     if (!original || original.guestId !== guestId) throw new AppError(404, 'RESERVATION_NOT_FOUND', '预约不存在');
     if (original.status !== 'cancelled' || !String(original.cancellationReason || '').startsWith('weather_batch:')) {
       throw new AppError(409, 'RESCHEDULE_NOT_AVAILABLE', '只有天气批量取消的预约可以改约');
@@ -333,7 +339,7 @@ export async function confirmWeatherReschedule({ reservationId, guestId, actorId
     return { previousReservationId: reservationId, newReservationId, reservation: created.reservation,
       linkId, notificationCreated: true, replayed: false };
   };
-  return hasActiveTransaction() ? action() : transaction(action);
+  return inTransaction(action);
 }
 
 export async function assignStaffToSlot({ slotId, staffId, jobType, actorId }) {
@@ -341,7 +347,7 @@ export async function assignStaffToSlot({ slotId, staffId, jobType, actorId }) {
   return await transaction(async () => {
     const slot = await db.prepare(`SELECT s.id,s.project_id AS projectId,s.business_date AS businessDate,
         s.local_start AS localStart,s.local_end AS localEnd,p.name AS projectName
-      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.id=?${lock()}`).get(slotId);
+      FROM activity_slots s JOIN projects p ON p.id=s.project_id WHERE s.id=?${mysqlLockSuffix()}`).get(slotId);
     if (!slot) throw new AppError(404, 'SLOT_NOT_FOUND', '项目时段不存在');
     const staff = await db.prepare(`SELECT id,name,job_type AS jobType,status FROM users
       WHERE id=? AND role='staff'`).get(staffId);
@@ -432,7 +438,7 @@ export async function recordProviderFailure({ supplier, feature, errorCode = 'PR
     await db.prepare(`INSERT INTO stage26_provider_events(id,supplier_key,feature_key,outcome,error_code,occurred_at)
       VALUES(?,?,?,'failed',?,?)`).run(id('provider_event'), supplierKey, featureKey, safeCode, stamp);
     const state = await db.prepare(`SELECT consecutive_failures AS consecutiveFailures,first_failed_at AS firstFailedAt
-      FROM stage26_provider_state WHERE supplier_key=? AND feature_key=?${lock()}`).get(supplierKey, featureKey);
+      FROM stage26_provider_state WHERE supplier_key=? AND feature_key=?${mysqlLockSuffix()}`).get(supplierKey, featureKey);
     const count = Number(state?.consecutiveFailures || 0) + 1;
     if (state) {
       await db.prepare(`UPDATE stage26_provider_state SET consecutive_failures=?,last_outcome='failed',
@@ -443,11 +449,11 @@ export async function recordProviderFailure({ supplier, feature, errorCode = 'PR
         await db.prepare(`INSERT INTO stage26_provider_state(supplier_key,feature_key,consecutive_failures,last_outcome,
           first_failed_at,last_failed_at,last_success_at,updated_at) VALUES(?,?,?,'failed',?,?,NULL,?)`)
           .run(supplierKey, featureKey, count, stamp, stamp, stamp);
-      } catch (error) { if (!duplicate(error)) throw error; }
+      } catch (error) { if (!isUniqueViolation(error)) throw error; }
     }
     if (count >= failureThreshold()) {
       const current = await db.prepare(`SELECT status FROM stage26_operations_incidents
-        WHERE supplier_key=? AND feature_key=?${lock()}`).get(supplierKey, featureKey);
+        WHERE supplier_key=? AND feature_key=?${mysqlLockSuffix()}`).get(supplierKey, featureKey);
       const impactSummary = String(impact || '连续调用失败；相关资料查询暂时降级，其他运营功能可继续使用。').slice(0, 500);
       if (current) {
         await db.prepare(`UPDATE stage26_operations_incidents SET status='open',failure_count=?,first_failed_at=COALESCE(first_failed_at,?),
@@ -485,7 +491,7 @@ export async function closeOperationsIncident({ supplier, feature, actorId }) {
   const featureKey = boundedKey(feature, 64);
   return await transaction(async () => {
     const row = await db.prepare(`SELECT status,recovered_at AS recoveredAt,failure_count AS failureCount,
-      impact_summary AS impactSummary FROM stage26_operations_incidents WHERE supplier_key=? AND feature_key=?${lock()}`)
+      impact_summary AS impactSummary FROM stage26_operations_incidents WHERE supplier_key=? AND feature_key=?${mysqlLockSuffix()}`)
       .get(supplierKey, featureKey);
     if (!row) throw new AppError(404, 'OPERATIONS_INCIDENT_NOT_FOUND', '运营事项不存在');
     if (row.status === 'closed') return { supplier: supplierKey, feature: featureKey, status: 'closed', replayed: true };
