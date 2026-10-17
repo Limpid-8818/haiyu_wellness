@@ -1,3 +1,15 @@
+# 最新人类授权：剩余工程问题串行修复，仅第1阶段G41（2026-10-17）
+
+用户最新要求“开始派发剩下没有做完的工程问题”，commit信息参考Limpid的fix(server)/refactor(web)/docs格式；取代下方10-14不派后续的旧停止状态。本Source仍01a0cbfe-a161-72d0-992d-12fad655d4ef/local，只规划与独验。准备前main/origin/实际远端均af5fb2ba919aa515dae246c6ff0950e4ca394ecd，PR#3同学成果已合入；工程47项中34完成、G12部分、12未修，当前计划只覆盖13开放项。
+
+详见docs/工程问题剩余修复执行计划_20261017.md和第103轮。每阶段一个独立App GPT-6.1 Sol/High、串行；当前仅G41助手finishRun终态原子性，入口server/src/assistant-run.js。准备先提交协调文稿保证干净基线，然后create_thread项目local；执行者可建codex阶段分支，不新worktree/复制依赖/内部agent。旧worker28d6及其dirty/失败原件不动。实际worker身份以App回执和ignored output/dispatch/g41-dispatch-20261017.json为准，禁止编造或冒用Source。
+
+G41只终态事务与离线故障回滚测试，不读私密.env/用户库、不真模型/天气/MySQL/scheduler/浏览器/CI修复；目标及关联回归、server全测和精确资源退出双门。普通OS硬60秒、runner45秒、lease15min、日志8MiB/temp512MiB，先准确退出/句柄关闭再自身temp/socket/link清理并核审计自身退出。不扩权限、不kill用户进程，不反复全盘历史散列。
+
+worker报告104、Source独验105；候选Git暂存/commit/merge/push0，G41仅候选。完成/失败/阻塞用户授权向本Source App主动一次回包后停；Source派发后至多一次必要就绪即结束，不持续轮询。独验通过后另给同阶段收尾commit/main合入/原工程条目完成/普通push核SHA，随后新阶段从最新已验main接续。后续2—10未派；业务U01/V03/V04、109未全验/NOT_FINAL_ACCEPTED/旧FAIL及历史例外保持。下方历史全文保留。
+
+---
+
 # 最新交付状态：阶段6已合main推远端，Source101交付复核完成（2026-10-14）
 
 按人类最新先交付授权，产品4a1123e经main正常mergecb0811b、文稿f20a82b已普通push，Source101亲核160引用/96产品blob/main一致、三方remoteSHA相同且main干净；Source另在main真实98/98退出0，workerbuild52/521ms0已核。原6根60实例、新integration worker5+Source3共8双根准确资源PASS，auditor各3身份2组/guardian0另退，无新模型/Key/env/provider/用户库或依赖链接。
