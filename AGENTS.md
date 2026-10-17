@@ -1,3 +1,13 @@
+# 当前工程进度：G04已合推并Source114复核，准备仅G05/G37（2026-10-17）
+
+G04产品803b7f3经正常merge fadac02、文稿c3a5678普通push，Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同c3a5678a65035bab6e02cdd876b19970995cd456且干净、17件blob保持（含唯一授权单LF规范化）、111原件保持；112旧BLOCKED不改，113新实际收据分开。原G04 App idle/completed，23实例201准确身份/自身路径仍退、无新运行资源。G04原条目完成但未知锁不自动恢复/同步账本成本边界保留。
+
+详114及docs/工程第3阶段G05_G37执行计划_20261017.md。仅新独立App GPT-6.1 Sol/High准备第3阶段G05/G37，最新main及纯协调文稿为输入，当前local串行、不内部代理/新worktree/复制依赖。G37已有11位手机号格式/密码/重复校验，不重复造轮子或冒称所有权验证；补基本限流并纠正旧概括。G05全部HTTP密码热路径async scrypt、兼容旧salt:hex和CLI/种子，有限IP/账号/主体请求门，不SMS/验证码平台/Redis/新Key/G12会话迁移。
+
+worker115/Source116，实际ID按App回执和ignored output/dispatch/g05-g37-dispatch-20261017.json；候选暂存/commit/merge/push0。目标和全测/准确资源双门后才原任务收尾Git再派4；新未跟踪文件须覆盖空白检查。普通OS60/runner45/lease15min/log8MiB/temp512MiB、真实caller/新审计根/G41 app.listen fixture；不读私密.env/用户库或真模型天气/MySQL/scheduler/browser/CI/新安装。G04单次安装授权已用，不跨阶段继承。完成一次App主动回本Source停，源至多一次就绪即结束不轮询。4—10未派，U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL例外不变，下方历史完整保留。
+
+---
+
 # 当前工程整合：G04已验产品合main，第113轮文稿与普通push收尾（2026-10-17）
 
 Source111独验server176/176、web34/34、lint0及production build70/485ms通过；原App `01a14959-a61a-7f83-9dba-97428dc4ae08 / local` 按Source单LF格式例外（独立addendum）将environment-budget.js仅删末尾1个LF，其余16件及其余字节保持，node/staged diff检查0。17产品/测试原子提交 `803b7f3a945788be54cc9214946b84896f9450cf`，main正常merge `fadac0224f03e10438a7285d1104e4d18fcf0588`，main逐件blob等于已验指纹/唯一格式例外。112阻塞/旧整合封包/108—111原件完整保留，不用整合成功抹去检查遗漏。
