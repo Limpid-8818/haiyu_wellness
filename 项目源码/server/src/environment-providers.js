@@ -1,6 +1,6 @@
 import { ENVIRONMENT_DEMO_RULES, ENVIRONMENT_SOURCES } from './environment-config.js';
 import crypto from 'node:crypto';
-import { reserveEnvironmentProviderRequest, STAGE27_R4_ENV_LIMITS } from '../../scripts/resources/stage27-r4-budget-accounts.js';
+import { reserveEnvironmentProviderRequest, ENVIRONMENT_PROVIDER_LIMITS } from './environment-budget.js';
 
 export class EnvironmentProviderError extends Error {
   constructor(code, message, { statusCode = null } = {}) {
@@ -112,7 +112,7 @@ function uvLevel(index) {
 }
 
 async function requestJson(url, { fetchImpl = fetch, headers = {}, timeoutMs = 8000, provider = 'environment', validatePayload } = {}) {
-  const effectiveTimeoutMs = Math.min(Number(timeoutMs) || 8000, STAGE27_R4_ENV_LIMITS.requestTimeoutMs);
+  const effectiveTimeoutMs = Math.min(Number(timeoutMs) || 8000, ENVIRONMENT_PROVIDER_LIMITS.requestTimeoutMs);
   const budget = await reserveEnvironmentProviderRequest({ filePath: process.env.ENVIRONMENT_PROVIDER_BUDGET_LEDGER_PATH,
     taskId: process.env.CODEX_TASK_ID, baselineUsed: Number(process.env.ENVIRONMENT_PROVIDER_BUDGET_BASELINE || 0), provider });
   let outcome = 'failed';

@@ -6,7 +6,7 @@ import { PageTitle, Metric, SectionHead, Empty, Loading } from '../../shared/ui.
 import { admissionLabel } from '../../app/navigation.js';
 import { BusinessReason } from '../../SourceDetails.jsx';
 import { SourceDetails } from '../../SourceDetails.jsx';
-import { businessText } from '../../../../shared/release-presentation.js';
+import { businessText } from '../../lib/release-presentation.js';
 import { AssistantCollaborationTrace, agentStateLabel } from '../assistant/assistant-parts.jsx';
 import { MoodSpace } from '../../MoodSpace.jsx';
 import EnvironmentPanel from '../../EnvironmentPanel.jsx';

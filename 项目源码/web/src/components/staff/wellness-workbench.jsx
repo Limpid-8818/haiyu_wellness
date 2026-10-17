@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { request } from '../../lib/request.js';
-import { businessText, businessTime } from '../../../../shared/release-presentation.js';
+import { businessText, businessTime } from '../../lib/release-presentation.js';
 import { initials } from '../../lib/normalize.js';
 import { useQuery } from '../../lib/useQuery.js';
 import { PageTitle, SectionHead, Empty, QueryState } from '../../shared/ui.jsx';

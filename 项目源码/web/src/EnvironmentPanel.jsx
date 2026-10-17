@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './environment.css';
-import {businessTime} from '../../shared/release-presentation.js';
+import {businessTime} from './lib/release-presentation.js';
 import {SourceDetails} from './SourceDetails.jsx';
 import { businessToday as businessDateKey } from './lib/date.js';
 

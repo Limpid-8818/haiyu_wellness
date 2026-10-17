@@ -1,7 +1,7 @@
 import { db, id, inTransaction, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { systemBusinessClock } from './clock.js';
-import {checkinAvailability} from '../../shared/release-presentation.js';
+import {checkinAvailability} from './release-presentation.js';
 
 const FEELINGS = new Set(['comfortable', 'general', 'uncomfortable']);
 

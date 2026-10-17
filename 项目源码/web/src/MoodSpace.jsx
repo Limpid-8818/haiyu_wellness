@@ -1,4 +1,4 @@
-import {businessText} from '../../shared/release-presentation.js';
+import {businessText} from './lib/release-presentation.js';
 import {SourceDetails} from './SourceDetails.jsx';
 import { businessToday } from './lib/date.js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { mealLocalTime } from '../../lib/date.js';
-import { businessText, businessTime, notificationCategory } from '../../../../shared/release-presentation.js';
+import { businessText, businessTime, notificationCategory } from '../../lib/release-presentation.js';
 import { wellnessTargetSection } from '../../app/navigation.js';
 import { SourceDetails } from '../../SourceDetails.jsx';
 

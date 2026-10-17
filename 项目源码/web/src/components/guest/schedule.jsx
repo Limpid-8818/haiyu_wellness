@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { businessToday, mealLocalTime, slotDateLabel } from '../../lib/date.js';
 import { useQuery } from '../../lib/useQuery.js';
-import { checkinAvailability, businessText, businessTime, notificationCategory } from '../../../../shared/release-presentation.js';
+import { checkinAvailability, businessText, businessTime, notificationCategory } from '../../lib/release-presentation.js';
 import { PageTitle, SectionHead, Empty } from '../../shared/ui.jsx';
 import { STAFF_JOB_LABELS } from '../../app/navigation.js';
 import { SourceDetails, BusinessReason } from '../../SourceDetails.jsx';
