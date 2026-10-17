@@ -1,3 +1,13 @@
+# 当前工程进度：G41已合main推送并Source107复核，准备仅G04（2026-10-17）
+
+G41产品53dbe26经正常merge0fb82d5、文稿a1dc3a4普通push完成；Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同a1dc3a4150a29787e7df4ed2ed5a9e987a092c92且干净，四已验产品/测试blob一致、105原件保持；8实例78准确身份和自身temp/socket仍退出，整合无新运行资源。工程G41原条目完成，剩11未修+G12部分。
+
+详第107轮及docs/工程第2阶段G04执行计划_20261017.md。仅新独立App GPT-6.1 Sol/High准备第2阶段G04，从本main及随后纯协调文稿开始，不恢复旧G41执行任务/旧worker，不用内部代理/新worktree/复制依赖。只生产包运行依赖与明确账本边界、两包展示纯函数入口和一致性测试，旧工具/账本/root shared原件保；原未配账本本来无账本I/O，不夸大也不取消显式预算。worker108/Source109，实际ID以App创建回执和ignored output/dispatch/g04-dispatch-20261017.json为准。
+
+候选暂存/commit/merge/push0、G04不提前关闭；质量与准确资源双门后另授权同阶段Git收尾再推进。普通OS60/runner45/lease15min/log8MiB/temp512MiB，测试API必须G41专用fixture、真实caller/独占audit根；不私密.env/Key/真实模型或天气/用户库/MySQL/scheduler/browser/依赖安装/CI修复。缺前端依赖先具体BLOCKED回源，不擅自安装。完成一次App主动回本Source停，源至多一次就绪后结束不轮询。第3—10未派，业务U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL例外保持，下方历史完整保留。
+
+---
+
 # 当前工程整合：G41已验四文件合入main，普通push收尾（2026-10-17）
 
 原worker `01a1494a-9f45-7060-8f70-8952defa778d / local` 按Source105授权完成产品`53dbe26c60b6219a260f6a6ce4333949afe7f74e`，main正常merge`0fb82d5e7765e3b743cf414693351333cba75989`；四已验文件main blob与候选逐件一致。原工程G41已完成，只终态事务和离线故障回滚范围；Source独立server156/156退出0与双方8实例78准确身份全退依据不变，MySQL未实测。104/105完整原件保留，106记录收尾；本次仅Git/文稿与有限精确残留核对，无新增受管Session或服务、不重复全测。
