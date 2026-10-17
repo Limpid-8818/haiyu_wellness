@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { request } from '../../lib/request.js';
 import { fmtDate } from '../../lib/date.js';
-import { businessText } from '../../../../shared/release-presentation.js';
+import { businessText } from '../../lib/release-presentation.js';
 import { QueryState } from '../../shared/ui.jsx';
 import { Brand } from '../../shared/branding.jsx';
 

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 // G18 阶段 2：机构运营样式随 StaffView 分包就近加载（.stage26-advice-draft/.stage26-draft-trigger 助手专用规则已并入 assistant.css）。
 import '../../styles/operations.css';
 import { request } from '../../lib/request.js';
-import { businessText } from '../../../../shared/release-presentation.js';
+import { businessText } from '../../lib/release-presentation.js';
 import { PageTitle } from '../../shared/ui.jsx';
 
 export function OperationsWorkbench({ notify, me, initialSource = null }) {
