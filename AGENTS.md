@@ -1,3 +1,15 @@
+# 当前工程进度：G42已合推并Source144复核，准备仅G46（2026-10-19）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同e6306436cb0a543f5dbcff7468895bd7765c1ad9且干净，15已验main产品/6docs/103worker与46Source原证据及7整合回执保持，原App idle/completed。ca440b9正常mergec9d9830、docs e630643普通push0；G42仅默认关/preview/显式apply、停写单维护进程、有界来源判定通过，不冒称自动后台/在线竞争/任意规模。141/142/140与旧FAIL原件保持。
+
+本轮0新Session/服务，有限双方30实例852事件201准确身份115组236路径仍全退，句柄/guardian缺口0，审计自身旧已退；不重测双库/251/前端或全历史审计。详144与docs/工程第8阶段G46执行计划_20261019.md。只新独立App GPT-6.1 Sol/High第8阶段G46：领域schema/运营入口、来源事件等下层去隐藏动态业务环，公开导出与HTTP/事务/幂等保持，29迁移name/编号及两方言实际DDL/up SQL字节保持；旧stage路径可仅静态兼容门面，生产转领域入口，不物理表改名/新迁移或业务改写。
+
+worker145/Source146，真实App ID/基线按App回执与ignored output/dispatch/g46-dispatch-20261019.json；当前最新local main可建codex分支，不新worktree/代理/复制依赖。自己的g46真实ID独占根，OS60/runner45/lease15min/log8MiB/temp512MiB/顺序两Session，API只app.listen，SQLite合成与静态双DDL/定向+server全测/临时web生产build/依赖图门；本轮无MySQL启动/用户库/私密.env/真实模型天气/Windows/browser/scheduler/CI/安装。准确退出→句柄→自身temp/socket/build→auditor另退，旧账本/链接/历史证据不清，不跑旧cleanup。
+
+候选不暂存commitmergepush/不提前关G46，独验后另原任务整合普通push；完成/阻塞唯一主动回本Source后停，源至多一次就绪即结束不轮询。当前9—10未派，144及141—143/全部旧FAIL保持；U01/V03/V04/109未全验/NOT_FINAL_ACCEPTED/G12复制凭据HTTPS/G23与G42限制不变。以下历史全文保留。
+
+---
+
 # 当前工程整合：G42已验产品合main，第143轮文稿与普通push收尾（2026-10-18）
 
 Source142核19候选/103worker及46Source证据，自有新双库29版/重复0/20场景与真实CLI preview不改行/apply1/重复0、定向24/24和独立server39文件251/251退出0；Source完整72223B TAP实际存在，worker原72220B另存。15冻结源码树产品提交ca440b918102e3b4a8c470f7e3ecf9f29b52516d，main正常merge c9d983024529c27aea8b4408b0f287841a495263，逐件main blob等于Source冻结SHA，继承853c068/b5b17aa及前序全部成果。141/142/140旧报告和失败原件保持，G42原位置仅本阶段范围完成。
