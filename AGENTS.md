@@ -1,3 +1,37 @@
+# 当前工程整合：G42已验产品合main，第143轮文稿与普通push收尾（2026-10-18）
+
+Source142核19候选/103worker及46Source证据，自有新双库29版/重复0/20场景与真实CLI preview不改行/apply1/重复0、定向24/24和独立server39文件251/251退出0；Source完整72223B TAP实际存在，worker原72220B另存。15冻结源码树产品提交ca440b918102e3b4a8c470f7e3ecf9f29b52516d，main正常merge c9d983024529c27aea8b4408b0f287841a495263，逐件main blob等于Source冻结SHA，继承853c068/b5b17aa及前序全部成果。141/142/140旧报告和失败原件保持，G42原位置仅本阶段范围完成。
+
+范围是默认关闭/preview优先/显式apply的停写单维护进程手动策略；FK/非FK/JSON与父子会话图来源优先，55表预算不完整拒绝，审计独立默认关仅旧login/user可清，mood只应用事件不媒体/Codex账本。原建议scheduler已由执行计划改手动，不声称后台自动清理、在线竞争或任意规模。29历史DDL/G23/G45及旧证据不变。
+
+本轮仅必要六文稿/普通push，0新受管Session/服务，不重跑双库/251/56/前端或全历史审计。双方各唯一名直接有限后核仍30实例852事件201准确身份115组236自身路径全退，句柄/guardian/标准退出缺口0，审计自身旧已退。最终docs/final SHA、普通push实际回执、main/origin/实际远端一致与main干净以本worker ignored integration-final-packet.json和一次回源实收为准，不循环填写143自身SHA。详第143轮及现行G42说明。
+
+仅原App01a14ea4-49cd-7e53-a95e-dd287bc7bde4/local完成/阻塞唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后立即停，Source核交付/远端/资源后才决定第8阶段，当前8—10未派。无私密.env/用户库/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent；旧依赖链接、U01/V03/V04/109未全验/NOT_FINAL_ACCEPTED/旧FAIL/G12复制凭据与HTTPS/G23边界保持。以下历史全文保留。
+
+---
+
+# 当前工程阶段：G42 Source142双库独验PASS，仅原任务第143轮整合（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核19候选/103原证据SHA及旧AGENTS完整后缀，自己的新SQLite/MySQL8.4.11各29版/重复0/20共享场景和实际CLI preview不改行/apply1/重复0通过。独立定向24/24、server39文件251/251退出0（15452.224958ms），完整72223B TAP实际落盘；11JS/3Python语法、93模块344边、全部tracked/untracked空白/index保持。Source初次元数据路径重复拼接的只读失败已纠正，不影响产品/套件；原worker失败和141/140/所有旧原件保持。
+
+Source MySQL总17517/close13210ms、shutdown0/mysqld0/graceful、temp/datadir/socket/63619清，观察峰值167022592B；双方有限30实例852事件201准确身份115组236自身路径全退，auditor自身另退/句柄guardian缺口0。详142与Source ignored source142-final-review.json冻结15源码树文件SHA，仅G42停写单进程手动维护/默认关闭/preview/独立审计与有界来源快照通过，不宣称在线竞争或任意规模。
+
+只原App01a14ea4-49cd-7e53-a95e-dd287bc7bde4/local GPT-6.1 Sol/High第143轮Git整合：15已验字节保持，英文feat/fix(server)带G42产品提交、main正常merge、原条目本范围完成与限制、必要现行docs/AGENTS/143、普通push核main/origin/实际远端一致和main干净。HEAD/main仍853c068未整合；Source仅新增142与此头不作污染，141/142/140及旧失败封包冻结。0新运行资源，不重测双库/251/前端或全历史审计，只有限准确退出后核；若新资源仍原预算/准确退出→句柄→自身temp/socket→auditor另退。
+
+完成/阻塞一次主动回本Source后停，Source核交付/远端/资源后才派第8阶段，当前8—10未派。无新用户库/私密.env/真实模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent；旧依赖链接保持，U01/V03/V04/109未全验/NOT_FINAL_ACCEPTED/旧FAIL/G12复制凭据及HTTPS/G23支持边界不变。以下历史全文保留。
+
+---
+
+# 当前工程候选：G42手动保留策略双库PASS，待Source142独验（2026-10-18）
+
+唯一worker App `01a14ea4-49cd-7e53-a95e-dd287bc7bde4 / local`，分支codex/fix-g42-data-retention-policy-20261018，HEAD/main仍853c068e8ea312fe70ee96a8027427550e16df61。默认关闭/默认preview、显式enabled+apply+maintenance手动维护，disabled零DB初始化，已有库CLI不迁移/seed/创建默认库；无HTTP/scheduler接入。会话/父子运行/消息关联整组、FK/非FK/JSON与审计实际来源优先TTL，55表有界完整判定，超预算拒绝；审计独立默认关仅旧login/user类别可显式清，mood只应用事件不媒体/Codex账本。
+
+SQLite及新MySQL8.4.11共享20场景与真实CLI preview不改行/apply1/重复0通过，最终定向24/24、关联56/56、server251/251；完整72220B全测TAP实际落盘。mysql01仅G42合成item遗漏必填rule_ids_json失败，原FAIL保留；补fixture离线与资源门先过后唯一mysql02通过，不第三次起库。29历史DDL/G23算法/G45门面/锁和140/原历史不动。两MySQL真实shutdown0/进程0/graceful、close13200/13169ms、自身目录/端口清；本阶段全部失败/嵌套/auditor有限准确退出后核以本真实ID final-after-exit/candidate-final-packet为准，不重跑旧G23审计/cleanup。
+
+详docs/G42数据保留策略与维护说明_20261018.md与wangshanchong/第141轮报告.md。**仅worker候选PASS，G42未关闭、暂存commitmergepush0**；Source142独验后另原任务整合，不进入8—10。只停写单进程手动维护，未测在线分布式竞争/任意规模/真实用户库。OS60/runner45/lease15min/log8MiB/temp512MiB/两Session及14秒退出预留保持；无私密.env/用户库/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent。完成唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后立即停；U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12及全部下方历史保留。
+
+---
+
 # 当前工程进度：G23已合推并Source140复核，准备仅G42（2026-10-18）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同b5b17aaafa228aa762b81534869e44e3da5fbbf8且干净，20已验产品blob/21docs/最终153worker及47Source引用/138独验与60889B完整TAP保持，原G23 App idle/completed。aee941c正常mergedbf0d0f、文稿b5b17aa普通push0。原G23支持/未测边界、旧FAIL/mysql02前缀+两posthoc/7备份不变。双方54实例1363事件330身份184组380路径仍全退，句柄/guardian缺口0，0新Session，不重测/全历史审计。
