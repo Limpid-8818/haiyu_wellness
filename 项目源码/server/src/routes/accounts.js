@@ -1,6 +1,6 @@
 // G43：注册登录与个人账号域路由，自 app.js 纯搬运；路径与处理逻辑不变。
 import express from 'express';
-import { signToken } from '../auth.js';
+import { clearBrowserSession, requireBrowserWrite, sessionResponse } from '../browser-session.js';
 import { countAccessibleGuests } from '../authorization.js';
 import { db, guestProfile, guestSummary, id, isUniqueViolation, json, log, now, transaction } from '../db.js';
 import { hashPasswordAsync, verifyPasswordAsync } from '../password.js';
@@ -44,7 +44,7 @@ routes.post('/api/auth/register', requestLimit('register'), async (req, res) => 
     throw error;
   }
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(guestId);
-  res.status(201).json({ token: signToken(user), user: safeUser(user), admissionStatus: 'pending' });
+  sessionResponse(req, res.status(201), user, { user: safeUser(user), admissionStatus: 'pending' });
 });
 
 // G38：不存在/坏散列账号也派生一次；减少密码派生路径差异，不承诺完全恒时。
@@ -64,7 +64,14 @@ routes.post('/api/auth/login', requestLimit('login'), async (req, res) => {
   }
   await currentCredentialUser(user);
   await log(user.id, 'login', 'user', user.id, '登录系统');
-  res.json({ token: signToken(user), user: { ...safeUser(user), capabilities: await capabilitiesFor(db, user) } });
+  sessionResponse(req, res, user, { user: { ...safeUser(user), capabilities: await capabilitiesFor(db, user) } });
+});
+// Clear this browser cookie, including an expired credential; this does not revoke copied tokens.
+routes.post('/api/auth/logout', (req, res) => {
+  // Guard the matched route too: Express accepts case variants and trailing slashes.
+  requireBrowserWrite(req, req.app.locals.browserOrigins);
+  clearBrowserSession(res);
+  res.json({ ok: true });
 });
 routes.get('/api/me', auth, async (req, res) => {
   if (req.user.role === 'guest') {
@@ -135,7 +142,7 @@ routes.post('/api/me/password', auth, requestLimit('password'), async (req, res)
     await log(req.user.id, 'password.change', 'user', req.user.id, '修改登录密码');
     updated = await db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
   });
-  res.json({ ok: true, token: signToken(updated) });
+  sessionResponse(req, res, updated, { ok: true });
 });
 
 export default router;

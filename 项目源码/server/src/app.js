@@ -14,6 +14,7 @@ import assistantRoutes from './routes/assistant.js';
 import staffRoutes from './routes/staff.js';
 import operationsRoutes from './routes/operations.js';
 import deanRoutes from './routes/dean.js';
+import { allowedBrowserOrigins, browserWriteGuard } from './browser-session.js';
 import { createRequestControls } from './request-controls.js';
 
 export function createApp({ requestControls = createRequestControls() } = {}) {
@@ -21,9 +22,10 @@ export function createApp({ requestControls = createRequestControls() } = {}) {
   app.locals.requestControls = requestControls;
   // G10：仅白名单来源可跨域读取（逗号分隔可用 CORS_ALLOWED_ORIGINS 覆盖；
   // 无 Origin 头的同域请求与服务端调用不受影响）。
-  const corsAllowedOrigins = new Set(String(process.env.CORS_ALLOWED_ORIGINS
-    || 'http://127.0.0.1:5180,http://localhost:5180').split(',').map(value => value.trim()).filter(Boolean));
+  const corsAllowedOrigins = allowedBrowserOrigins();
+  app.locals.browserOrigins = corsAllowedOrigins;
   app.use(cors({ origin: (origin, callback) => callback(null, !origin || corsAllowedOrigins.has(origin)) }));
+  app.use(browserWriteGuard(corsAllowedOrigins));
   app.use(express.json({ limit: '256kb' }));
 
   app.use(publicRoutes);

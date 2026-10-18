@@ -30,8 +30,6 @@ export function Login({ role, onBack, onLogin }) {
     setError('');
     try {
       const data = await request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password, role }) });
-      localStorage.setItem('community_token', data.token);
-      localStorage.setItem('community_user', JSON.stringify(data.user));
       onLogin(data.user);
     } catch (requestError) {
       setError(requestError.message || '登录失败，请检查账号信息');
@@ -54,8 +52,6 @@ export function Login({ role, onBack, onLogin }) {
         method: 'POST',
         body: JSON.stringify({ name, phone, password, confirmPassword })
       });
-      localStorage.setItem('community_token', data.token);
-      localStorage.setItem('community_user', JSON.stringify(data.user));
       onLogin(data.user, 'profile');
     } catch (requestError) {
       setError(requestError.message || '注册失败，请检查填写内容');

@@ -1,6 +1,7 @@
 // G43：路由层共享中间件与助手，自 app.js 纯搬运；行为不变。
 import crypto from 'node:crypto';
 import { readToken } from '../auth.js';
+import { requestCredential } from '../browser-session.js';
 import { authorizeGuestAccess } from '../authorization.js';
 import { db, guestProfile, hasActiveTransaction, json, mysqlLockSuffix, publicUser } from '../db.js';
 import { AppError } from '../errors.js';
@@ -19,35 +20,30 @@ export async function currentCredentialUser(snapshot) {
   return current;
 }
 
-export async function auth(req, _res, next) {
-  const header = req.headers.authorization;
-  const token = typeof header === 'string' ? header.replace(/^Bearer\s+/i, '') : '';
-  const payload = readToken(token);
-  if (!payload) throw new AppError(401, 'AUTH_REQUIRED', '登录已失效，请重新登录');
+async function authenticate(req, optional) {
+  const credential = requestCredential(req);
+  req.authTransport = credential.transport;
+  if (!credential.transport) {
+    if (optional) { req.user = null; return; }
+    throw new AppError(401, 'AUTH_REQUIRED', '登录已失效，请重新登录');
+  }
+  const payload = readToken(credential.token);
+  if (!payload) throw new AppError(401, 'AUTH_INVALID', '登录凭证无效，请重新登录');
   const user = await db.prepare("SELECT * FROM users WHERE id=? AND status='active'").get(payload.sub);
   if (!user) throw new AppError(401, 'ACCOUNT_INACTIVE', '账号不存在或已停用');
-  // G11：令牌版本不匹配说明密码已更改或凭证已被吊销。
   if (Number(payload.ver ?? 0) !== Number(user.token_version ?? 0)) {
     throw new AppError(401, 'AUTH_TOKEN_REVOKED', '登录凭证已失效，请重新登录');
   }
   req.user = user;
+}
+
+export async function auth(req, _res, next) {
+  await authenticate(req, false);
   next();
 }
 
 export async function optionalAuth(req, _res, next) {
-  const header = req.headers.authorization;
-  if (!header) {
-    req.user = null;
-    return next();
-  }
-  const token = typeof header === 'string' ? header.replace(/^Bearer\s+/i, '') : '';
-  const payload = readToken(token);
-  if (!payload) throw new AppError(401, 'AUTH_INVALID', '登录凭证无效，请重新登录');
-  req.user = await db.prepare("SELECT * FROM users WHERE id=? AND status='active'").get(payload.sub) || null;
-  if (!req.user) throw new AppError(401, 'ACCOUNT_INACTIVE', '账号不存在或已停用');
-  if (Number(payload.ver ?? 0) !== Number(req.user.token_version ?? 0)) {
-    throw new AppError(401, 'AUTH_TOKEN_REVOKED', '登录凭证已失效，请重新登录');
-  }
+  await authenticate(req, true);
   next();
 }
 

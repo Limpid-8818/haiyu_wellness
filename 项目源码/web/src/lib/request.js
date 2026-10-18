@@ -1,4 +1,13 @@
 const API = '/api';
+let sessionActive = false;
+export function setSessionActive(active) { sessionActive = Boolean(active); }
+export function clearLegacySessionStorage() {
+  for (const name of ['localStorage', 'sessionStorage']) {
+    try {
+      for (const key of ['community_token', 'community_user']) window[name].removeItem(key);
+    } catch { /* storage can be disabled; it is never used for authentication */ }
+  }
+}
 
 export class ApiError extends Error {
   constructor(message, { status = 0, code = '', data = null } = {}) {
@@ -12,14 +21,16 @@ export class ApiError extends Error {
 
 export async function request(path, options = {}) {
   const { onUnauthorized, ...fetchOptions } = options;
-  const token = localStorage.getItem('community_token');
+  clearLegacySessionStorage();
   let response;
   try {
     response = await fetch(API + path, {
       ...fetchOptions,
+      credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'X-Session-Transport': 'cookie',
+        'X-Community-Request': '1',
         ...(fetchOptions.headers || {})
       }
     });
@@ -36,7 +47,8 @@ export async function request(path, options = {}) {
       data
     });
     if (response.status === 401 && typeof onUnauthorized === 'function') onUnauthorized(error);
-    if (response.status === 401 && token && !path.startsWith('/auth/login') && typeof window !== 'undefined') {
+    if (response.status === 401 && sessionActive && !path.startsWith('/auth/') && typeof window !== 'undefined') {
+      sessionActive = false;
       window.dispatchEvent(new CustomEvent('community:auth-expired'));
     }
     throw error;

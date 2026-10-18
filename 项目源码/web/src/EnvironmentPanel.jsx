@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './environment.css';
+import { request } from './lib/request.js';
 import {businessTime} from './lib/release-presentation.js';
 import {SourceDetails} from './SourceDetails.jsx';
 import { businessToday as businessDateKey } from './lib/date.js';
@@ -56,15 +57,7 @@ export default function EnvironmentPanel({ projectId = '', requestApi = null }) 
     setLoading(true);
     // 优先使用注入的统一 request 封装（路径不带 /api 前缀，由封装添加）：
     // 401 过期登出、网络错误文案与全站一致（G21）。
-    const pending = requestApi
-      ? requestApi('/environment?' + query.toString())
-      : fetch('/api/environment?' + query.toString(), {
-        headers: (() => { const token = localStorage.getItem('community_token'); return token ? { Authorization: 'Bearer ' + token } : {}; })()
-      }).then(async response => {
-        const body = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(body.error || '环境信息暂时无法加载');
-        return body;
-      });
+    const pending = (requestApi || request)('/environment?' + query.toString());
     pending.then(result => {
       if (!current) return;
       setData(result);
