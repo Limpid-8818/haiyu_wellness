@@ -1,3 +1,13 @@
+# 当前工程进度：G05/G37已合推并Source118复核，准备仅G12（2026-10-18）
+
+G05/G37产品997ca7d正常merge41b7218、文稿50f4211普通push完成；Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同50f42118e62816c583133aa9976f23a655aa143d且干净、11产品SHA与116一致、115/116原件及6整合证据保持，原任务idle/completed。有限后核11实例512事件119准确身份55组110自身路径仍全退，句柄/guardian缺口0，无新运行资源，不重复195全测/build/全历史审计。
+
+详118与docs/工程第4阶段G12执行计划_20261018.md。只新独立App GPT-6.1 Sol/High执行第4阶段G12网页HttpOnly cookie：Bearer API兼容、/me真实恢复、改密续会话与旧凭证吊销、退出和最小CSRF/来源门；保留G10来源白名单/G11/G05，不新认证SaaS/会话平台。当前local最新main、可建codex阶段分支，不内部agent/新worktree/复制依赖。worker119/Source120，实际身份以App回执/ignored output/dispatch/g12-dispatch-20261018.json为准。
+
+本阶段明确允许受管合成浏览器核心短旅程以验证cookie真实行为（覆盖下方旧阶段browser0仅针对G12必要流程），只现有headless运行时、不安装/录屏/全站重放，不碰用户浏览器/服务。OS60/runner45/lease15min/log8MiB/temp512MiB；纯测试最多外层+API两Session，浏览器可峰值三Session，全部准确退出→句柄→自身temp/socket/profile/cache/build→audit自身另退。无真实模型/天气/私密.env/用户库/MySQL/Windows/scheduler/CI/安装。候选暂存/commit/merge/push0、G12不提前关闭；独验后另原任务收尾再推进。完成/失败一次主动回本Source停，源至多一次就绪后结束不轮询。5—10未派，U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/历史FAIL例外保持，下方完整历史保留。
+
+---
+
 # 当前工程整合：G05/G37已验产品合main，普通push收尾（2026-10-18）
 
 Source116独验server195/195与双方资源门PASS后，原App `01a14978-eaf8-7e30-b825-ee734890eda3 / local` 将11件已验产品/公开配置/测试原子提交 `997ca7d3971cc7f1ce686b407cac37e2dc22468e`，main正常merge `41b7218cbed0fda140b2a1e926bb9cc751da1eb7`；逐件main blob等于已验指纹，原两笔Source协调提交保持。原工程G05/G37本阶段基本整改已完成：HTTP异步scrypt与基本有界请求门，G37原已有格式检查、手机号所有权仍未验证；单进程重启清零/多副本独立/代理共享socket IP/容量保守拒绝/非跨窗口总并发门保留，不扩G12或SMS/验证码/实名。
