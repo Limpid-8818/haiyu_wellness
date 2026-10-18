@@ -1,3 +1,143 @@
+# 当前工程整合：G23已验产品合main，第139轮文稿与普通push收尾（2026-10-18）
+
+Source138新根独验双库29版/重复0/共享七表9组及server228/228后，原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local将20冻结源码/SQL测试/受管脚本提交aee941c3f609804dc9186952ce4949e030513d16，main正常merge dbf0d0f35e93a67f09399a2004a6a60f3f6cb3c5；逐件main blob等于Source冻结SHA，继承c3a75da及前序。G23原条目仅本阶段SQL适配范围完成：词法区分字面量/注释/标识符与别名，七表映射/参数/结果合同保持；单层DML/明确AS/限定JOIN/单通配已验，复杂或歧义语法明确拒绝。591为代表性静态展开，不是全业务MySQL端到端。
+
+Source138新60889B完整TAP实际存在且SHA核，worker137全测仍仅有界tail；G45旧日志更正及127—138原件/FAIL/mysql02原前缀/恰两posthoc/7备份保持。双方本G23有限准确退出后核54实例1363事件330准确身份184组380自身路径全退，句柄/guardian/标准退出缺口0；本轮0新Session/服务，不重复MySQL/228全测/591/前端或全历史审计。
+
+仅必要21文稿收尾，最终docs/final SHA、普通push原回执、main/origin/实际远端一致与main干净，以本worker ignored integration-final-packet.json和一次App回源实收为准，不循环填写139自身SHA。详第139轮与现行G23说明。Source复核整合/远端/资源后才另派G42，当前7—10未派；完成/阻塞唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后立即停。无私密.env/用户库/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent，旧依赖链接、U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/历史FAIL及G12复制凭据/HTTPS边界保持。下方完整历史保留。
+
+---
+
+# 当前工程阶段：G23 Source138双库独验PASS，仅原任务第139轮整合（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核137的39文件/141证据与schema/迁移/db门面保持；自己新受管MySQL8.4.11根实际29版+重复0/七表9组PASS、池关闭，24离线/16JS/591代表静态SQL/独立server228/228退出0（16386.823833ms），完整Source TAP60889B实际落盘且SHA已核。仅这个Source新TAP完整，不改变worker137和G45旧受限日志事实；36untracked完整空白/index保持过，无前端不build/browser。
+
+Source独立MySQL总16770ms/close13187ms、观察目录最大167022592B、真实shutdown/graceful/进程0，temp/datadir/socket/49241已清。双方本G23合计54历史顺序实例1363事件330准确身份184组380自身路径全退、句柄/guardian/标准退出缺口0，auditor另退；旧mysql02 preserved/两posthoc/失败/7备份保持，不重分类。Source source138-final-review冻结20源码树文件SHA，详138。
+
+只原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local GPT-6.1 Sol/High第139轮：20已验源码/测试/受管脚本字节保持、英文fix(server)带G23提交/main正常merge、原工程G23本范围完成与单层DML/复杂语法拒绝/591代表非全业务MySQL边界，必要docs/普通push核三方SHA和main干净。HEAD/main仍c3a75da未整合，远端6b58aa3；Source仅新138/此头不作污染。原127—138/所有失败封包/141旧证据/registry前缀及两追加冻结保持。
+
+本次仅Git文稿无需重复已过MySQL/228全测/591/前端/全历史审计，0新资源只有限退出后核；新资源仍真实ID/原OS60-runner45/精确退出→句柄→自身temp/datadir/socket→auditor另退。不新真实库/模型天气/私密.env/用户库/Windows/browser/scheduler/CI/安装/worktree/内部agent。完成/阻塞唯一主动回本Source后停，Source核整合/远端/资源后才可派G42，当前7—10未派，业务U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持，下方完整历史保留。
+
+---
+
+# 当前工程候选：G23双库合同与server全测通过，待Source138独验（2026-10-18）
+
+原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local第137轮按Source136仅修fixture输出工具；5产品/SQL测试继续冻结。客户端改skip-password，成功进程的root设置/TCP两入口只识别确切已观察提示及唯一数据行，保raw原输出；实际mysql04双tail回放和异常拒绝连同原18项，离线24/24，10JS/1Python语法/预算/5冻结先过。真实skip-password仍有同一提示，不宣称提示消失或推测私人配置。
+
+唯一mysql05新实例e4adb310-a7b0-4349-9581-db3d24c2639f/127.0.0.1:65206，8.4.11/48MiB buffer-redo/禁binlog/默认模式、专用g23_probe@127与仅自身schema/TCP身份实过；应用29版迁移、重复0和共享七表9组全过、连接池关闭。随后当前定向35/35（含纯17/SQLite29版与共享9/关联/边界）、server228/228退出0、16JS语法/591 prepare代表性静态转换/128模块497边及隔离5源码通过。全测保留实际有界tail及汇总，不称完整TAP；直接node串行选项在38文件参数前，非旧npm追加推断。
+
+shutdown43152与mysqld42651均0/无signal，真实socket关闭与进程退出确认；close13218ms/总17012ms/峰值167022592B，自身root/datadir/socket与65206清。通用scope及auditor自身另退后posthoc核PASS：worker41实例987事件240准确身份136组282自身路径全退，句柄/guardian/标准退出缺口0；旧mysql02原前缀/两posthoc/7备份与127—136原件/110证据保持，旧FAIL不重分类。
+
+详第137轮、现行G23说明与ignored mysql05-final-packet.json。**仅worker候选PASS，G23未正式关闭、暂存commitmergepush0、7—10未派**；HEAD/main c3a75da不动，Source138新根独验后另决定。OS60/runner45/lease15min/log8MiB/temp512MiB/两Session及setup2/work29-close14-outer2保持，无mysql06/产品或历史DDL改动/新安装/新worktree/内部agent/用户库/私密.env/模型天气/Windows/browser/scheduler/CI。完成唯一主动回Source后立即停，业务未验/109/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持。下方历史完整保留。
+
+---
+
+# 当前工程续办：G23 Source136核输出解析阻塞，仅原任务修工具后一次mysql05（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核135的34文件/110证据SHA；mysql04 root settings/建库账号授权0、TCP身份0且正确，原tail有明确CLI密码提示，整段trim比较错，不是产品SQL或权限仍失败。应用probe/29版/七表未到达，G23产品无PASS。当前双方34实例699事件175身份100组208路径全退，句柄/guardian缺口0，原失败/posthoc保持，Source0新Session/MySQL。
+
+只原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local GPT-6.1 Sol/High按docs/G23客户端输出解析与单次复测_20261018.md第137轮，Source138：5产品继续冻结，只fixture工具改skip-password且no-defaults/no-login-paths隔离、严格识别已观察提示+唯一数据行并保raw，root设置/TCP两入口都测实际原tail及异常，原18+新解析/语法/预算门先过。然后只一次新mysql05、不复用旧4端口/根；原OS60/runner45/lease15min/log8MiB/temp512MiB/两Session/setup2共享/work29-close14-outer2不增，任一失败停回源不mysql06或改产品/历史DDL抢绿。
+
+真实settings/账号/TCP身份/应用29版+重复0/共享七表过才补其他本阶段门；候选Git0/不派7—10。旧127—136/封包/FAIL/两posthoc与日志备份保持，Source仅136/决定/此头不作污染。准确退出→句柄→自身datadir/temp/socket→auditor另退，失败保护不放松。无用户库/私密.env/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent，完成/失败唯一主动回本Source后停，源至多一次就绪后结束，业务未验/NOT_FINAL_ACCEPTED/109未验/旧FAIL/G12边界保持，下方完整历史保留。
+
+---
+
+# 当前工程阻塞：G23 mysql04账号TCP实通，CLI警告合流比较失败（2026-10-18）
+
+原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local第135轮按Source134仅补fixture工具：固定g23_probe@127.0.0.1/仅自有纯字母数字schema.*、root只socket、mysql/mysqladmin no-defaults首位+no-login-paths+显式无提示空密码；setup两步共享2秒。离线18/18（含旧12生命周期）、8JS/1Python语法预算/5产品冻结通过，原31输入/91证据核保持。产品SQL/测试不改。
+
+唯一mysql04版本/初始化/三ping691ms成功；socket设置/建库/CREATE USER/数据库级GRANT客户端0，实际TCP CURRENT_USER/DATABASE客户端0且数据行精确为g23_probe@127.0.0.1及新schema。但--password=产生客户端警告，与数据合在受管tail；verifyTcpIdentity整体trim后严格等值断言因此失败，非账号/host权限不符。setup校验门仍FAIL，应用probe/连接池/29版迁移/重复0/七表均未启动；不剥警告改PASS、不mysql05/补权限/改产品，按合同BLOCKED，无候选PASS。
+
+shutdown28926与mysqld28620均0/无signal、真实graceful确认，close13271ms在14秒内、fixture总16207ms，自身64812/根/datadir/socket清。原scope及auditor自身另posthoc核PASS：worker30实例639事件157准确身份92组192路径全退，当前句柄/端口/temp残留0、guardian/标准退出缺口0。旧mysql01—03/失败封包/两posthoc/7备份及127—134原件保持。
+
+详第135轮、现行说明及ignored mysql04-final-packet.json/blocker-analysis，Source136决定后续。HEAD/main c3a75da，暂存commitmergepush0/G23未完成/7—10未派。唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后立即停；无私密.env/用户库/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent，业务未验/109/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持。下方历史全文保留。
+
+---
+
+# 当前工程续办：G23 Source134核TCP准备阻塞，仅原任务补fixture账号后一次mysql04（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核133的29文件/91证据SHA及5产品/工具冻结；mysql03三ping682ms/设置建库0，应用TCP root被ER_HOST_NOT_PRIVILEGED握手拒绝，首条应用SQL/29版/七表未执行，不是已证SQL/DDL失败。socket root@localhost可用但fixture没建127应用账号。shutdown0/真实graceful/进程0、close13240ms/总16462ms/temp与端口已退；当前双方28实例548事件139准确身份78组162路径全清，句柄/guardian缺口0。Source无新Session/MySQL。
+
+只原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local GPT-6.1 Sol/High按docs/G23临时TCP账号准备与单次复测_20261018.md第135轮，Source136：仅工具离线构造/验证自有schema专用用户@127、root只本socket准备/关闭、同账号真实TCP CURRENT_USER/DATABASE核；mysql/mysqladmin显式no-login-paths/无提示密码、不改系统或用户库。5产品继续冻结；前置过才一次新mysql04，不复用50634/51016/64525，不mysql05或反复补权限。原setup2秒共享root准备+TCP核验，work29/close14/outer2、OS60/runner45/lease15min/log8MiB/temp512MiB/两Session及8.4.11隔离规格不增。
+
+MySQL实过才补本阶段其他门，任一失败保原件唯一回Source后停，不自行Git/7—10。旧127—134/封包/FAIL/两posthoc/日志前缀与备份保持；Source仅134/决定/此头不作污染。准确退出→句柄→自身temp/datadir/socket→auditor另退，不假graceful。无私密.env/现有库/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent；G23未关闭/未暂存commitmergepush，业务未验/NOT_FINAL_ACCEPTED/109未验/旧FAIL/G12边界保持，下方历史完整保留。
+
+---
+
+# 当前工程阻塞：G23 mysql03配置实过，TCP账号host拒绝，worker133回源（2026-10-18）
+
+原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local按Source132只一次mysql03，先核28文件/131交付78证据与5产品工具冻结。版本/初始化0、ready正常pending两次后第三次alive（682ms）、真实settings8.4.11/48MiB buffer与redo/禁binlog/默认SQL模式、新自身schema创建均过。应用TCP127.0.0.1:64525/root在首连接握手ER_HOST_NOT_PRIVILEGED，SQL模式探测SELECT尚未执行、29版迁移/重复0/共享七表均未到达；属fixture连接准备阻塞，不冒称SQL翻译或旧DDL失败。未读grant表/用户库或跑旧基线，未补账号/改产品/第四次启动。
+
+mysql03外层/业务probe exit1，按合同BLOCKED，不跑后续定向/全测/591/语法包边界产品门；没有候选PASS。连接池已关闭无SQLite fallback，mysqladmin shutdown0及mysqld0/无signal/graceful真实确认，close13240ms在14秒内、fixture总16462ms，目录峰值157958144B；准确退出/句柄关闭后自身root/socket/datadir清、64525释放。原通用audit及auditor自身另posthoc核PASS：worker24实例488事件121准确身份70组146路径全退，当前句柄/端口/temp残留0、guardian/标准退出缺口0，旧mysql01/02及补清历史保持。
+
+详第133轮和ignored mysql03-final-packet.json/contract/fixture证据与blocker-analysis。本轮源码/工具/5产品指纹全保持，仅必要文稿；旧127—132/两失败封包/131交付/78证据及原mysql02恰两追加不动。HEAD/main c3a75da，暂存commitmergepush0/G23未完成/7—10未派，Source134另决定。唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后立即停；无私密.env/用户库/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent，业务未验/109/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持。下方完整历史保留。
+
+---
+
+# 当前工程续办：G23 Source132工具与当前资源PASS，仅原任务一次mysql03（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核131交付26变更/78证据、5产品冻结、7日志备份/授权SHA、mysql02原47221B registry前缀与恰两posthoc追加保持，诊断root不存在；旧shutdown1/preserved/FAIL不重分类。自己新受管根离线12/12退出0（629.742916ms）、5JS/1Python/原45-14预算/5产品冻结过，原通用scope audit及双方auditor另后核PASS，25实例444事件117准确身份62组128路径全退、句柄/guardian/标准退出缺口0。无Source MySQL/SQL/591/全测，G23产品仍未验收。
+
+详132与docs/G23离线返修验收后单次双库复测_20261018.md。仅原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local GPT-6.1 Sol/High第133轮一次新mysql03，Source134：当前5产品/已验工具先核SHA，不重跑清理工具；全新8.4.11合成root/端口/socket/schema，不复用旧50634/51016。保持OS60/runner45/lease15min/log8MiB/temp512MiB/两Session、work29+close14+outer2、ready≤4秒/6次，真实settings/29版+重复0/共享七表过才补其他门，任何失败立即停回源，不第四次实例/扩预算/改历史DDL抢绿。130旧不准第三次仅被此明确单次授权覆盖，其余资源门不放松。
+
+候选Git0，不合并不push不派7—10，原127—132/封包/失败与补清历史完整保留；Source仅新增132/决定/此头不作污染。准确退出→句柄→自身temp/datadir/socket→auditor自身另退，真实关闭失败仍保护诊断，不以进程0冒称socket成功。无模型天气/私密.env/用户库/Windows/browser/scheduler/CI/安装/新worktree/内部agent。完成/失败唯一主动回Source后停，源至多一次就绪后结束不轮询，业务U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持，下方完整历史保留。
+
+---
+
+# 当前工程工具返修：G23诊断补清与离线工具门通过，待Source132（2026-10-18）
+
+原App `01a14cff-5566-7971-8b0c-4153a8ab6b00/local`第131轮仅按Source130清理与工具返修。精确mysql02已退出自有root先核task/instance/完整身份组/句柄/端口/非link及同dev，再备份7小日志+原manifest/失败收据/registry前缀并SHA核，二次检查后只删除该根。原47221B registry前缀SHA保持，仅追加真实posthoc_failure_diagnostic_preserved与posthoc_resource_directory_removed，现49513B；旧shutdown1/preserved/FAIL不改、不补cleaned或graceful。144252395文件字节/du141144KiB获授权补清，非Finder空间推算。
+
+只改mysql-fixture及必要新工具：正常failed/非零/无signal未timeout仅ready可pending；timeout/signal/异常立即拒，普通步骤仍0；早期失败关闭准备只借未用work时间（state RPC≤500ms/ready≤2s），保持work29s+退出14s+外层2s=45s，session.close与guardian失败保护不动，import fixture无服务副作用。最终offline12/12（含实际受管小Node exit1）和5JS/1Python语法/预算通过，5份SQL产品与SQL测试按129SHA冻结。本轮0 MySQL/SQL运行、0全测/591重跑/新服务，离线通过不当真实MySQL验收。
+
+原通用有限scope新核PASS，auditor自身另退后独立posthoc核：21实例384事件99准确身份54组112路径全退，当前句柄/端口/temp残留0、guardian/标准退出缺口0。旧简化checker及旧FAIL原件不改，mysql02历史preserved与新补清成功两事实并存。详131与ignored repair01-delivery-packet.json；127—130/两封包/原14及36引用保持，唯一原registry按授权只追加且其冻结前缀保留。Source130输入/下方全部历史完整保留。
+
+本轮scope补清/工具门PASS，**G23仍未完成/真实MySQL与server全测未验**，无mysql03授权；暂存commitmergepush0、HEAD/main c3a75da不动。一次主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停，Source132复核后另决定，不自行真实复测/整合或7—10。无私密.env/用户库/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent；旧依赖链接、业务未验/109/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持。
+
+---
+
+# 当前工程返修：G23 Source130核BLOCKED，仅原任务补清与零MySQL工具演练（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核129的18变更/36证据和7小日志SHA一致、HEAD/main仍c3a75da/无暂存。首ping正常failed/exit1无signal未timeout被包装先验exited误拒，settings/schema/29版/七表未到达；socket shutdown1后guardian停服，进程0不冒称graceful socket成功。只读后核11实例230事件54身份34组72路径无活进程/组/句柄，但mysql02自有诊断root残留，资源总门FAIL不改写。Source0新Session/数据库。
+
+只原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local GPT-6.1 Sol/High按docs/G23诊断目录清理与离线工具返修_20261018.md第131轮：备份7小日志/清单并精确身份句柄核后，仅补清/tmp/haiyu-resource-01a14cff-ffb6652a-895f-439c-b3c0-e0558cdad630（自有实例/144252395文件字节），真实posthoc追加不改旧preserved/FAIL事件；修工具failed状态与早期失败有界关闭调度，离线实小进程/替身覆盖，产品SQL以129封包实际产品SHA冻结，不扩代码。Source132复核后另决定；当前明确不授权mysql03/真实库/全测/Git整合/后续阶段。
+
+普通OS60/runner45/lease15min/log8MiB/temp512MiB和至少14秒退出预留不变，准确退出→句柄→自身temp/datadir/socket→audit自身另退；不改通用auditor/guardian抢绿、不按名kill、不删其他root/用户库/缓存。旧127—130/封包14及36证据/原历史保，Source仅新增130/决定/此头不作污染。未暂存commitmergepush，G23未关闭/7—10未派；无模型天气/私密.env/用户库/Windows/browser/scheduler/CI/安装/新worktree/内部agent。完成/失败唯一主动回Source后停，源至多一次就绪即结束不轮询，业务未验/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持。下方完整历史保留。
+
+---
+
+# 当前工程再阻塞：G23 mysql02 ready包装提前失败，worker129回源（2026-10-18）
+
+原App `01a14cff-5566-7971-8b0c-4153a8ab6b00/local`按Source128仅一次续办，原HEAD/main c3a75da与阶段分支保持，暂存/commit/merge/push0。17纯转换+当前confirmed共享SQLite9组（node18/18）、8JS语法、591实际prepare代表性展开静态转换、包边界7/7（128模块497相对边）通过；修FOR UPDATE/原生非映射upsert、计算映射投影无AS明确拒绝/字面量标点与关键字定位。SQL模式保护尚无MySQL实际连接验证。
+
+唯一新mysql02版本8.4.11/初始化0，首个ping正常非零exit1/无timeout因socket尚无；包装错误要求status=exited，而ResourceSession正常非零为failed，故错误地提前抛出，未进入后续授权ping。随后socket shutdown也exit1，guardian准确终止mysqld（exit0/无signal）；受管层按mysql-shutdown-command-failed:1保留自身诊断根，不冒称graceful命令成功。MySQL settings/schema/29版迁移/七表均未执行，server全测未跑；按合同再次BLOCKED，不第三次启动/改产品续跑或扩预算。
+
+全部11实例230事件54准确身份34组已退出（含原5实例及两次auditor），无活进程/监听/句柄/guardian或标准退出证据缺口；**资源总门FAIL**：mysql02一根`/tmp/haiyu-resource-01a14cff-ffb6652a-895f-439c-b3c0-e0558cdad630`（datadir/log/work）由受管层保留，未擅删，audit scope exit2、after-exit exit1，不能写全清/PASS。详第129轮、现行说明与ignored resume01-final-packet.json；127/128/旧blocked封包及14旧证据冻结，Source续办协调头与历史全文保留。
+
+完成/失败唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停，须Source决定诊断目录及后续，不自行整合或推进7—10。无私密.env/用户库/模型天气/Windows/browser/scheduler/CI/安装/新worktree/内部agent，原依赖/链接保。U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12边界不变。
+
+---
+
+# 当前工程续办：G23 BLOCKED已Source128核，仅原任务一次新attempt（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核worker127的13草稿/14证据SHA、schema/migrations/db门面与旧报告保持，HEAD/main仍c3a75da、无暂存；mysql01 ready timedOut虽exit0仍FAIL，服务端日志已ready、settings/schema/29版/七表未执行，未给产品PASS。自身0新Session/数据库；有限后核原5实例111事件25身份16组34路径全退、句柄/guardian缺口0，shutdown/mysqld0/graceful及端口释放保持。
+
+仅原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local GPT-6.1 Sol/High按docs/G23就绪检查与原任务续办_20261018.md一次续办，worker129/Source130：--wait为重试次数非秒，具体内部时延不猜测；去内置wait，显式共享≤4秒/最多6个有界单次ready探针、timeout不忽略，整个runner45/OS60/lease15min/log8MiB/temp512MiB不加，至少留14秒退出后核。先纯转换/已改confirmed的当前SQLite/语法/包边界与预算过，再只一个新mysql02或resume01合成实例；再失败即停回源，不循环启动/加预算/装依赖/改系统9.6或用户库。双库真实过才补全测等候选质量门。
+
+旧127/BLOCKED/mysql01原件封包冻结，不修改；现有dirty草稿保全、不暂存/commit/merge/push、不新worktree/内部agent。Source仅此头/128/续办文稿为授权输入，不作污染。新尝试仍8.4.11、--no-defaults/禁core/loopback/48MiB buffer-redo/禁binlog，全部准确退出→句柄→自身datadir/temp/socket→audit自身另退出，旧5实例审计保。无模型天气/私密.env/用户库/Windows/browser/scheduler/CI/安装。完成/失败唯一主动回本Source后停，源至多一次就绪后结束；G23未关闭/7—10未派，业务未验/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持，下方完整历史保留。
+
+---
+
+# 当前工程阻塞：G23 ready客户端超时，worker127回Source（2026-10-18）
+
+唯一App `01a14cff-5566-7971-8b0c-4153a8ab6b00 / local`，干净main `c3a75da6f0997b89e0303cec8d38dd651b7d6c21` 建 `codex/fix-g23-sql-dialect-translation-20261018`。词法/投影/audit参数适配仅未完成草稿；纯转换14/14与初版SQLite共享9检查通过，但后者随后按真实MySQL枚举将测试值reviewed改confirmed，当前版未重跑。不把SQLite通过当MySQL适配已验，G23未完成、无候选PASS。
+
+一次受管MySQL8.4.11新datadir初始化exit0、mysqld日志已ready，但mysqladmin ready客户端在校准3000ms内timedOut=true（exitCode0不能覆盖超时）。按合同立即BLOCKED，不重启、不扩预算、不修系统。未创建测试schema、未执行MySQL29版迁移或七表用例；无MySQL基线DDL失败结论。mysqladmin shutdown与mysqld均exit0/无signal，准确身份/连接句柄关闭后自身datadir/socket/temp已清、50634端口释放。5实例111事件25准确身份16组34路径及auditor自身后核PASS，句柄/guardian/退出缺口0。
+
+详 `docs/G23_SQL方言适配草稿与阻塞说明_20261018.md`、`wangshanchong/第127轮报告.md` 和本真实ID ignored `blocked-final-packet.json`。未跑server全测/Node语法/生产依赖图门，不声称完成质量门或双库实测通过；后续需Source决定，不自行续办/第7阶段。暂存/commit/merge/push0，main/远端未动，115—126/历史schema/迁移/G45分层原件保持。一次主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停；U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/历史FAIL/G12边界不变。以下历史完整保留。
+
+---
+
 # 当前工程进度：G45已合推并Source126复核，准备仅G23（2026-10-18）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同6b58aa3bc87085d85b0525ab98c0142ebc6afde7且干净，15已验main blob/保护115—124/原33worker与34Source证据保持，原App idle/completed；G45产品67ede47正常merge9caa934、文稿6b58aa3普通push0。123全测完整TAP错误在当前说明/完成依据/125更正，原件不改；20实例694事件167身份80组163路径仍全退，句柄/guardian缺口0，无新Session/服务，不重复已过测试/全历史审计。
@@ -138,7 +278,7 @@ worker115/Source116，实际ID按App回执和ignored output/dispatch/g05-g37-dis
 
 Source111独验server176/176、web34/34、lint0及production build70/485ms通过；原App `01a14959-a61a-7f83-9dba-97428dc4ae08 / local` 按Source单LF格式例外（独立addendum）将environment-budget.js仅删末尾1个LF，其余16件及其余字节保持，node/staged diff检查0。17产品/测试原子提交 `803b7f3a945788be54cc9214946b84896f9450cf`，main正常merge `fadac0224f03e10438a7285d1104e4d18fcf0588`，main逐件blob等于已验指纹/唯一格式例外。112阻塞/旧整合封包/108—111原件完整保留，不用整合成功抹去检查遗漏。
 
-原工程G04已完成仅运行包边界/显式预算合同；预存未知owner锁仍立即拒绝、不自动恢复，显式账本同步哈希/fsync成本保持，未配账本原本零账本I/O不变。旧工具/root shared/package/lock及所需node_modules保。当前仅10份必要文稿docs提交后普通push；最终HEAD/origin/实际远端SHA、push退出和main干净收据以本ID ignored `integration-repair01-final-packet.json` 与一次App回源为准，不循环填写报告自己的SHA。
+原工程G04已完成仅运行包边界/显式预算合同；预存未知owner锁仍立即拒绝、不自动恢复，显式账本同步哈希/fsync成本保持，未配账本原本零账本I/O不变。旧工具/root shared/package/lock及所需node_modules保。当前仅10份必要文稿docs提交后普通push；最终HEAD/origin/实际远端SHA、push退出和main干净收据以本ID ignored `integration-repair01-delivery-packet.json` 与一次App回源为准，不循环填写报告自己的SHA。
 
 本轮无新受管Session/服务，不重复测试/构建或全历史审计，只有限核双方G04既有23实例736事件201准确身份79组158路径。Source复核整合后才可另派3，当前3—10未派；无新模型/天气/秘密.env/Key/用户库/MySQL/scheduler/browser/安装/CI。业务U01/V03/V04、历史109未全验/NOT_FINAL_ACCEPTED/旧FAIL例外保持。整合完成/阻塞一次主动回Source后停；以下协调和失败历史全文保留。
 
