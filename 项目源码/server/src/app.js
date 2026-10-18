@@ -14,33 +14,39 @@ import assistantRoutes from './routes/assistant.js';
 import staffRoutes from './routes/staff.js';
 import operationsRoutes from './routes/operations.js';
 import deanRoutes from './routes/dean.js';
+import { createRequestControls } from './request-controls.js';
 
-const app = express();
-// G10：仅白名单来源可跨域读取（逗号分隔可用 CORS_ALLOWED_ORIGINS 覆盖；
-// 无 Origin 头的同域请求与服务端调用不受影响）。
-const corsAllowedOrigins = new Set(String(process.env.CORS_ALLOWED_ORIGINS
-  || 'http://127.0.0.1:5180,http://localhost:5180').split(',').map(value => value.trim()).filter(Boolean));
-app.use(cors({ origin: (origin, callback) => callback(null, !origin || corsAllowedOrigins.has(origin)) }));
-app.use(express.json({ limit: '256kb' }));
+export function createApp({ requestControls = createRequestControls() } = {}) {
+  const app = express();
+  app.locals.requestControls = requestControls;
+  // G10：仅白名单来源可跨域读取（逗号分隔可用 CORS_ALLOWED_ORIGINS 覆盖；
+  // 无 Origin 头的同域请求与服务端调用不受影响）。
+  const corsAllowedOrigins = new Set(String(process.env.CORS_ALLOWED_ORIGINS
+    || 'http://127.0.0.1:5180,http://localhost:5180').split(',').map(value => value.trim()).filter(Boolean));
+  app.use(cors({ origin: (origin, callback) => callback(null, !origin || corsAllowedOrigins.has(origin)) }));
+  app.use(express.json({ limit: '256kb' }));
 
-app.use(publicRoutes);
-app.use(accountsRoutes);
-app.use(bookingRoutes);
-app.use(mealsRoutes);
-app.use(healthRoutes);
-app.use(wellnessRoutes);
-app.use(environmentRoutes);
-app.use(assistantRoutes);
-app.use(staffRoutes);
-app.use(operationsRoutes);
-app.use(deanRoutes);
+  app.use(publicRoutes);
+  app.use(accountsRoutes);
+  app.use(bookingRoutes);
+  app.use(mealsRoutes);
+  app.use(healthRoutes);
+  app.use(wellnessRoutes);
+  app.use(environmentRoutes);
+  app.use(assistantRoutes);
+  app.use(staffRoutes);
+  app.use(operationsRoutes);
+  app.use(deanRoutes);
 
-app.use((error, req, res, next) => {
-  if (res.headersSent) return next(error);
-  if (error?.type === 'entity.parse.failed') return sendError(res, new AppError(400, 'INVALID_JSON', '请求体不是有效 JSON'));
-  if (!(error instanceof AppError)) console.error(error);
-  return sendError(res, error);
-});
+  app.use((error, req, res, next) => {
+    if (res.headersSent) return next(error);
+    if (error?.type === 'entity.parse.failed') return sendError(res, new AppError(400, 'INVALID_JSON', '请求体不是有效 JSON'));
+    if (!(error instanceof AppError)) console.error(error);
+    return sendError(res, error);
+  });
+  return app;
+}
 
+const app = createApp();
 export { app };
 export default app;

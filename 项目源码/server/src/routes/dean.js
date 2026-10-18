@@ -1,9 +1,11 @@
 // G43：院长管理域路由，自 app.js 纯搬运；路径与处理逻辑不变。
 import express from 'express';
-import { db, escapeLikeValue, guestProfile, guestSummary, hashPassword, id, isUniqueViolation, json, likeEscapeClause, log, now, transaction } from '../db.js';
+import { db, escapeLikeValue, guestProfile, guestSummary, id, isUniqueViolation, json, likeEscapeClause, log, now, transaction } from '../db.js';
+import { hashPasswordAsync } from '../password.js';
+import { requestLimit } from '../request-controls.js';
 import { AppError } from '../errors.js';
-import { JOB_TYPES, MEDICAL_CAPABILITY, SUMMARY_CAPABILITY, capabilityMatrix, isDateOnly, jobTypeLabel, nightsBetween, stayStatus } from '../staffing.js';
-import { auth, deanOnly, publicStaffRow, queryString, requireGuestAccount, routeHandler, staffManagementOnly } from './shared.js';
+import { JOB_TYPES, MEDICAL_CAPABILITY, SUMMARY_CAPABILITY, canManageStaff, capabilityMatrix, isDateOnly, jobTypeLabel, nightsBetween, stayStatus } from '../staffing.js';
+import { auth, currentCredentialUser, deanOnly, publicStaffRow, queryString, requireGuestAccount, routeHandler, staffManagementOnly } from './shared.js';
 
 const router = express.Router();
 const routes = Object.fromEntries(['get', 'post', 'put', 'patch', 'delete'].map(method => [method, (route, ...handlers) =>
@@ -27,7 +29,7 @@ routes.get('/api/dean/staff', auth, staffManagementOnly, async (req, res) => {
     adviceCount: adviceCounts.get(row.id) || 0
   })));
 });
-routes.post('/api/dean/staff', auth, staffManagementOnly, async (req, res) => {
+routes.post('/api/dean/staff', auth, staffManagementOnly, requestLimit('password'), async (req, res) => {
   const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   const username = typeof body.username === 'string' ? body.username.trim() : '';
@@ -45,10 +47,14 @@ routes.post('/api/dean/staff', auth, staffManagementOnly, async (req, res) => {
     throw new AppError(409, 'STAFF_USERNAME_TAKEN', '该账号已存在');
   }
   const staffId = id('staff');
+  const passwordHash = await hashPasswordAsync(password);
   try {
     await transaction(async () => {
+      if (!canManageStaff(await currentCredentialUser(req.user))) {
+        throw new AppError(403, 'CAPABILITY_FORBIDDEN', '当前岗位无权管理员工');
+      }
       await db.prepare(`INSERT INTO users(id,username,password_hash,role,name,phone,status,job_type,created_at)
-        VALUES(?,?,?,'staff',?,?,'active',?,?)`).run(staffId, username, hashPassword(password), name, phone, jobType, now());
+        VALUES(?,?,?,'staff',?,?,'active',?,?)`).run(staffId, username, passwordHash, name, phone, jobType, now());
       await log(req.user.id, 'staff.create', 'staff', staffId, `创建${jobTypeLabel(jobType)}账号 ${username}`);
     });
   } catch (error) {

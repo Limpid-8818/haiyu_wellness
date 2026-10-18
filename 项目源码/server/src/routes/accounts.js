@@ -2,16 +2,18 @@
 import express from 'express';
 import { signToken } from '../auth.js';
 import { countAccessibleGuests } from '../authorization.js';
-import { db, guestProfile, guestSummary, hashPassword, id, isUniqueViolation, json, log, now, transaction, verifyPassword } from '../db.js';
+import { db, guestProfile, guestSummary, id, isUniqueViolation, json, log, now, transaction } from '../db.js';
+import { hashPasswordAsync, verifyPasswordAsync } from '../password.js';
+import { requestLimit } from '../request-controls.js';
 import { AppError } from '../errors.js';
 import { capabilitiesFor } from '../staffing.js';
-import { auth, routeHandler, safeUser } from './shared.js';
+import { auth, currentCredentialUser, routeHandler, safeUser } from './shared.js';
 
 const router = express.Router();
 const routes = Object.fromEntries(['get', 'post', 'put', 'patch', 'delete'].map(method => [method, (route, ...handlers) =>
   router[method](route, ...handlers.map(routeHandler))]));
 
-routes.post('/api/auth/register', async (req, res) => {
+routes.post('/api/auth/register', requestLimit('register'), async (req, res) => {
   const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
   const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
   const password = typeof body.password === 'string' ? body.password : '';
@@ -27,10 +29,11 @@ routes.post('/api/auth/register', async (req, res) => {
 
   const guestId = id('guest');
   const createdAt = now();
+  const passwordHash = await hashPasswordAsync(password);
   try {
     await transaction(async () => {
       await db.prepare(`INSERT INTO users(id,username,password_hash,role,name,phone,status,job_type,created_at)
-        VALUES(?,?,?,?,?,?,'active',NULL,?)`).run(guestId, phone, hashPassword(password), 'guest', name, phone, createdAt);
+        VALUES(?,?,?,?,?,?,'active',NULL,?)`).run(guestId, phone, passwordHash, 'guest', name, phone, createdAt);
       await db.prepare(`INSERT INTO guest_profiles
         (user_id,gender,birth_date,room_no,check_in,check_out,stay_plan,emergency_contact,chronic_json,allergies_json,mobility,updated_at)
         VALUES(?,NULL,NULL,NULL,NULL,NULL,NULL,'','[]','[]','',?)`).run(guestId, createdAt);
@@ -44,23 +47,22 @@ routes.post('/api/auth/register', async (req, res) => {
   res.status(201).json({ token: signToken(user), user: safeUser(user), admissionStatus: 'pending' });
 });
 
-// G38：账号不存在时对固定哈希执行一次等价的密码校验，抹平登录响应的计时侧信道，
-// 使响应耗时无法用于枚举已注册账号。
-const LOGIN_TIMING_HASH = hashPassword('login-timing-equalizer');
-routes.post('/api/auth/login', async (req, res) => {
+// G38：不存在/坏散列账号也派生一次；减少密码派生路径差异，不承诺完全恒时。
+const LOGIN_TIMING_HASH = await hashPasswordAsync('login-timing-equalizer');
+routes.post('/api/auth/login', requestLimit('login'), async (req, res) => {
   const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
   const { username, password, role } = body;
   if (![username, password, role].every(value => typeof value === 'string')) {
     throw new AppError(401, 'AUTH_INVALID_CREDENTIALS', '账号、密码或身份不匹配');
   }
   const user = await db.prepare("SELECT * FROM users WHERE username=? AND role=? AND status='active'").get(username, role);
-  if (!user) {
-    verifyPassword(password, LOGIN_TIMING_HASH);
+  const stored = user?.password_hash;
+  const validHash = typeof stored === 'string' && /^[^:]+:[0-9a-f]{128}$/i.test(stored);
+  const matches = await verifyPasswordAsync(password, validHash ? stored : LOGIN_TIMING_HASH);
+  if (!user || !validHash || !matches) {
     throw new AppError(401, 'AUTH_INVALID_CREDENTIALS', '账号、密码或身份不匹配');
   }
-  if (!verifyPassword(password, user.password_hash)) {
-    throw new AppError(401, 'AUTH_INVALID_CREDENTIALS', '账号、密码或身份不匹配');
-  }
+  await currentCredentialUser(user);
   await log(user.id, 'login', 'user', user.id, '登录系统');
   res.json({ token: signToken(user), user: { ...safeUser(user), capabilities: await capabilitiesFor(db, user) } });
 });
@@ -112,22 +114,27 @@ routes.patch('/api/me/profile', auth, async (req, res) => {
   });
   res.json(await guestSummary(req.user.id));
 });
-routes.post('/api/me/password', auth, async (req, res) => {
+routes.post('/api/me/password', auth, requestLimit('password'), async (req, res) => {
   const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
   const { currentPassword, newPassword } = body;
-  if (!verifyPassword(currentPassword, req.user.password_hash)) {
+  if (!await verifyPasswordAsync(currentPassword, req.user.password_hash)) {
     throw new AppError(400, 'PASSWORD_CURRENT_INVALID', '当前密码不正确');
   }
   if (typeof newPassword !== 'string' || newPassword.length < 8 || newPassword.length > 128) {
     throw new AppError(400, 'PASSWORD_NEW_INVALID', '新密码长度应为 8 至 128 位');
   }
+  const passwordHash = await hashPasswordAsync(newPassword);
+  let updated;
   await transaction(async () => {
+    await currentCredentialUser(req.user);
     // G11：递增令牌版本吊销该用户全部已签发 token（含当前会话），随后向下发新 token 保持本会话。
-    await db.prepare('UPDATE users SET password_hash=?,token_version=token_version+1 WHERE id=?')
-      .run(hashPassword(newPassword), req.user.id);
+    const result = await db.prepare(`UPDATE users SET password_hash=?,token_version=token_version+1
+      WHERE id=? AND password_hash=? AND token_version=? AND status='active'`)
+      .run(passwordHash, req.user.id, req.user.password_hash, Number(req.user.token_version ?? 0));
+    if (Number(result.changes) !== 1) throw new AppError(401, 'AUTH_TOKEN_REVOKED', '登录凭证已失效，请重新登录');
     await log(req.user.id, 'password.change', 'user', req.user.id, '修改登录密码');
+    updated = await db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
   });
-  const updated = await db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
   res.json({ ok: true, token: signToken(updated) });
 });
 
