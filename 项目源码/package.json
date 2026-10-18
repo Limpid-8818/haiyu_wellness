@@ -8,6 +8,7 @@
   },
   "packageManager": "npm@10.9.3",
   "scripts": {
+    "maintenance:retention": "node server/scripts/data-retention.js",
     "demo:team": "node scripts/init-demo-team.js",
     "demo:mock": "node scripts/demo-mock-data.mjs",
     "dev": "concurrently -n api,web -c blue,green \"npm run dev -w server\" \"npm run dev -w web\"",
