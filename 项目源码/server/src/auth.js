@@ -23,7 +23,9 @@ export function signToken(user) {
 }
 export function readToken(token) {
   try {
-    const [body, signature] = String(token || '').split('.');
+    const parts = String(token || '').split('.');
+    if (parts.length !== 2) return null;
+    const [body, signature] = parts;
     if (!body || !signature) return null;
     const expected = crypto.createHmac('sha256', secret).update(body).digest('base64url');
     const signatureBuffer = Buffer.from(signature);

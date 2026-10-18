@@ -12,7 +12,7 @@ import { MoodPlayerDock } from '../MoodSpace.jsx';
 const StaffView = lazy(() => import('../components/staff/StaffView.jsx').then(m => ({ default: m.StaffView })));
 const AssistantWidget = lazy(() => import('../components/assistant/AssistantWidget.jsx').then(m => ({ default: m.AssistantWidget })));
 
-export function AppShell({ user, onLogout }) {
+export function AppShell({ user, onLogout, onSessionExpired }) {
   // G17：section 与 location.hash 双向同步——刷新、浏览器返回和深链均可恢复页面。
   const [section, setSectionState] = useState(() => {
     const fromHash = decodeURIComponent(window.location.hash.replace(/^#/, ''));
@@ -66,14 +66,14 @@ export function AppShell({ user, onLogout }) {
       }
     } catch (error) {
       if (error.status === 401) {
-        onLogout();
+        onSessionExpired();
       } else {
         setMeError(error.message || '工作区暂时无法加载');
       }
     } finally {
       setMeLoading(false);
     }
-  }, [onLogout, user]);
+  }, [onSessionExpired, user]);
 
   useEffect(() => {
     loadMe();
@@ -81,7 +81,7 @@ export function AppShell({ user, onLogout }) {
   }, [loadMe]);
 
   const handleGuestChange = useCallback((guestId) => setAssistantGuestId(guestId || ''), []);
-  const handleAuthExpired = useCallback(() => onLogout(), [onLogout]);
+  const handleAuthExpired = useCallback(() => onSessionExpired(), [onSessionExpired]);
   const clearReviewDraftRequest = useCallback(() => setReviewDraftRequest(''), []);
   const openReviewSource = useCallback(draftId => {
     if (user.role !== 'staff' || me?.jobType !== 'clinician' || !me?.capabilities?.medicalAdvicePublish || !draftId) {
