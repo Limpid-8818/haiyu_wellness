@@ -1,3 +1,33 @@
+# 当前工程整合：G05/G37已验产品合main，普通push收尾（2026-10-18）
+
+Source116独验server195/195与双方资源门PASS后，原App `01a14978-eaf8-7e30-b825-ee734890eda3 / local` 将11件已验产品/公开配置/测试原子提交 `997ca7d3971cc7f1ce686b407cac37e2dc22468e`，main正常merge `41b7218cbed0fda140b2a1e926bb9cc751da1eb7`；逐件main blob等于已验指纹，原两笔Source协调提交保持。原工程G05/G37本阶段基本整改已完成：HTTP异步scrypt与基本有界请求门，G37原已有格式检查、手机号所有权仍未验证；单进程重启清零/多副本独立/代理共享socket IP/容量保守拒绝/非跨窗口总并发门保留，不扩G12或SMS/验证码/实名。
+
+第117轮只Git/必要文稿与本阶段有限退出后核，无新受管Session/服务，不重复195测试或前端构建/全历史审计；115/116完整原件与旧FAIL保持。AGENTS/工程原条目/设计说明/115/116/117仅6份文稿提交后普通push；最终docs/final SHA、push退出、main/origin/实际远端一致与main干净，以本ID ignored `integration-final-packet.json` 实收及一次App回源为准，不自引用本报告SHA。
+
+Source复核整合/远端/资源后才可另派G12，当前第4—10未派；本任务一次主动回Source后停止。无新模型/天气/私密.env/用户库/MySQL/Windows/browser/scheduler/CI/安装依赖/新worktree，node_modules/旧链接保。U01/V03/V04、109未全验/NOT_FINAL_ACCEPTED/历史例外不变，下方协调及失败历史全文保留。
+
+---
+
+# 当前工程阶段：G05/G37 Source116独验PASS，仅原任务整合（2026-10-17）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核15候选/26证据与保护SHA保持，自己新合成根受管server195/195退出0、8500.231041ms，含HTTP异步派生、限流/429/并发/改密/员工创建/待入住拒绝和原G04/G41。新6文件只检查cached patch whitespace0、index字节不变；tracked diff check0，无前端改动无需build/browser。双方本阶段11实例512事件119准确身份55组110自身路径全清、审计自身另退/句柄缺口0，旧worker首次fixture失败/取消原件保留。详第116轮。
+
+只原App01a14978-eaf8-7e30-b825-ee734890eda3/local GPT-6.1 Sol/High第117轮同阶段收尾：11已验产品配置测试SHA保持，fix(server)带G05/G37英文提交、main正常合入、原工程两项基本防滥用完成及边界、docs/普通push核三方SHA和main干净。当前仍阶段分支HEAD/main8a0dcfa，尚未整合推送；115/116原件不改，源只新增此协调头和116。G37已有格式门，不声称手机号所有权验证；单进程/重启清零/代理共享IP/非总并发门边界保留，不引SMS/验证码平台/Redis/G12。
+
+无需重复已过195全测/前端构建或全历史资源审计，0新运行资源时有限退出后核即可；新资源仍须准确退出→句柄→自身temp/socket→审计自身另退。不真模型天气/私密.env/用户库/MySQL/Windows/browser/scheduler/CI/安装依赖/新worktree。完成/失败一次主动回本Source停；Source复核整合/远端/资源后才派4，当前4—10未派。U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL例外不改，下方历史完整保留。
+
+---
+
+# 当前工程候选：G05/G37限流与异步密码离线通过，待Source116独验（2026-10-17）
+
+独立App `01a14978-eaf8-7e30-b825-ee734890eda3 / local` 从干净main `8a0dcfa9456b124c05c4007528bdda61de887dac` 建立 `codex/fix-g05-g37-auth-request-controls-20261017`。登录/注册/助手chat与重试具备有界IP/账号/认证主体固定窗口；改密和员工创建共享认证写入门，429/中文/Retry-After、并发预占、容量拒绝/过期回收，不信任转发头或自报guestId/runId。所有HTTP密码热路径await异步scrypt，合法旧salt:hex与同步CLI/种子入口保留；写事务前派生，事务内复核/条件更新，G11保持。G37原已有手机号格式检查，候选说明已纠正“零验证”概括，不验证手机号所有权。
+
+第115轮：定向24/24，补待入住真实预约约束路由13/13，最终受管server195/195退出0（含G04/G41/五岗/四域）；首轮新fixture两失败一超时、初步检查包装对no-index exit1的误判原件保留并明确纠正。8实例352事件83去重准确身份（含audit自身4）全退、38组空、16自身根/socket路径无残留；auditor另后核PASS。沿用既有output/resource-audit符号链接物理根，不改链接、不新worktree/依赖。未改前端，未跑浏览器/build；无真实模型/天气/私密.env/用户库/MySQL/scheduler/CI/安装。
+
+详 `wangshanchong/第115轮报告.md` 与 `docs/G05_G37请求限流与异步密码说明_20261017.md`。仅worker候选PASS，G05/G37未正式关闭；未暂存/commit/merge/push，Source116独验后另授权同阶段Git收尾。本任务完成一次App主动回本Source后停，第4—10未派；单进程重启清零/代理共享对端IP/容量满时保守拒绝/非总并发门及业务U01/V03/V04、109未全验/NOT_FINAL_ACCEPTED/旧FAIL例外保持。以下历史完整保留。
+
+---
+
 # 当前工程进度：G04已合推并Source114复核，准备仅G05/G37（2026-10-17）
 
 G04产品803b7f3经正常merge fadac02、文稿c3a5678普通push，Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同c3a5678a65035bab6e02cdd876b19970995cd456且干净、17件blob保持（含唯一授权单LF规范化）、111原件保持；112旧BLOCKED不改，113新实际收据分开。原G04 App idle/completed，23实例201准确身份/自身路径仍退、无新运行资源。G04原条目完成但未知锁不自动恢复/同步账本成本边界保留。
