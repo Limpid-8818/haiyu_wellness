@@ -1,3 +1,37 @@
+# 当前工程整合：G45已验产品合main，第125轮文稿与普通push收尾（2026-10-18）
+
+Source124独立server210/210、直接node定向28/28及新合成四探针对照/静态合同/资源门PASS后，原worker `01a14ced-7e61-7ec1-a66e-6724ffa8ff35 / local` 将15件冻结源码/测试/受管脚本提交 `67ede47f1f4bc356c09bc51377840901ae54cefd`，main正常merge `9caa934df55aa4207df46530f02dc68645475bda`，逐件main blob等于Source冻结指纹，继承54bb7d2及前序成果。G45原条目仅本阶段数据库分层完成：24导出/TLA/live binding、两方言实际29版及默认路径/事务/缓存/种子时机/客人投影保持；MySQL仅静态未实测，G23/G46/G42不扩。
+
+必须按124保留日志更正：123及旧说明声称完整全测TAP，但双方目的文件实际均未生成，只有32KiB尾部与真实210通过汇总/exit0；不得声称完整逐项日志或从参数推断npm全测串行已生效。定向完整输出存在，合同未要求全量TAP，产品通过不受影响；不推测原因、不补造日志、不重跑全测。123/124、115—122和候选/失败原件冻结保留，现行G45说明/完成依据/125明确纠正。
+
+本轮仅Git和必要六文稿AGENTS/工程清单/G45说明/123/124/125，无新受管Session或服务，不重复测试/探针/依赖图/web/build/browser或全历史审计。双方各唯一名有限后核仍20实例694事件167准确身份80组163自身路径全退，句柄/guardian/退出缺口0。最终docs/finalSHA、普通push退出、main/origin/实际远端一致与main干净以worker ignored integration-final-packet.json和一次App回源实收为准，不在125循环填写文稿自己的SHA。
+
+Source复核整合/远端/资源后才可能另派G23，当前6—10未派；本任务完成/阻塞按原授权唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停。无新模型/天气/私密.env/用户库/MySQL/Windows/scheduler/CI/安装/新worktree/内部agent，旧链接/node_modules保持；U01/V03/V04、109未全验、NOT_FINAL_ACCEPTED/历史FAIL及G12复制凭据/HTTPS边界不变。以下独验、候选及全部历史按时点完整保留。
+
+---
+
+# 当前工程阶段：G45 Source124独验PASS，收尾须更正全测日志范围（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核19候选/33证据及保护schema/115—122原件；自己新合成库四探针对照worker改前基线一致（来源明确不冒称Source改前亲跑），9搬运/两方言29版/90模块依赖通过，G45可达无循环；独立server210/210退出0、8378.014917ms，额外短定向28/28退出0/完整7948B输出，12JS及15untracked完整空白/index保持通过，无前端改动不build/browser。
+
+重要事实更正：worker123/说明所称最终完整全测TAP文件实际不存在，Source相同目的参数也未生成，仅runner32KiB尾部；全测通过汇总真实，但不声称完整逐项日志或未验证的全测串行参数效果。合同不要求全量TAP，产品范围通过；原123/候选封包不改，现行说明/完成依据/整合125必须明确更正，无需再全测。Source元数据旧AGENTS保护误比、静态详情/外层收据同名、缺TAP汇总错误均保留说明，只补静态详情及短定向，产品未改。
+
+双方本G45分根合计20实例694事件167准确身份80组163自身路径全退，auditor自身及后续短定向/静态另后核，句柄/guardian/标准退出缺口0。详124与Source ignored source-final-review冻结15源码树文件。只原App01a14ced-7e61-7ec1-a66e-6724ffa8ff35/local GPT-6.1 Sol/High第125轮整合：15已验字节保持、refactor(server)英文G45提交/main正常合入、G45原位置本范围完成与日志/MySQL未测/G23/G46边界、必要docs/普通push核三方SHA和main干净。当前仍阶段分支HEAD/main54bb7d2未整合；Source仅新增此头和124，不当污染，123及115—122原件保。
+
+无需重复已过全测/探针/前端或全历史审计，0新资源仅有限退出后核；新资源准确退出→句柄→自身temp/socket/合成库→audit自身另退。无新模型/天气/私密.env/用户库/MySQL/Windows/browser/scheduler/CI/安装/新worktree/内部agent。原任务完成/阻塞一次主动回本Source停，Source复核合并/远端/资源后才派6，当前6—10未派；U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/历史FAIL与G12边界保持。下方历史完整保留。
+
+---
+
+# 当前工程候选：G45数据库分层离线通过，待Source124独验（2026-10-18）
+
+唯一worker `01a14ced-7e61-7ec1-a66e-6724ffa8ff35 / local`，基线main54bb7d26abaf22d177f94841156ab511f3ebd13b，阶段分支`codex/refactor-g45-database-layers-20261018`。db.js保留18行兼容门面/24导出及结果live binding，基础设施/两方言29版迁移/目录种子/可选演示种子/客人投影分层；纯旧健康转换移出以避免回引门面。默认路径/DDL/方言算法/事务/缓存/种子时机保持，G23/G46/G42不扩。
+
+改前baseline01与改后comparison01四组新库/另进程重启规范化JSON逐字段一致，真实无token_version的v28边界补v29及注入失败回滚通过；定向28/28、最终server210/210退出0。首次全测固定探针时钟泄漏导致206过4失败，原回执/登记保留，修正仅包装时钟作用域后通过；未削断言。准确资源退出和所有新文件空白/真实index收据见123及ignored candidate-packet。MySQL仅静态、未连接，纯后端无web/build/browser。
+
+仅候选PASS，G45未关闭，暂存/commit/merge/push0；待Source124新根独验后另授权原任务收尾。详docs/G45数据库分层说明_20261018.md与wangshanchong/第123轮报告.md。完成按人类授权一次主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停，不进入6—10；115—122及旧FAIL原件保持，U01/V03/V04、109未全验、NOT_FINAL_ACCEPTED/历史例外不变。无真实模型天气/私密.env/用户库/MySQL/Windows/scheduler/CI/安装/新worktree/内部agent，旧链接及依赖保持。下方历史完整保留。
+
+---
+
 # 当前工程进度：G12已合推并Source122复核，准备仅G45（2026-10-18）
 
 G12产品8290ae9正常merge05e07fa、文稿20aa71e普通push；Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local亲核main/origin/实际远端同20aa71e78f81eb884d8d1739f76e09db16d8b9c4且干净、21main blob等于120冻结SHA、119/120及115—118原件与11整合证据保持，原App idle/completed。G12本阶段完成及复制凭据/HTTPS/MySQL/Windows/全站未验边界保持；双方23实例852事件227准确身份85组166路径仍全退，句柄/guardian缺口0，无新运行资源，不重复测试/build/browser/全历史审计。
