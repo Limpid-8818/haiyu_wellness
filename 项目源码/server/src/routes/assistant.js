@@ -4,6 +4,7 @@ import { confirmAssistantAction } from '../assistant-actions.js';
 import { assistantStatus, chatWithAssistant, getAssistantHistory, getAssistantRun, retryAssistantRun, scheduleAssistantRun, startAssistantRun } from '../assistant.js';
 import { id, json } from '../db.js';
 import { AppError } from '../errors.js';
+import { requestLimit } from '../request-controls.js';
 import { auth, optionalAuth, routeHandler } from './shared.js';
 
 const router = express.Router();
@@ -19,7 +20,7 @@ routes.get('/api/assistant/status', optionalAuth, async (req, res) => {
   }
   res.json(status);
 });
-routes.post('/api/assistant/chat', optionalAuth, async (req, res) => {
+routes.post('/api/assistant/chat', optionalAuth, requestLimit('assistant'), async (req, res) => {
   const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
   const clientRequestId = req.get('Idempotency-Key') || body.clientRequestId;
   const forceDomainCollaboration = process.env.NODE_ENV === 'test'
@@ -47,7 +48,7 @@ routes.post('/api/assistant/chat', optionalAuth, async (req, res) => {
 routes.get('/api/assistant/runs/:runId', optionalAuth, async (req, res) => {
   res.json(await getAssistantRun({ user: req.user, role: req.query.role, runId: req.params.runId }));
 });
-routes.post('/api/assistant/runs/:runId/retry', optionalAuth, async (req, res) => {
+routes.post('/api/assistant/runs/:runId/retry', optionalAuth, requestLimit('assistant'), async (req, res) => {
   const result = await retryAssistantRun({ user: req.user, role: req.body?.role, runId: req.params.runId });
   res.status(result.status === 'queued' || result.status === 'running' ? 202 : 200).json(result);
 });

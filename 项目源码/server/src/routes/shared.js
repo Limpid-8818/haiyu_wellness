@@ -2,12 +2,22 @@
 import crypto from 'node:crypto';
 import { readToken } from '../auth.js';
 import { authorizeGuestAccess } from '../authorization.js';
-import { db, guestProfile, json, publicUser } from '../db.js';
+import { db, guestProfile, hasActiveTransaction, json, mysqlLockSuffix, publicUser } from '../db.js';
 import { AppError } from '../errors.js';
 import { effectiveHealthConstraints, healthProfileCompleteness, normalizeHealthProfile } from '../health-profile.js';
 import { capabilitiesFor, canManageStaff, jobTypeFor, jobTypeLabel } from '../staffing.js';
 
 export const routeHandler = handler => (req, res, next) => Promise.resolve().then(() => handler(req, res, next)).catch(next);
+
+// CPU 派生等待后重新核验凭证快照；写路径在事务中调用。
+export async function currentCredentialUser(snapshot) {
+  const current = await db.prepare(`SELECT * FROM users WHERE id=? AND status='active'${hasActiveTransaction() ? mysqlLockSuffix() : ''}`).get(snapshot.id);
+  if (!current || current.password_hash !== snapshot.password_hash
+    || Number(current.token_version ?? 0) !== Number(snapshot.token_version ?? 0)) {
+    throw new AppError(401, 'AUTH_TOKEN_REVOKED', '登录凭证已失效，请重新登录');
+  }
+  return current;
+}
 
 export async function auth(req, _res, next) {
   const header = req.headers.authorization;
