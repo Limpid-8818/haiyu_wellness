@@ -1,3 +1,13 @@
+# 当前工程进度：G23已合推并Source140复核，准备仅G42（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同b5b17aaafa228aa762b81534869e44e3da5fbbf8且干净，20已验产品blob/21docs/最终153worker及47Source引用/138独验与60889B完整TAP保持，原G23 App idle/completed。aee941c正常mergedbf0d0f、文稿b5b17aa普通push0。原G23支持/未测边界、旧FAIL/mysql02前缀+两posthoc/7备份不变。双方54实例1363事件330身份184组380路径仍全退，句柄/guardian缺口0，0新Session，不重测/全历史审计。
+
+详140与docs/工程第7阶段G42执行计划_20261018.md。只新独立App GPT-6.1 Sol/High第7阶段G42：默认关闭/preview优先/显式apply手动维护，不后台scheduler，FK及非FK/JSON业务来源和活跃/较新父子图优先保留，审计独立默认关，mood_resource_events是应用数据不删Codex账本。disabled零DB初始化、preview不改行/不迁移seed、apply在合成两库验证删除/保护/事务回滚/重复与有界批量，不用户数据/旧失败证据/媒体/29版schema。worker141/Source142，真实ID按App回执/ignored output/dispatch/g42-dispatch-20261018.json，当前local最新main可建codex分支，不新worktree/代理/复制依赖。
+
+新g42真实ID独占根，OS60/runner45/lease15min/log8MiB/temp512MiB/两Session；必要既有8.4.11合成MySQL复用已验纯fixture工具、自己的owner/probe，不直接跑G23旧checks/七表当本阶段验收，专用127账号/单schema/48M/禁binlog/原14秒退出预留保持，环境/资源阻塞回源不循环起库。准确退出→句柄→自身temp/datadir/socket→audit自身另退，不再跑旧cleanup。候选Git0/G42不提前关，独验后另原任务整合普通push；完成/阻塞一次主动回Source后停，源至多一次就绪后结束。8—10未派，无私密.env/用户库/模型天气/Windows/browser/scheduler/CI/安装，业务U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持，下方完整历史保留。
+
+---
+
 # 当前工程整合：G23已验产品合main，第139轮文稿与普通push收尾（2026-10-18）
 
 Source138新根独验双库29版/重复0/共享七表9组及server228/228后，原App01a14cff-5566-7971-8b0c-4153a8ab6b00/local将20冻结源码/SQL测试/受管脚本提交aee941c3f609804dc9186952ce4949e030513d16，main正常merge dbf0d0f35e93a67f09399a2004a6a60f3f6cb3c5；逐件main blob等于Source冻结SHA，继承c3a75da及前序。G23原条目仅本阶段SQL适配范围完成：词法区分字面量/注释/标识符与别名，七表映射/参数/结果合同保持；单层DML/明确AS/限定JOIN/单通配已验，复杂或歧义语法明确拒绝。591为代表性静态展开，不是全业务MySQL端到端。
