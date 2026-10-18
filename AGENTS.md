@@ -1,3 +1,13 @@
+# 当前工程进度：G12已合推并Source122复核，准备仅G45（2026-10-18）
+
+G12产品8290ae9正常merge05e07fa、文稿20aa71e普通push；Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local亲核main/origin/实际远端同20aa71e78f81eb884d8d1739f76e09db16d8b9c4且干净、21main blob等于120冻结SHA、119/120及115—118原件与11整合证据保持，原App idle/completed。G12本阶段完成及复制凭据/HTTPS/MySQL/Windows/全站未验边界保持；双方23实例852事件227准确身份85组166路径仍全退，句柄/guardian缺口0，无新运行资源，不重复测试/build/browser/全历史审计。
+
+详122与docs/工程第5阶段G45执行计划_20261018.md。只新独立App GPT-6.1 Sol/High准备第5阶段G45数据库分层：兼容db门面、基础设施/迁移/种子/客人查询单向依赖，实际29版迁移/公开导出/默认路径/事务/缓存/种子时机全保持。先受管合成基线后对照新库/旧版升级/重启/种子与查询，server全测；不改G23翻译算法/G46命名/G42清理策略。worker123/Source124，真实身份按App回执/ignored output/dispatch/g45-dispatch-20261018.json，当前local最新main可建codex分支，不新worktree/复制依赖/内部agent。
+
+OS60/runner45/lease15min/log8MiB/temp512MiB，顺序测试峰值两Session，app.listen专用fixture，不index/scheduler；本G45无需browser/前端构建。无真实模型/天气/私密.env/用户库/MySQL/Windows/CI/安装。准确退出→句柄→自身temp/socket/合成库→audit自身另退。候选Git0/G45不提前关闭，完成/失败一次主动回本Source停，源至多一次就绪后结束不轮询；独验后另原任务整合/普通push再推进。6—10未派，U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL例外保持，下方完整历史保留。
+
+---
+
 # 当前工程整合：G12已验产品合main，普通push收尾（2026-10-18）
 
 Source120独验server206/206、web43/43、lint0错误/原44warning、production build70模块/461ms及一次真实headless核心20检查PASS，原worker `01a14cd9-40e4-7c60-97db-38f8298ba2eb / local` 将21已验产品/公开配置/测试/受管脚本原子提交 `8290ae92c26fbf676117faebcc042d8d2b1df53d`，main正常merge `05e07fabc6d9f1b77f90acac2464789d5ab75ed3`，21main blob逐件等于Source冻结指纹；前序edeacf2协调提交保持。G12原工程条目本阶段完成：本地同源HttpOnly Cookie、Bearer兼容、/me恢复、最小Origin+保护头CSRF、改密续会话/旧凭证吊销及后端退出已验。
