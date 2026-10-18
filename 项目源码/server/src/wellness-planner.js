@@ -1,3 +1,4 @@
+import { getWellnessDraft } from './wellness-draft-queries.js';
 import crypto from 'node:crypto';
 import { db, guestProfile, id, inTransaction, json, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { chatWithAssistant, getAssistantRun } from './assistant.js';
@@ -7,10 +8,10 @@ import { getProject } from './catalog.js';
 import { getGuestMenu } from './meals.js';
 import { AppError } from './errors.js';
 import { normalizeHealthProfile } from './health-profile.js';
-import { systemBusinessClock } from './clock.js';
 import { isDateOnly } from './staffing.js';
+import { systemBusinessClock } from './clock.js';
 import { inspectWellnessCollaboration } from './wellness-run-evidence.js';
-import { draftEnvironmentHistory, captureDraftEnvironmentHistory } from './environment-history.js';
+import { captureDraftEnvironmentHistory } from './environment-history.js';
 
 const MAX_STAY_DAYS = 7;
 const MAX_CANDIDATE_PROJECTS = 3;
@@ -54,53 +55,6 @@ function dateDistance(start, end) {
 function localMinutes(value) {
   const match = String(value || '').match(/^(\d{2}):(\d{2})$/);
   return match ? Number(match[1]) * 60 + Number(match[2]) : null;
-}
-
-function decodeItem(row) {
-  return {
-    id: row.id,
-    businessDate: String(row.business_date).slice(0, 10),
-    slotKey: row.slot_key,
-    type: row.item_type,
-    candidateId: row.candidate_id || null,
-    title: row.title,
-    localStart: row.local_start || null,
-    localEnd: row.local_end || null,
-    status: row.status,
-    reason: row.reason,
-    location: row.location || null,
-    ruleIds: json(row.rule_ids_json, []),
-    sourceIds: json(row.source_ids_json, []),
-    environmentSnapshotId: row.environment_snapshot_id || null,
-    evidence: json(row.evidence_json, {})
-  };
-}
-
-function decodeDraft(row, items = []) {
-  const evidence = json(row.evidence_json, {});
-  return {
-    draftId: row.id,
-    guestId: row.guest_id,
-    version: Number(row.version),
-    sourceRunId: row.source_run_id || null,
-    stayStart: String(row.stay_start).slice(0, 10),
-    stayEnd: String(row.stay_end).slice(0, 10),
-    status: row.status,
-    reviewStatus: row.review_status || (row.status === 'active' ? 'active' : row.status === 'cancelled' ? 'returned' : 'pending_review'),
-    reviewReason: row.review_reason || '',
-    reviewedAt: row.reviewed_at || null,
-    supersedesDraftId: row.supersedes_draft_id || null,
-    reviewThreadId: row.review_thread_id || row.id,
-    active: row.status === 'active',
-    reviewPolicy: { mode: row.review_policy, samplePercent: Number(row.review_sample_percent || 0) },
-    evidence,
-    parentRunId: evidence.parentRunId || row.source_run_id || null,
-    sessionId: evidence.sessionId || evidence.adoption?.sessionId || null,
-    selectedCandidateIds: Array.isArray(evidence.coordinator?.selectedCandidateIds)
-      ? evidence.coordinator.selectedCandidateIds : [],
-    createdAt: row.created_at,
-    items
-  };
 }
 
 function adoptionBody(body) {
@@ -867,143 +821,5 @@ export async function adoptWellnessDraft({ user, body, requestKey }) {
       modelCalls: run.modelCallCount, toolCalls: run.toolCallCount } };
 }
 
-export async function createRestChangeDraft({ user, reservationId, sessionId, sourceRunId, actionCardId, reason, requestKey }) {
-  if (!user || user.role !== 'guest') throw new AppError(403, 'GUEST_REQUIRED', '仅客人可提出本人疗程调整');
-  if (typeof requestKey !== 'string' || !/^[A-Za-z0-9:_-]{8,120}$/.test(requestKey)) {
-    throw new AppError(400, 'IDEMPOTENCY_KEY_INVALID', '调整草案缺少有效请求标识');
-  }
-  const trimmedReason = typeof reason === 'string' ? reason.trim() : '';
-  if (!trimmedReason || trimmedReason.length > 500) throw new AppError(400, 'WELLNESS_REASON_REQUIRED', '请说明希望休息或调整的原因');
-  const create = async () => {
-    const existing = await db.prepare('SELECT id FROM wellness_drafts WHERE guest_id=? AND request_key=?').get(user.id, requestKey);
-    if (existing) return { draftId: existing.id, replayed: true };
-    const profile = await guestProfile(user.id);
-    if (!profile) throw new AppError(409, 'PROFILE_NOT_READY', '客人档案尚未建立');
-    const stayStart = String(profile.check_in || '').slice(0, 10);
-    const stayEnd = String(profile.check_out || '').slice(0, 10);
-    const reservation = await db.prepare(`SELECT r.id,r.status,r.wellness_draft_id AS wellnessDraftId,
-        s.business_date AS businessDate,s.project_id AS projectId,p.name AS projectName
-      FROM reservations r JOIN activity_slots s ON s.id=r.slot_id JOIN projects p ON p.id=s.project_id
-      WHERE r.id=? AND r.guest_id=?`).get(reservationId, user.id);
-    if (!reservation || reservation.status !== 'cancelled') {
-      throw new AppError(409, 'WELLNESS_REVIEW_STATE', '调整草案必须关联已取消的本人预约');
-    }
-    const businessDate = String(reservation.businessDate).slice(0, 10);
-    if (!isDateOnly(stayStart) || !isDateOnly(stayEnd) || businessDate < stayStart || businessDate >= stayEnd) {
-      throw new AppError(409, 'WELLNESS_STAY_INVALID', '预约日期不在当前有效入住区间内');
-    }
-    let sourceDraft = reservation.wellnessDraftId
-      ? await db.prepare('SELECT id,version,review_thread_id AS reviewThreadId,review_status AS reviewStatus FROM wellness_drafts WHERE id=? AND guest_id=?')
-        .get(reservation.wellnessDraftId, user.id)
-      : null;
-    if (!sourceDraft) sourceDraft = await db.prepare(`SELECT id,version,review_thread_id AS reviewThreadId,review_status AS reviewStatus
-      FROM wellness_drafts WHERE guest_id=? AND review_status='active' ORDER BY version DESC,id DESC LIMIT 1`).get(user.id);
-    const latest = await db.prepare('SELECT COALESCE(MAX(version),0) AS version FROM wellness_drafts WHERE guest_id=?').get(user.id);
-    const version = Number(latest?.version || 0) + 1;
-    const draftId = id('wellness_draft');
-    const timestamp = now();
-    const threadId = sourceDraft?.reviewThreadId || sourceDraft?.id || draftId;
-    const evidence = {
-      stage: 23,
-      requestedChange: 'rest_or_reschedule',
-      requestReason: trimmedReason,
-      sourceReservationId: reservation.id,
-      sourceProjectId: reservation.projectId,
-      sourceProjectName: reservation.projectName,
-      sourceAssistantSessionId: sessionId,
-      sourceAssistantRunId: sourceRunId,
-      sourceActionCardId: actionCardId,
-      requiresClinicianReview: true,
-      activatesReplacement: false
-    };
-    await db.prepare(`INSERT INTO wellness_drafts
-      (id,guest_id,version,request_key,source_run_id,stay_start,stay_end,status,review_policy,review_sample_percent,
-       evidence_json,created_at,review_status,review_thread_id,supersedes_draft_id)
-      VALUES(?,?,?,?,?,?,?,'pending_review','sampled_review',100,?,?,'pending_review',?,?)`).run(
-      draftId, user.id, version, requestKey, sourceRunId, stayStart, stayEnd,
-      JSON.stringify(evidence), timestamp, threadId, sourceDraft?.id || null
-    );
-    const itemId = id('wellness_item');
-    await db.prepare(`INSERT INTO wellness_draft_items
-      (id,draft_id,business_date,slot_key,item_type,candidate_id,title,local_start,local_end,status,reason,location,
-       rule_ids_json,source_ids_json,environment_snapshot_id,evidence_json)
-      VALUES(?,?,?,'morning','rest',NULL,?,NULL,NULL,'pending_review',?,NULL,'[]',?,NULL,?)`).run(
-      itemId, draftId, businessDate, '休息调整（待医护审核）',
-      `客人确认停止预约 ${reservation.id}；${trimmedReason}。本条为待审调整草案，不会自动激活替代项目。`,
-      JSON.stringify([{ type: 'reservation', id: reservation.id, label: reservation.projectName || '已取消预约' },
-        { type: 'assistant_session', id: sessionId, label: '客人助手会话' },
-        { type: 'assistant_action', id: actionCardId, label: '已确认的调整请求' }]),
-      JSON.stringify({ requiresClinicianReview: true, noReplacementReservation: true, sourceRunId })
-    );
-    await db.prepare(`INSERT INTO wellness_review_events
-      (id,draft_id,review_thread_id,guest_id,actor_id,actor_role,action,reason,from_version,to_version,request_key,payload_json,created_at)
-      VALUES(?,?,?,?,?,'guest','revision',?,?,?,?,?,?)`).run(
-      id('wellness_review'), draftId, threadId, user.id, user.id, trimmedReason,
-      sourceDraft?.version ?? null, version, requestKey,
-      JSON.stringify({ sourceReservationId: reservation.id, sourceSessionId: sessionId,
-        sourceAssistantRunId: sourceRunId, sourceActionCardId: actionCardId, kind: 'guest_rest_change_request' }), timestamp
-    );
-    await log(user.id, 'wellness_draft.guest_change_request', 'wellness_draft', draftId,
-      `客人提出休息调整；关联已取消预约 ${reservation.id}；待医护审核`);
-    return { draftId, replayed: false };
-  };
-  const result = await inTransaction(create);
-  return { ...(await getWellnessDraft(user.id, result.draftId)), deduplicated: result.replayed };
-}
-
-export async function getWellnessDraft(guestId, draftId) {
-  const row = await db.prepare('SELECT * FROM wellness_drafts WHERE id=? AND guest_id=?').get(draftId, guestId);
-  if (!row) throw new AppError(404, 'WELLNESS_DRAFT_NOT_FOUND', '疗程草案不存在');
-  const items = await db.prepare(`SELECT * FROM wellness_draft_items WHERE draft_id=?
-    ORDER BY business_date,CASE slot_key WHEN 'breakfast' THEN 1 WHEN 'morning' THEN 2 WHEN 'lunch' THEN 3
-      WHEN 'afternoon' THEN 4 WHEN 'dinner' THEN 5 ELSE 6 END,local_start`).all(draftId);
-  const draft = decodeDraft(row, items.map(decodeItem));
-  return { ...draft, environmentHistory: await draftEnvironmentHistory(draft) };
-}
-
-export async function listWellnessDrafts(guestId, { stayStart = null, stayEnd = null } = {}) {
-  const filters = ['guest_id=?'];
-  const params = [guestId];
-  if (stayStart && stayEnd) { filters.push('stay_start=? AND stay_end=?'); params.push(stayStart, stayEnd); }
-  const rows = await db.prepare(`SELECT * FROM wellness_drafts WHERE ${filters.join(' AND ')} ORDER BY version DESC,id DESC LIMIT 50`)
-    .all(...params);
-  // G24：一次取回全部草案条目并按 draft_id 分组，替代逐草案 N+1 查询；环境历史仍按草案单独读取。
-  const draftIds = rows.map(row => row.id);
-  const itemsByDraft = new Map();
-  if (draftIds.length) {
-    const itemPlaceholders = draftIds.map(() => '?').join(',');
-    const itemRows = await db.prepare(`SELECT * FROM wellness_draft_items WHERE draft_id IN (${itemPlaceholders})
-      ORDER BY business_date,CASE slot_key WHEN 'breakfast' THEN 1 WHEN 'morning' THEN 2 WHEN 'lunch' THEN 3
-        WHEN 'afternoon' THEN 4 WHEN 'dinner' THEN 5 ELSE 6 END,local_start`).all(...draftIds);
-    for (const item of itemRows) {
-      if (!itemsByDraft.has(item.draft_id)) itemsByDraft.set(item.draft_id, []);
-      itemsByDraft.get(item.draft_id).push(item);
-    }
-  }
-  const result = [];
-  for (const row of rows) {
-    const draft = decodeDraft(row, (itemsByDraft.get(row.id) || []).map(decodeItem));
-    result.push({ ...draft, environmentHistory: await draftEnvironmentHistory(draft) });
-  }
-  return result;
-}
-
-export async function wellnessTimeline(guestId) {
-  const nowValue = systemBusinessClock.utc();
-  const reservations = await db.prepare(`SELECT r.id,r.status,r.cancelled_at AS cancelledAt,r.cancellation_reason AS cancellationReason,
-      s.project_id AS projectId,s.business_date AS businessDate,s.starts_at AS startsAt,s.ends_at AS endsAt,
-      s.local_start AS localStart,s.local_end AS localEnd,p.name AS projectName,p.location
-    FROM reservations r JOIN activity_slots s ON s.id=r.slot_id JOIN projects p ON p.id=s.project_id
-    WHERE r.guest_id=? ORDER BY s.starts_at DESC,r.created_at DESC`).all(guestId);
-  const upcoming = reservations.filter(item => item.status === 'confirmed' && Date.parse(item.startsAt) > Date.parse(nowValue));
-  const cancelledHistory = reservations.filter(item => item.status === 'cancelled');
-  const drafts = (await listWellnessDrafts(guestId)).filter(item => item.status === 'pending_review');
-  return {
-    upcomingBookings: upcoming.map(item => ({ ...item, type: 'confirmed_reservation' })),
-    cancelledHistory: cancelledHistory.map(item => ({ ...item, type: 'cancelled_reservation' })),
-    proposedDrafts: drafts.map(item => ({ draftId: item.draftId, version: item.version, stayStart: item.stayStart,
-      stayEnd: item.stayEnd, status: item.status, sourceRunId: item.sourceRunId, createdAt: item.createdAt,
-      active: false, itemCount: item.items.length })),
-    boundary: '待审草案不属于预约，不占用名额；只有仍有效的已确认预约会进入待执行日程。'
-  };
-}
+export { createRestChangeDraft } from './wellness-draft-changes.js';
+export { getWellnessDraft, listWellnessDrafts, wellnessTimeline } from './wellness-draft-queries.js';

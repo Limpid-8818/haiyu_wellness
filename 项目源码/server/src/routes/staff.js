@@ -6,7 +6,7 @@ import { db, escapeLikeValue, guestSummary, id, json, likeEscapeClause, log } fr
 import { AppError } from '../errors.js';
 import { normalizeHealthProfile } from '../health-profile.js';
 import { recordStaffExecution } from '../service-execution.js';
-import { listStaffDailySchedule, organizationGuestHealthHistory } from '../stage26-operations.js';
+import { listStaffDailySchedule, organizationGuestHealthHistory } from '../operations.js';
 import { auth, clinicianOnly, operationsSummaryOnly, queryString, routeHandler, staffOnly } from './shared.js';
 
 const router = express.Router();

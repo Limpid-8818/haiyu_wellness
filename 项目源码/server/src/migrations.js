@@ -6,12 +6,12 @@ import { mysqlMealSchema, sqliteMealSchema, mysqlMealReviewSchema, sqliteMealRev
 import { sqliteServiceSchema, mysqlServiceSchema } from './service-schema.js';
 import { mysqlMoodSchema, sqliteMoodSchema } from './mood-schema.js';
 import { mysqlAssistantRunsSchema, sqliteAssistantRunsSchema } from './assistant-runs-schema.js';
-import { mysqlStage21Schema, sqliteStage21Schema } from './stage21-schema.js';
-import { mysqlStage22Schema, sqliteStage22Schema } from './stage22-schema.js';
-import { mysqlStage23Schema, sqliteStage23Schema } from './stage23-schema.js';
-import { mysqlStage24Schema, sqliteStage24Schema } from './stage24-schema.js';
-import { mysqlStage25Schema, sqliteStage25Schema } from './stage25-schema.js';
-import { mysqlStage26Schema, sqliteStage26Schema } from './stage26-schema.js';
+import { mysqlAssessmentWellnessDraftSchema, sqliteAssessmentWellnessDraftSchema } from './assessment-wellness-draft-schema.js';
+import { mysqlWellnessReviewSchema, sqliteWellnessReviewSchema } from './wellness-review-schema.js';
+import { mysqlAssistantActionSchema, sqliteAssistantActionSchema } from './assistant-action-schema.js';
+import { mysqlWellnessFollowupSchema, sqliteWellnessFollowupSchema } from './wellness-followup-schema.js';
+import { mysqlWellnessNotificationSchema, sqliteWellnessNotificationSchema } from './wellness-notification-schema.js';
+import { mysqlOperationsSchema, sqliteOperationsSchema } from './operations-schema.js';
 import { db, driver, transaction } from './db-infrastructure.js';
 import { now } from './db-values.js';
 import { JOB_TYPES } from './staffing.js';
@@ -186,8 +186,8 @@ export async function migrate() {
           await db.exec("ALTER TABLE agent_steps ADD COLUMN diagnostic_json TEXT NOT NULL DEFAULT '{}'");
         }
       } },
-      { version: 17, name: 'stage21-resumable-assessment-and-inactive-itinerary-drafts', up: async () => db.exec(sqliteStage21Schema) },
-      { version: 18, name: 'stage22-clinician-review-versioning-and-activation', up: async () => db.exec(sqliteStage22Schema) },
+      { version: 17, name: 'stage21-resumable-assessment-and-inactive-itinerary-drafts', up: async () => db.exec(sqliteAssessmentWellnessDraftSchema) },
+      { version: 18, name: 'stage22-clinician-review-versioning-and-activation', up: async () => db.exec(sqliteWellnessReviewSchema) },
       { version: 19, name: 'stage22-review-request-replay-index', up: async () => {
         await db.exec('CREATE INDEX IF NOT EXISTS idx_wellness_review_request ON wellness_review_events(actor_id,action,request_key,created_at)');
       } },
@@ -227,7 +227,7 @@ export async function migrate() {
           await db.exec('ALTER TABLE health_records ADD COLUMN source_session_id TEXT REFERENCES assistant_sessions(id) ON DELETE SET NULL');
         }
         await db.exec('CREATE INDEX IF NOT EXISTS idx_health_source_session ON health_records(source_session_id)');
-        await db.exec(sqliteStage23Schema);
+        await db.exec(sqliteAssistantActionSchema);
       } },
       { version: 22, name: 'assistant-run-explicit-stop-reasons', up: async () => {
         const columns = await db.prepare('PRAGMA table_info(agent_runs)').all();
@@ -240,13 +240,13 @@ export async function migrate() {
         if (!columns.some(column => column.name === 'revision')) {
           await db.exec('ALTER TABLE mood_records ADD COLUMN revision INTEGER NOT NULL DEFAULT 1');
         }
-        await db.exec(sqliteStage24Schema);
+        await db.exec(sqliteWellnessFollowupSchema);
       } },
       { version: 24, name: 'stage25-daily-briefs-and-notifications', up: async () => {
-        await db.exec(sqliteStage25Schema);
+        await db.exec(sqliteWellnessNotificationSchema);
       } },
       { version: 25, name: 'stage26-operations-schedules-and-incidents', up: async () => {
-        await db.exec(sqliteStage26Schema);
+        await db.exec(sqliteOperationsSchema);
       } },
       { version: 26, name: 'meal-restriction-and-order-review', up: async () => {
         await db.exec(sqliteMealReviewSchema);
@@ -467,10 +467,10 @@ export async function migrate() {
       if (!column) await db.exec('ALTER TABLE agent_steps ADD COLUMN diagnostic_json JSON NULL');
     } },
     { version: 17, name: 'stage21-resumable-assessment-and-inactive-itinerary-drafts', up: async () => {
-      for (const statement of mysqlStage21Schema) await db.exec(statement);
+      for (const statement of mysqlAssessmentWellnessDraftSchema) await db.exec(statement);
     } },
     { version: 18, name: 'stage22-clinician-review-versioning-and-activation', up: async () => {
-      for (const statement of mysqlStage22Schema) await db.exec(statement);
+      for (const statement of mysqlWellnessReviewSchema) await db.exec(statement);
     } },
     { version: 19, name: 'stage22-review-request-replay-index', up: async () => {
       const index = await db.prepare(`SELECT INDEX_NAME AS name FROM INFORMATION_SCHEMA.STATISTICS
@@ -499,7 +499,7 @@ export async function migrate() {
         WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='health_records' AND CONSTRAINT_NAME='fk_health_source_session'`).get();
       if (!constraint) await db.exec(`ALTER TABLE health_records ADD CONSTRAINT fk_health_source_session
         FOREIGN KEY(source_session_id) REFERENCES assistant_sessions(id) ON DELETE SET NULL`);
-      for (const statement of mysqlStage23Schema) await db.exec(statement);
+      for (const statement of mysqlAssistantActionSchema) await db.exec(statement);
     } },
     { version: 22, name: 'assistant-run-explicit-stop-reasons', up: async () => {
       const column = await db.prepare(`SELECT COLUMN_NAME AS name FROM INFORMATION_SCHEMA.COLUMNS
@@ -510,13 +510,13 @@ export async function migrate() {
       const column = await db.prepare(`SELECT COLUMN_NAME AS name FROM INFORMATION_SCHEMA.COLUMNS
         WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='mood_records' AND COLUMN_NAME='revision'`).get();
       if (!column) await db.exec('ALTER TABLE mood_records ADD COLUMN revision INT UNSIGNED NOT NULL DEFAULT 1');
-      for (const statement of mysqlStage24Schema) await db.exec(statement);
+      for (const statement of mysqlWellnessFollowupSchema) await db.exec(statement);
     } },
     { version: 24, name: 'stage25-daily-briefs-and-notifications', up: async () => {
-      for (const statement of mysqlStage25Schema) await db.exec(statement);
+      for (const statement of mysqlWellnessNotificationSchema) await db.exec(statement);
     } },
     { version: 25, name: 'stage26-operations-schedules-and-incidents', up: async () => {
-      for (const statement of mysqlStage26Schema) await db.exec(statement);
+      for (const statement of mysqlOperationsSchema) await db.exec(statement);
     } },
     { version: 26, name: 'meal-restriction-and-order-review', up: async () => {
       for (const statement of mysqlMealReviewSchema) await db.exec(statement);

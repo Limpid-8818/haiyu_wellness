@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { AppError } from './errors.js';
 import { db, isUniqueViolation, now } from './db.js';
 import { shiftDateKey, systemBusinessClock } from './clock.js';
-import { recordReplanSourceEvent } from './wellness-followup.js';
+import { recordReplanSourceEvent } from './wellness-source-events.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const mediaRoot = path.resolve(here, '../media/mood');
