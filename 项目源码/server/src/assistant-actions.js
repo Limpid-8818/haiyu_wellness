@@ -1,3 +1,4 @@
+import { createRestChangeDraft } from './wellness-draft-changes.js';
 import crypto from 'node:crypto';
 import { db, guestProfile, id, inTransaction, json, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { stableJson } from './stable-json.js';
@@ -542,7 +543,6 @@ async function executeConfirmedAction(row, user, parameters, key) {
   }
   if (row.action_type === 'rest_change') {
     const reservation = await cancelReservation({ guestId, reservationId: parameters.reservationId });
-    const { createRestChangeDraft } = await import('./wellness-planner.js');
     const draft = await createRestChangeDraft({ user, reservationId: parameters.reservationId, sessionId: row.session_id,
       sourceRunId: row.source_run_id, actionCardId: row.id, reason: parameters.reason,
       requestKey: `${row.id}:v${row.version}` });

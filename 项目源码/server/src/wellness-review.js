@@ -5,7 +5,7 @@ import { createReservation, evaluateExistingDraftSlot } from './booking.js';
 import { getProject } from './catalog.js';
 import { authorizeGuestAccess, accessibleGuestIds } from './authorization.js';
 import { canManageStaff, isDateOnly, jobTypeFor } from './staffing.js';
-import { getWellnessDraft } from './wellness-planner.js';
+import { getWellnessDraft } from './wellness-draft-queries.js';
 import { createCareFollowUpTask, createNotificationOnce } from './wellness-notifications.js';
 
 const MAX_REASON = 1000;

@@ -1,7 +1,7 @@
 import { AppError } from './errors.js';
 import { db, log, now, transaction } from './db.js';
 import { shiftDateKey, systemBusinessClock } from './clock.js';
-import { recordReplanSourceEvent } from './wellness-followup.js';
+import { recordReplanSourceEvent } from './wellness-source-events.js';
 
 import { HEALTH_METRIC_RULE_VERSION, HEALTH_DEMO_RULE, HEALTH_METRICS, metricKey, legacyStructuredValue } from './health-metric-values.js';
 export { HEALTH_METRIC_RULE_VERSION, HEALTH_DEMO_RULE, HEALTH_METRICS, legacyStructuredValue } from './health-metric-values.js';

@@ -5,7 +5,7 @@ import { cancelReservation, createReservation, listGuestReservations, listGuestS
 import { systemBusinessClock } from '../clock.js';
 import { db, id, json } from '../db.js';
 import { AppError } from '../errors.js';
-import { confirmWeatherReschedule, listWeatherCancellationCandidates } from '../stage26-operations.js';
+import { confirmWeatherReschedule, listWeatherCancellationCandidates } from '../operations.js';
 import { createGuestCheckin, createGuestFeedback, listGuestCheckins, updateGuestFeedback } from '../wellness-followup.js';
 import { auth, authorizeQueryGuest, requireGuestRole, routeHandler } from './shared.js';
 

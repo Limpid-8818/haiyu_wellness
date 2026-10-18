@@ -1,4 +1,4 @@
-import { recordProviderFailure, recordProviderSuccess } from './stage26-operations.js';
+import { recordProviderFailure, recordProviderSuccess } from './operations.js';
 
 export class ModelRequestError extends Error {
   constructor(code, message = '模型请求失败', diagnostic = null) {

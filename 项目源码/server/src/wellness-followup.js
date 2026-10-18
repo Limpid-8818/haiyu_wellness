@@ -1,7 +1,13 @@
-import { db, id, inTransaction, log, mysqlLockSuffix, now, transaction } from './db.js';
+import { db, id, log, mysqlLockSuffix, now, transaction } from './db.js';
 import { AppError } from './errors.js';
 import { systemBusinessClock } from './clock.js';
 import {checkinAvailability} from './release-presentation.js';
+import { recordReplanSourceEvent } from './wellness-source-events.js';
+export { recordReplanSourceEvent, markReplanDraftActive } from './wellness-source-events.js';
+import { reservationExecutions } from './service-execution.js';
+import { getWellnessDraft } from './wellness-draft-queries.js';
+import { createWellnessDraft } from './wellness-planner.js';
+import { autoActivateWellnessDraft } from './wellness-review.js';
 
 const FEELINGS = new Set(['comfortable', 'general', 'uncomfortable']);
 
@@ -49,38 +55,6 @@ function publicFeedback(row, revisions = []) {
   };
 }
 
-export async function recordReplanSourceEvent({ guestId, sourceType, sourceId, sourceVersion = 1,
-  sourceLabel, sourceSnapshot, triggerReason = '', requiresAttention = false }) {
-  if (!['feedback', 'health_metric', 'mood'].includes(sourceType)) throw new Error(`unsupported replan source type: ${sourceType}`);
-  if (!Number.isSafeInteger(Number(sourceVersion)) || Number(sourceVersion) < 1) throw new Error('source version must be a positive integer');
-  const persist = async () => {
-    const existing = await db.prepare(`SELECT * FROM wellness_replan_events
-      WHERE guest_id=? AND source_type=? AND source_id=? AND source_version=?`).get(
-      guestId, sourceType, String(sourceId), Number(sourceVersion));
-    if (existing) return existing;
-    const stamp = now();
-    const eventId = id('replan');
-    try {
-      await db.prepare(`INSERT INTO wellness_replan_events
-        (id,guest_id,source_type,source_id,source_version,source_label,source_snapshot_json,trigger_reason,
-         requires_attention,status,baseline_draft_id,candidate_draft_id,created_at,updated_at)
-        VALUES(?,?,?,?,?,?,?,?,?,'recorded',NULL,NULL,?,?)`).run(
-        eventId, guestId, sourceType, String(sourceId), Number(sourceVersion), String(sourceLabel || '').slice(0, 256),
-        JSON.stringify(sourceSnapshot || {}), String(triggerReason || '').slice(0, 1000), requiresAttention ? 1 : 0, stamp, stamp
-      );
-    } catch (error) {
-      if (!/unique|duplicate/i.test(`${error.code || ''} ${error.message || ''}`)) throw error;
-      const raced = await db.prepare(`SELECT * FROM wellness_replan_events
-        WHERE guest_id=? AND source_type=? AND source_id=? AND source_version=?`).get(
-        guestId, sourceType, String(sourceId), Number(sourceVersion));
-      if (raced) return raced;
-      throw error;
-    }
-    return await db.prepare('SELECT * FROM wellness_replan_events WHERE id=?').get(eventId);
-  };
-  return inTransaction(persist);
-}
-
 async function reservationForGuest(guestId, reservationId, forUpdate = false) {
   return await db.prepare(`SELECT r.id AS reservationId,r.guest_id AS guestId,r.status AS reservationStatus,
       s.id AS slotId,s.business_date AS businessDate,s.starts_at AS startsAt,s.ends_at AS endsAt,
@@ -121,7 +95,7 @@ export async function listGuestCheckins(guestId) {
       localStart: row.localStart, localEnd: row.localEnd, projectName: row.projectName, location: row.location,
       checkin: row.checkinId ? { id: row.checkinId, checkedInAt: row.checkedInAt,
         businessDate: dateText(row.checkedInBusinessDate) } : null,
-      feedback, executions: await (await import('./service-execution.js')).reservationExecutions(row.reservationId) });
+      feedback, executions: await reservationExecutions(row.reservationId) });
   }
   return { items, total: items.length };
 }
@@ -266,7 +240,6 @@ async function replanEventRow(guestId, eventId) {
 }
 
 export async function getReplanEventDetail(guestId, eventId) {
-  const { getWellnessDraft } = await import('./wellness-planner.js');
   const row = await replanEventRow(guestId, eventId);
   if (!row) throw new AppError(404, 'WELLNESS_REPLAN_EVENT_NOT_FOUND', '重规划来源记录不存在');
   const baseline = row.baselineDraftId ? await getWellnessDraft(guestId, row.baselineDraftId).catch(() => null) : null;
@@ -286,7 +259,6 @@ export async function getReplanEventDetail(guestId, eventId) {
 export async function listReplanEvents(guestId) {
   // G24：一次性取回事件全行（不再逐条回查 id），同一草案在多条来源事件间复用
   // getWellnessDraft 的原有逻辑按 draftId 记忆化，避免重复加载同一草案。
-  const { getWellnessDraft } = await import('./wellness-planner.js');
   const rows = await db.prepare(`SELECT id,guest_id AS guestId,source_type AS sourceType,source_id AS sourceId,
     source_version AS sourceVersion,source_label AS sourceLabel,source_snapshot_json AS sourceSnapshotJson,
     trigger_reason AS triggerReason,requires_attention AS requiresAttention,status,
@@ -334,7 +306,6 @@ export async function evaluateReplanEvent({ user, eventId }) {
   const snapshot = jsonValue(row.sourceSnapshotJson);
   const request = `根据已登记的执行/健康来源重新评估当前疗程，并生成一个待审核候选版本。来源类型：${row.sourceType}；来源编号：${row.sourceId}；来源版本：${row.sourceVersion}；来源摘要：${row.sourceLabel}；记录快照：${JSON.stringify(snapshot)}。触发说明：${row.triggerReason || '将此记录作为本次评估依据。'}。请复用当前多智能体协调器、现行安全约束、规则与实际可用时段；不要宣称诊断或因果关系。`;
   try {
-    const { createWellnessDraft } = await import('./wellness-planner.js');
     const draft = await createWellnessDraft({ user, body: { request }, requestKey: `q24-replan:${eventId}` });
     const evidence = { ...(draft.evidence || {}), replanning: { eventId, sourceType: row.sourceType,
       sourceId: row.sourceId, sourceVersion: Number(row.sourceVersion), sourceLabel: row.sourceLabel,
@@ -360,7 +331,6 @@ export async function activateReplanEvent({ user, eventId }) {
   const row = await replanEventRow(user.id, eventId);
   if (!row) throw new AppError(404, 'WELLNESS_REPLAN_EVENT_NOT_FOUND', '重规划来源记录不存在');
   if (!row.candidateDraftId) throw new AppError(409, 'WELLNESS_REPLAN_CANDIDATE_MISSING', '请先生成候选版本');
-  const { autoActivateWellnessDraft } = await import('./wellness-review.js');
   const activated = await autoActivateWellnessDraft(row.candidateDraftId);
   if (activated) {
     await db.prepare(`UPDATE wellness_replan_events SET status='active',updated_at=? WHERE id=? AND guest_id=?`)
@@ -368,9 +338,4 @@ export async function activateReplanEvent({ user, eventId }) {
   }
   return { activated: Boolean(activated), detail: await getReplanEventDetail(user.id, eventId),
     message: activated ? '现行低风险自动激活规则已完成复核。' : '候选版本仍待医护按现行审核规则核对。' };
-}
-
-export async function markReplanDraftActive(draftId) {
-  await db.prepare(`UPDATE wellness_replan_events SET status='active',updated_at=? WHERE candidate_draft_id=?`)
-    .run(now(), draftId);
 }

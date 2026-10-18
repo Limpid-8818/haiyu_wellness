@@ -10,7 +10,7 @@ import { listHealthRecords, publicHealthRecord } from './health-metrics.js';
 import { effectiveHealthConstraints, normalizeHealthProfile } from './health-profile.js';
 import { evaluateProjectRules } from './rules-engine.js';
 import { proposeGuestAction } from './assistant-actions.js';
-import { searchOperationsCapacity, searchStaffReviewContext } from './stage26-operations.js';
+import { searchOperationsCapacity, searchStaffReviewContext } from './operations.js';
 import { readCurrentEnvironmentSnapshot } from './environment.js';
 import { systemBusinessClock } from './clock.js';
 
