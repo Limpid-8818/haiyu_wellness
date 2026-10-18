@@ -1,3 +1,33 @@
+# 当前工程整合：G12已验产品合main，普通push收尾（2026-10-18）
+
+Source120独验server206/206、web43/43、lint0错误/原44warning、production build70模块/461ms及一次真实headless核心20检查PASS，原worker `01a14cd9-40e4-7c60-97db-38f8298ba2eb / local` 将21已验产品/公开配置/测试/受管脚本原子提交 `8290ae92c26fbf676117faebcc042d8d2b1df53d`，main正常merge `05e07fabc6d9f1b77f90acac2464789d5ab75ed3`，21main blob逐件等于Source冻结指纹；前序edeacf2协调提交保持。G12原工程条目本阶段完成：本地同源HttpOnly Cookie、Bearer兼容、/me恢复、最小Origin+保护头CSRF、改密续会话/旧凭证吊销及后端退出已验。
+
+退出只清当前Cookie，不全局吊销复制凭据；HTTPS部署/MySQL/Windows/全站浏览器未验。U01/V03/V04、109未全验、NOT_FINAL_ACCEPTED/旧FAIL/历史例外保持。119/120及115—118原件保持，21产品字节不改；本次只Git/文稿和双方本G12有限准确退出后核，没有新受管Session/服务，不重复206全测/web/build/browser或全历史审计。双方既有23实例852事件227准确身份85组166自身路径仍全退，审计自身已另退、句柄/guardian/退出缺口0，详121与ignored整合回执。
+
+本轮仅6份必要文稿AGENTS/工程清单/G12说明/119/120/121提交后普通push，最终docs/final SHA、push退出、main/origin/实际远端一致与main干净以本worker ignored `integration-final-packet.json`及一次App回源实收为准，不在121循环填写报告自己的SHA。Source复核整合/远端/资源后才可能新派G45，当前5—10未派。完成/阻塞按原授权一次主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停；无新模型/天气/私密.env/用户库/MySQL/Windows/scheduler/CI/安装/worktree/内部agent。以下全部协调、候选和失败历史按时点完整保留，旧“当前/候选/未完成”不作为本头现态。
+
+---
+
+# 当前工程阶段：G12 Source120独验PASS，仅原任务整合（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核25候选/32证据及115—118原件SHA保持，新合成根独立server206/206退出0（8453.327208ms）、web43/43、lint0错误/原44warning、production build70模块/461ms且演示密码不在8产物，一次受管headless真实客人核心20检查PASS。/me恢复/HttpOnly/JS及storage不可读/改密续会话与旧凭证吊销/退出刷新均实跑；三身份五岗由HTTP/UI回归覆盖。语法/含12 untracked完整空白/真实index保持0。首次只读汇总字段KeyError/exit1保留并纠正，无重跑测试。
+
+本G12双方分根合计23实例852事件227准确身份85组166自身路径全清，Source auditor自身另后核、句柄/guardian/历史退出缺口0。详第120轮及本Source ignored source-final-review.json冻结21源码树文件SHA。119旧fixture失败、原115—119和全部历史保持，业务U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL例外不改。只清当前Cookie不等于全局吊销复制凭据，HTTPS部署/MySQL/Windows/全站浏览器未验边界保持。
+
+只原App01a14cd9-40e4-7c60-97db-38f8298ba2eb/local GPT-6.1 Sol/High第121轮收尾：保持21已验产品/公开配置/测试/受管脚本，英文fix范围G12提交、main正常合入、G12原条目本范围完成与边界、必要docs/普通push核三方SHA和main干净。当前仍阶段分支HEAD/main edeacf2，尚未整合；Source仅新增此头和120，不视为污染。无新运行资源不重复206全测/web/build/browser或全历史审计，只有限准确退出后核；新资源仍准确退出→句柄→自身temp/socket/profile/cache/build→audit自身另退。无新模型/天气/私密.env/用户库/MySQL/Windows/scheduler/CI/安装/新worktree。原任务完成/阻塞一次主动回Source后停，Source复核整合/远端/资源后才派5，当前5—10未派。以下完整历史保留。
+
+---
+
+# 当前工程候选：G12网页Cookie会话已自验，待Source120独验（2026-10-18）
+
+唯一worker `01a14cd9-40e4-7c60-97db-38f8298ba2eb / local`，基线main `edeacf2ba8972463a90bdabbe31e843c576ea000`，阶段分支 `codex/fix-g12-browser-cookie-session-20261018`。网页使用HttpOnly host-only Cookie、/me真实恢复及旧storage清理；明确Bearer优先/无效不回退，坏Cookie不降匿名；可信Origin+保护头涵盖cookie登录/注册/写入/退出，保留G10/G11/G05与G41。改密当前Cookie续会话，退出服务端清当前Cookie、失败不假称成功；退出不全局吊销被复制凭据，沿用改密版本吊销。
+
+第119轮最终server206/206、定向31/31、web43/43、lint0错误/原44warning、production build70模块/448ms，生产演示密码未入产物；一次现有受管headless Chrome/Playwright单context/page核心旅程20检查通过，无截图/录屏/trace。首轮新增fixture将匿名role误写visitor的29/30失败原件保留，按真实public合同修正；退出大小写/尾斜线保护补验已纳入最终全测。准确资源含失败、API、浏览器和auditor自身另退；最终数量/指纹与纯空白/index检查见119和ignored candidate-packet，不重复全历史审计。
+
+只候选PASS，G12未正式关闭，暂存/commit/merge/push0；待Source120新证据根独验后另给原任务收尾授权。详docs/G12网页Cookie会话说明_20261018.md及wangshanchong/第119轮报告.md。完成一次App主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停止，不衔接5—10。无内部agent/新worktree/依赖安装或复制/真实模型天气/私密.env/用户库/MySQL/Windows/scheduler/CI，旧链接/依赖/115—118/全部历史保留；U01/V03/V04、109未全验、NOT_FINAL_ACCEPTED/旧FAIL例外保持。
+
+---
+
 # 当前工程进度：G05/G37已合推并Source118复核，准备仅G12（2026-10-18）
 
 G05/G37产品997ca7d正常merge41b7218、文稿50f4211普通push完成；Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同50f42118e62816c583133aa9976f23a655aa143d且干净、11产品SHA与116一致、115/116原件及6整合证据保持，原任务idle/completed。有限后核11实例512事件119准确身份55组110自身路径仍全退，句柄/guardian缺口0，无新运行资源，不重复195全测/build/全历史审计。
