@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import mysql from 'mysql2/promise';
 import { now } from './db-values.js';
+import { compileMysqlStatement, mysqlParams, restoreMysqlRows } from './mysql-dialect.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.resolve(here, '../data');
@@ -34,88 +35,6 @@ function mysqlConfig() {
     throw new Error('DB_DRIVER=mysql requires MYSQL_PORT, MYSQL_USER, and MYSQL_DATABASE; no SQLite fallback is attempted');
   }
   return { host, port, user, database };
-}
-
-function hasTable(sql, table) {
-  return new RegExp(`\\b(?:FROM|JOIN|INTO|UPDATE|TABLE)\\s+[\\x60"]?${table}[\\x60"]?\\b`, 'i').test(sql);
-}
-
-function replaceIdentifier(sql, from, to) {
-  return sql.replace(new RegExp(`(^|[^A-Za-z0-9_])${from}([^A-Za-z0-9_]|$)`, 'g'), `$1${to}$2`);
-}
-
-function mysqlSql(sql) {
-  let translated = sql;
-  const mappings = [
-    ['guest_profiles', [['check_in', 'check_in_date'], ['check_out', 'check_out_date']]],
-    ['health_records', [['value', 'value_text']]],
-    ['users', [['avatar', 'avatar_url']]],
-    ['news', [['cover', 'cover_url']]],
-    ['audit_logs', [['detail', 'detail_json']]],
-    ['assistant_messages', [['role', 'sender_role']]],
-    ['health_intakes', [['content', 'raw_content'], ['status', 'review_status']]]
-  ];
-  for (const [table, fields] of mappings) {
-    if (!hasTable(translated, table)) continue;
-    for (const [from, to] of fields) translated = replaceIdentifier(translated, from, to);
-  }
-  return translated;
-}
-
-function mysqlParams(sql, params) {
-  const values = [...params].map(value => {
-    if (typeof value === 'string') {
-      const timestamp = value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?Z$/);
-      if (timestamp) {
-        const fraction = timestamp[3] || '';
-        if (fraction.length > 3 && /[1-9]/.test(fraction.slice(3))) {
-          throw new Error(`MySQL DATETIME(3) cannot preserve SQLite timestamp precision: ${value}`);
-        }
-        return `${timestamp[1]} ${timestamp[2]}${fraction ? `.${fraction.slice(0, 3)}` : ''}`;
-      }
-    }
-    return value;
-  });
-  const insertFields = sql.match(/INSERT\s+(?:IGNORE\s+)?INTO\s+[\x60"]?audit_logs[\x60"]?\s*\(([^)]+)\)/i)?.[1];
-  if (insertFields) {
-    const detailIndex = insertFields.split(',').findIndex(field => field.trim().replaceAll('`', '') === 'detail_json');
-    if (detailIndex >= 0 && typeof values[detailIndex] === 'string') values[detailIndex] = JSON.stringify(values[detailIndex]);
-  }
-  return values;
-}
-
-function restoreMysqlAliases(rows, sql) {
-  if (!Array.isArray(rows)) return rows;
-  const mappings = [
-    ['guest_profiles', [['check_in_date', 'check_in'], ['check_out_date', 'check_out']]],
-    ['health_records', [['value_text', 'value']]],
-    ['users', [['avatar_url', 'avatar']]],
-    ['news', [['cover_url', 'cover']]],
-    ['audit_logs', [['detail_json', 'detail']]],
-    ['assistant_messages', [['sender_role', 'role']]],
-    ['health_intakes', [['raw_content', 'content'], ['review_status', 'status']]]
-  ];
-  return rows.map(source => {
-    const row = { ...source };
-    for (const [table, fields] of mappings) {
-      if (!hasTable(sql, table)) continue;
-      for (const [physical, logical] of fields) {
-        if (Object.hasOwn(row, physical) && !Object.hasOwn(row, logical)) row[logical] = row[physical];
-        if (physical !== logical) delete row[physical];
-      }
-    }
-    for (const [key, value] of Object.entries(row)) {
-      if (typeof value !== 'string') continue;
-      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,6})?$/.test(value)) row[key] = `${value.replace(' ', 'T')}Z`;
-    }
-    if (Object.hasOwn(row, 'detail')) {
-      try {
-        const decoded = JSON.parse(row.detail);
-        row.detail = typeof decoded === 'string' ? decoded : JSON.stringify(decoded);
-      } catch { /* preserve a legacy non-JSON audit detail */ }
-    }
-    return row;
-  });
 }
 
 async function mysqlConnection() {
@@ -170,11 +89,11 @@ function sqliteStatement(sql) {
 }
 
 async function mysqlQuery(sql, params = []) {
-  const translated = mysqlSql(sql);
+  const plan = compileMysqlStatement(sql);
   const { connection, owned } = await mysqlConnection();
   try {
-    const [rows] = await connection.execute(translated, mysqlParams(translated, params));
-    return restoreMysqlAliases(rows, sql);
+    const [rows, fields] = await connection.execute({ sql: plan.sql, rowsAsArray: true }, mysqlParams(plan, params));
+    return restoreMysqlRows(rows, fields, plan);
   } finally {
     if (owned) connection.release();
   }
@@ -188,10 +107,10 @@ export const db = {
       get: async (...params) => (await mysqlQuery(sql, params))[0],
       all: async (...params) => mysqlQuery(sql, params),
       run: async (...params) => {
-        const translated = mysqlSql(sql);
+        const plan = compileMysqlStatement(sql);
         const { connection, owned } = await mysqlConnection();
         try {
-          const [result] = await connection.execute(translated, mysqlParams(translated, params));
+          const [result] = await connection.execute(plan.sql, mysqlParams(plan, params));
           return { lastInsertRowid: result.insertId, changes: result.affectedRows };
         } finally {
           if (owned) connection.release();
@@ -297,9 +216,12 @@ export async function initializeConnection() {
       charset: 'utf8mb4'
     });
     try {
-      const [rows] = await mysqlPool.query('SELECT 1 AS ok, VERSION() AS version');
+      const [rows] = await mysqlPool.query('SELECT 1 AS ok, VERSION() AS version, @@SESSION.sql_mode AS sqlMode');
       if (!String(rows[0].version).startsWith('8.')) {
         throw new Error(`unsupported server version ${rows[0].version}; stage 10 requires MySQL 8.x`);
+      }
+      if (String(rows[0].sqlMode).split(',').some(mode => ['ANSI_QUOTES', 'NO_BACKSLASH_ESCAPES'].includes(mode))) {
+        throw new Error('logical SQL adapter requires default MySQL string quoting (no ANSI_QUOTES or NO_BACKSLASH_ESCAPES)');
       }
       console.log(`[community] DB_DRIVER=mysql SELECT 1=${rows[0].ok} server=${rows[0].version}`);
     } catch (error) {
