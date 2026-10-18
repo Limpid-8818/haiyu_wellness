@@ -1,3 +1,15 @@
+# 当前工程进度：G46已合推并Source148复核，准备仅G28（2026-10-19）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同e7c97df62d3e9ff41e3287d5a6eac75dd77e5912且干净，39已验main产品/6docs/65worker与36Source原证据及10整合回执保持，原App idle/completed。2f30d07正常merge6cf4520、docs e7c97df普通push0；G46领域入口/SCC零与两方言SQL保持范围完成，MySQL仅静态/旧500kB提示保持。145/146/144及旧FAIL原件完整。
+
+0新Session/服务，有限双方28实例681事件174准确身份83组171自身路径仍全退，句柄/guardian缺口0，auditor原已退，不重复262/build/全历史审计。详148与docs/工程第9阶段G28执行计划_20261019.md。只新独立App GPT-6.1 Sol/High第9阶段G28：实际全局可读token/对比/触达/焦点/状态、四window.confirm共享可访问对话框；真实公开登录/客人/员工核心网页及lazy助手，1024/1440/1920自然扩展和缩放重排，不移动App/手机壳/固定桌面宽高，不业务改写。worker149/Source150，实际身份/基线按App回执与ignored output/dispatch/g28-dispatch-20261019.json。
+
+当前local最新main可建codex分支，不新worktree/内部agent/复制依赖；新g28真实ID自有根，OS60/runner45/lease15min/log8MiB/temp512MiB/顺序两Session，短browser的API/Vite/浏览器进程同owner准确登记。仅合成app.listen库/账号、自己profile/cache/envDir/outDir，不用户浏览器服务/.env/模型天气/MySQL/Windows/scheduler/CI/安装。web lint/test/build与核心有限截图/数值/确认正反流程，四调用点合成回归；无server改动不跑262，实际查看图片。原生zoom若无工具支持，明确有效CSS视口等效布局及未实测，不把deviceScaleFactor冒称缩放。
+
+准确退出→句柄→自身temp/socket/profile/cache/build→auditor另退，必要小证据/截图和旧FAIL保，不删用户缓存/旧账本或跑旧cleanup。候选不暂存commitmergepush/不提前关G28，独验后另原任务整合普通push；完成/阻塞唯一主动回本Source停，源至多一次就绪即结束不轮询。第10阶段未派，148及140—147保持，U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12/G23/G42/G46边界不变。以下历史全文保留。
+
+---
+
 # 当前工程整合：G46已验产品合main，第147轮文稿与普通push收尾（2026-10-19）
 
 Source146独立核42候选/65worker原证据，Git对象原版/当前与worker真实改前507212B快照精确一致；两方言12schema导出、29版编号/name/条件与up SQL保持，运营/搬运函数原文保持。生产103模块359边/六根可达72/SCC零，六schema领域入口与七stage静态兼容门面、来源事件/草案查询/休息调整单向下沉通过。Source SQLite新29/重复0/物理v28升级1/重启0/FK、server41文件262/262及完整75176B TAP、web70模块/8产物通过；MySQL仅静态，不冒称新实库或产品最终验收。
