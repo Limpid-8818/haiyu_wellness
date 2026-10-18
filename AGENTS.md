@@ -1,3 +1,15 @@
+# 当前工程进度：G45已合推并Source126复核，准备仅G23（2026-10-18）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同6b58aa3bc87085d85b0525ab98c0142ebc6afde7且干净，15已验main blob/保护115—124/原33worker与34Source证据保持，原App idle/completed；G45产品67ede47正常merge9caa934、文稿6b58aa3普通push0。123全测完整TAP错误在当前说明/完成依据/125更正，原件不改；20实例694事件167身份80组163路径仍全退，句柄/guardian缺口0，无新Session/服务，不重复已过测试/全历史审计。
+
+详126与docs/工程第6阶段G23执行计划_20261018.md。只新独立App GPT-6.1 Sol/High执行G23：实际入口db-infrastructure.js，避免全SQL正则误伤字面量/注释/别名，七表逻辑映射与参数/结果合同保持，两库真实合成验证/SQLite全测，不改29历史schema或其他G项。worker127/Source128，真实ID按App回执/ignored output/dispatch/g23-dispatch-20261018.json，当前local最新main可建codex分支，不内部agent/新worktree/复制依赖。
+
+本阶段明确允许短时受管新MySQL8.4合成fixture，覆盖旧G45 MySQL0仅此必要验证：现有/opt/homebrew/opt/mysql@8.4/bin三工具8.4.11已版本探测，不能使用PATH默认缺protobuf的9.6或修复系统；不安装/拉镜像/brew services/读my.cnf/用户库。--no-defaults、loopback独占端口/datadir/socket/schema、buffer/redo各48MiB/禁binlog，真实ID独占g23根，两Session峰值，OS60/runner45/lease15min/log8MiB/temp512MiB不放宽。旧MySQL脚本有旧ID/root/端口/120秒，只参考不直接运行。预算/关闭失败BLOCKED回源，不擅扩。
+
+准确退出/连接句柄关闭→自身temp/datadir/socket→auditor自身另退，禁止未退删库或按名kill；无模型天气/秘密.env/现有库/Windows/browser/scheduler/CI/依赖安装。候选Git0/G23不提前关闭，独验后另原任务整合/普通push；完成/失败唯一主动回本Source后停，源至多一次就绪即结束不轮询。7—10未派，业务U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12边界保持，下方完整历史保留。
+
+---
+
 # 当前工程整合：G45已验产品合main，第125轮文稿与普通push收尾（2026-10-18）
 
 Source124独立server210/210、直接node定向28/28及新合成四探针对照/静态合同/资源门PASS后，原worker `01a14ced-7e61-7ec1-a66e-6724ffa8ff35 / local` 将15件冻结源码/测试/受管脚本提交 `67ede47f1f4bc356c09bc51377840901ae54cefd`，main正常merge `9caa934df55aa4207df46530f02dc68645475bda`，逐件main blob等于Source冻结指纹，继承54bb7d2及前序成果。G45原条目仅本阶段数据库分层完成：24导出/TLA/live binding、两方言实际29版及默认路径/事务/缓存/种子时机/客人投影保持；MySQL仅静态未实测，G23/G46/G42不扩。
