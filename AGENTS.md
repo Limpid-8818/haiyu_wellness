@@ -1,3 +1,27 @@
+# 当前工程整合：G46已验产品合main，第147轮文稿与普通push收尾（2026-10-19）
+
+Source146独立核42候选/65worker原证据，Git对象原版/当前与worker真实改前507212B快照精确一致；两方言12schema导出、29版编号/name/条件与up SQL保持，运营/搬运函数原文保持。生产103模块359边/六根可达72/SCC零，六schema领域入口与七stage静态兼容门面、来源事件/草案查询/休息调整单向下沉通过。Source SQLite新29/重复0/物理v28升级1/重启0/FK、server41文件262/262及完整75176B TAP、web70模块/8产物通过；MySQL仅静态，不冒称新实库或产品最终验收。
+
+39冻结源码树文件产品提交2f30d072e611aa9a90bb696b845f3718f0bade81，main正常merge6cf45203017a009cdab28110c1d3562c128d0d82（父45d9af9与2f30d07），逐件main blob等于Source冻结。继承e630643/G42与全部前序成果。仅必要六文稿收尾，145/146/144及全部旧FAIL和原证据保持；原G46位置仅本阶段领域组织范围完成，29历史DDL/up SQL/物理stage26表不变，旧500kB构建提示保持。
+
+本轮0新受管Session/服务，不重复262/快照/迁移/build或全历史审计。只本G46双方各唯一名直接有限退出后核，原auditor自身已退；实际计数、退出/句柄/路径与最终docs/final SHA、普通push回执、HEAD/main/origin/实际远端一致及main干净，以原worker ignored integration-final-packet.json和唯一回源实收为准，不循环写147自身SHA。详第147轮与现行G46说明。
+
+仅原App01a14fbf-3c11-7d13-bb2a-b89141d2eeff/local完成/阻塞唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后立即停，Source核交付/远端/资源后才派9，当前9—10未派。无私密.env/用户库/真实模型天气/MySQL/Windows/browser/scheduler/CI/安装/新worktree/内部agent，不跑旧G23/G42 cleanup；output链接/依赖、U01/V03/V04/109未全验/NOT_FINAL_ACCEPTED/旧FAIL/G12复制凭据HTTPS/G23支持/G42默认关preview显式apply停写单维护进程与有界快照限制保持。以下完整旧头与历史保留。
+
+---
+
+# 当前工程阶段：G46 Source146独验PASS，仅原任务第147轮整合（2026-10-19）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核42候选/65原证据，自己的Git对象原版与当前schema/up SQL/公开导出507212B快照及worker真实改前值完全一致，整个迁移源文除import和值名/运营原文/搬运函数保持。生产103模块359边/六根可达72/SCC零；SQLite新库29/重复0、物理v28升级1/再启0及55表/FK/旧用户/缓存通过。独立server41文件262/262退出0，15943.429667ms，实际完整75176B TAP；web生产70模块/8产物/707ms，旧500kB提示保留，自身build/env/cache清。34JS/5Python语法、81冻结、tracked和所有untracked完整空白/index保持通过。
+
+双方有限28实例681事件174准确身份83组171自身路径全退，审计自身另退/句柄guardian缺口0；Source峰值两Session、目录7008256B/log333761B，无MySQL/browser。详146与Source ignored source146-final-review.json冻结acceptedSourceTreeFiles39；145/144及所有旧失败原件保持。仅领域组织/兼容与静态双方言保持通过，不冒称新MySQL实库/产品业务最终验收。
+
+只原App01a14fbf-3c11-7d13-bb2a-b89141d2eeff/local GPT-6.1 Sol/High第147轮Git：39已验字节保持，英文refactor(server)带G46产品提交、正常main merge、G46原条目本范围完成/兼容门面与未测边界、必要docs/普通push三方一致及main干净。当前HEAD/main45d9af9未整合；Source只新增146与此头不作污染，145/146/144及旧报告冻结。无需重测262/build/全历史审计，0新运行资源只有限准确退出后核；不新MySQL/用户库/模型天气/私密.env/Windows/browser/scheduler/CI/安装/worktree/内部agent，不跑旧cleanup。
+
+完成/阻塞一次主动回本Source后停，Source核Git交付与资源后才派9，当前9—10未派；U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12复制凭据HTTPS/G23支持/G42停写手动及预算限制保持。以下完整历史保留。
+
+---
+
 # 当前工程进度：G42已合推并Source144复核，准备仅G46（2026-10-19）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同e6306436cb0a543f5dbcff7468895bd7765c1ad9且干净，15已验main产品/6docs/103worker与46Source原证据及7整合回执保持，原App idle/completed。ca440b9正常mergec9d9830、docs e630643普通push0；G42仅默认关/preview/显式apply、停写单维护进程、有界来源判定通过，不冒称自动后台/在线竞争/任意规模。141/142/140与旧FAIL原件保持。
