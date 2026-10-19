@@ -22,8 +22,8 @@
 
 .booking-panel-head p {
   margin: 0;
-  color: #617777;
-  font-size: .92rem;
+  color:var(--text-muted);
+  font-size:var(--font-body);
 }
 
 .booking-panel-head label {
@@ -31,7 +31,7 @@
   gap: 6px;
   min-width: 210px;
   color: #496262;
-  font-size: .82rem;
+  font-size:var(--font-body);
   font-weight: 650;
 }
 
@@ -57,7 +57,7 @@
   border-radius: 12px;
   background: #fffaf0;
   color: #69572f;
-  font-size: .9rem;
+  font-size:var(--font-body);
 }
 
 .booking-success {
@@ -130,8 +130,8 @@
   padding: 3px 9px;
   border-radius: 999px;
   background: #edf2f1;
-  color: #546b68;
-  font-size: .76rem;
+  color:var(--text-muted);
+  font-size:var(--font-body);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -148,7 +148,7 @@
 .booking-slot-state.inactive,
 .reservation-status.cancelled {
   background: #f3e9e7;
-  color: #865348;
+  color:var(--text-danger);
 }
 
 .booking-slot-state.pending,
@@ -161,8 +161,8 @@
 
 .booking-slot-card > p {
   margin: 12px 0 0;
-  color: #627573;
-  font-size: .85rem;
+  color:var(--text-muted);
+  font-size:var(--font-body);
 }
 
 .booking-slot-card .booking-slot-capacity {
@@ -178,8 +178,8 @@
 
 .booking-slot-reason {
   margin-top: auto;
-  color: #80602e;
-  font-size: .85rem;
+  color:var(--text-warning);
+  font-size:var(--font-body);
 }
 
 .booking-slot-reason summary {
@@ -232,7 +232,7 @@
 }
 
 .booking-dialog p {
-  color: #536b68;
+  color:var(--text-muted);
   line-height: 1.55;
 }
 
@@ -240,7 +240,7 @@
   padding: 10px 12px;
   border-radius: 10px;
   background: #fff7e8;
-  color: #735d31 !important;
+  color:var(--text-warning) !important;
 }
 
 .booking-dialog-actions {
@@ -273,7 +273,7 @@
   gap: 6px;
   min-width: 220px;
   color: #496262;
-  font-size: .82rem;
+  font-size:var(--font-body);
   font-weight: 650;
 }
 
@@ -290,8 +290,8 @@
 .reservation-filter-bar > span {
   flex: 1;
   padding-bottom: 10px;
-  color: #657875;
-  font-size: .88rem;
+  color:var(--text-muted);
+  font-size:var(--font-body);
 }
 
 .reservation-list-panel {
@@ -311,8 +311,8 @@
 }
 
 .reservation-section-head span {
-  color: #758783;
-  font-size: .86rem;
+  color:var(--text-muted);
+  font-size:var(--font-body);
 }
 
 .reservation-row {
@@ -336,8 +336,8 @@
 
 .reservation-row span:not(.reservation-status),
 .reservation-row small {
-  color: #657875;
-  font-size: .86rem;
+  color:var(--text-muted);
+  font-size:var(--font-body);
 }
 
 .reservation-row-actions {
@@ -370,8 +370,8 @@
 
 .project-slot-admin-head p {
   margin: 0;
-  color: #617777;
-  font-size: .89rem;
+  color:var(--text-muted);
+  font-size:var(--font-body);
 }
 
 .project-slot-admin-head label,
@@ -379,7 +379,7 @@
   display: grid;
   gap: 6px;
   color: #496262;
-  font-size: .82rem;
+  font-size:var(--font-body);
   font-weight: 650;
 }
 
@@ -422,8 +422,8 @@
 
 .project-slot-admin-time span,
 .project-slot-admin-time small {
-  color: #647875;
-  font-size: .83rem;
+  color:var(--text-muted);
+  font-size:var(--font-body);
 }
 
 .project-slot-admin-row input {
@@ -438,7 +438,7 @@
 }
 
 .danger-outline {
-  color: #925345 !important;
+  color:var(--text-danger) !important;
 }
 
 @media (max-width: 760px) {

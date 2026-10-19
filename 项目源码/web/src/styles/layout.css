@@ -4,7 +4,7 @@
 }
 
 .public-header nav {
-  font-size: 15px;
+  font-size:var(--font-body);
 }
 
 .login-shell {
@@ -30,11 +30,11 @@
 .form-lead,
 .login-form-wrap form label,
 .demo-hint {
-  font-size: 14px;
+  font-size:var(--font-body);
 }
 
 .login-form-wrap input {
-  font-size: 15px;
+  font-size:var(--font-body);
 }
 
 .app-sidebar {
@@ -44,7 +44,7 @@
 
 .side-nav button {
   min-height: 48px;
-  font-size: 15px;
+  font-size:var(--font-body);
 }
 
 .workspace-label,
@@ -54,7 +54,7 @@
 .privacy-note strong,
 .privacy-note small,
 .logout-btn {
-  font-size: 12px;
+  font-size:var(--font-body);
 }
 
 .app-header {
@@ -79,7 +79,7 @@
 .staff-banner p,
 .account-avatar p,
 .empty-large p {
-  font-size: 15px;
+  font-size:var(--font-body);
   line-height: 1.65;
 }
 
@@ -135,12 +135,12 @@
 .form-surface label,
 .advice-form label,
 .password-form label {
-  font-size: 14px;
+  font-size:var(--font-body);
 }
 
 .health-summary span,
 .health-summary small {
-  font-size: 12px;
+  font-size:var(--font-body);
 }
 
 .health-glance p,
@@ -161,7 +161,7 @@
 .agent-panel-head p,
 .agent-events p,
 .agent-gate {
-  font-size: 12px;
+  font-size:var(--font-body);
 }
 
 .table-surface {
@@ -174,12 +174,12 @@
 
 .table-row,
 .table-row strong {
-  font-size: 13px;
+  font-size:var(--font-body);
 }
 
 .table-head,
 .table-row small {
-  font-size: 12px;
+  font-size:var(--font-body);
 }
 
 .assistant-window {
@@ -188,14 +188,14 @@
 
 .assistant-message,
 .assistant-input input {
-  font-size: 14px;
+  font-size:var(--font-body);
 }
 
 .assistant-title small,
 .assistant-mode,
 .assistant-window > footer,
 .quick-replies button {
-  font-size: 12px;
+  font-size:var(--font-body);
 }
 
 .banner-kicker,
@@ -204,11 +204,11 @@
 .flow-node small,
 .agent-events strong,
 .assistant-fab small {
-  font-size: 12px;
+  font-size:var(--font-body);
 }
 
 .flow-node strong {
-  font-size: 13px;
+  font-size:var(--font-body);
 }
 
 @container (max-width: 900px) {

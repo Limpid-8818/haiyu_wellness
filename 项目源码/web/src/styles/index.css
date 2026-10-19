@@ -40,3 +40,6 @@
 @import './health-metrics.css';
 @import './mood.css';
 @import './release.css';
+
+/* Shared readability follows the existing eager cascade; lazy rules use the same tokens. */
+@import './readability.css';

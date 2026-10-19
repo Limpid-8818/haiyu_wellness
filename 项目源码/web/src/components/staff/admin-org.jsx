@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { useConfirmation } from '../../shared/Confirmation.jsx';
 import { request } from '../../lib/request.js';
 import { localDateValue, fmtDateTime } from '../../lib/date.js';
 import { initials } from '../../lib/normalize.js';
@@ -7,6 +8,7 @@ import { PageTitle, SectionHead, Empty, QueryState } from '../../shared/ui.jsx';
 import { admissionLabel, STAFF_JOB_LABELS } from '../../app/navigation.js';
 
 export function StaffManagement({ me, notify }) {
+  const { confirm, confirmation } = useConfirmation();
   const [saving, setSaving] = useState(false);
   const [updatingJobId, setUpdatingJobId] = useState('');
   const [form, setForm] = useState({ name: '', username: '', phone: '', password: '', jobType: 'clinician' });
@@ -32,12 +34,21 @@ export function StaffManagement({ me, notify }) {
 
   async function setStaffStatus(member) {
     const nextStatus = member.status === 'active' ? 'disabled' : 'active';
-    if (nextStatus === 'disabled' && !window.confirm(`确认停用 ${member.name}（${member.username}）？其历史工作记录会保留。`)) return;
-    try {
-      await request(`/dean/staff/${member.id}`, { method: 'PATCH', body: JSON.stringify({ status: nextStatus }) });
-      notify(nextStatus === 'disabled' ? '员工账号已停用' : '员工账号已重新启用');
-      await load();
-    } catch (requestError) { notify(requestError.message || '更新员工状态失败'); }
+    const update = async signal => {
+      try {
+        await request(`/dean/staff/${member.id}`, { method: 'PATCH', body: JSON.stringify({ status: nextStatus }), signal });
+        if (signal?.aborted) return;
+        notify(nextStatus === 'disabled' ? '员工账号已停用' : '员工账号已重新启用');
+        await load();
+      } catch (requestError) {
+        if (signal?.aborted) return;
+        const message = requestError.message || '更新员工状态失败';
+        notify(message);
+        if (signal) throw new Error(message);
+      }
+    };
+    if (nextStatus === 'disabled') confirm({ title: '停用员工账号', description: `确认停用 ${member.name}（${member.username}）？其历史工作记录会保留。`, confirmLabel: '确认停用', action: update });
+    else await update();
   }
 
   async function setStaffJobType(member, jobType) {
@@ -55,7 +66,7 @@ export function StaffManagement({ me, notify }) {
     finally { setUpdatingJobId(''); }
   }
 
-  return <><PageTitle eyebrow="STAFF ACCOUNTS" title="员工账号管理" desc="创建工作人员账号、指定岗位或停用账号。停用只影响后续登录和访问，历史记录继续保留。" action={<button type="button" className="outline-btn" onClick={load} disabled={loading}>刷新列表　↻</button>}/><section className="surface org-form-card"><SectionHead title="新增员工"/><form className="org-form-grid" onSubmit={createStaff}><label>姓名<input value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} maxLength={64} required/></label><label>登录账号<input value={form.username} onChange={event => setForm({ ...form, username: event.target.value })} autoComplete="username" required/></label><label>联系电话<input type="tel" value={form.phone} onChange={event => setForm({ ...form, phone: event.target.value })} maxLength={32}/></label><label>初始密码<input type="password" value={form.password} onChange={event => setForm({ ...form, password: event.target.value })} autoComplete="new-password" minLength={8} required/></label><label>岗位<select value={form.jobType} onChange={event => setForm({ ...form, jobType: event.target.value })}>{Object.entries(STAFF_JOB_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><div className="org-form-submit"><button type="submit" className="primary-btn" disabled={saving} aria-busy={saving}>{saving ? '创建中…' : '创建员工账号　→'}</button></div></form></section><section className="surface table-surface"><SectionHead title="工作人员"/><div className="org-table-wrap"><table className="org-table"><thead><tr><th>姓名与账号</th><th>岗位</th><th>身份</th><th>状态</th><th>操作</th></tr></thead><tbody>{loading ? <tr><td colSpan="5">正在加载员工…</td></tr> : error ? <tr><td colSpan="5" role="alert">{error}</td></tr> : staff.map(member => <tr key={member.id}><td><strong>{member.name}</strong><small>{member.username} · {member.phone || '未留电话'}</small></td><td><select className="org-job-select" aria-label={`${member.name}岗位`} value={member.jobType} disabled={updatingJobId === member.id || member.id === me.id} onChange={event => setStaffJobType(member, event.target.value)}>{Object.entries(STAFF_JOB_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{member.id === me.id && <small>当前管理员岗位已锁定</small>}</td><td><span className="org-role-pill">{member.role}</span></td><td><span className={`org-state ${member.status}`}>{member.status === 'active' ? '正常' : '已停用'}</span></td><td><button type="button" className={member.status === 'active' ? 'danger-btn' : 'outline-btn'} disabled={member.id === me.id && member.status === 'active'} onClick={() => setStaffStatus(member)}>{member.status === 'active' ? '停用' : '重新启用'}</button></td></tr>)}</tbody></table>{!loading && !error && !staff.length && <Empty text="还没有工作人员账号"/>}</div></section></>;
+  return <>{confirmation}<PageTitle eyebrow="STAFF ACCOUNTS" title="员工账号管理" desc="创建工作人员账号、指定岗位或停用账号。停用只影响后续登录和访问，历史记录继续保留。" action={<button type="button" className="outline-btn" onClick={load} disabled={loading}>刷新列表　↻</button>}/><section className="surface org-form-card"><SectionHead title="新增员工"/><form className="org-form-grid" onSubmit={createStaff}><label>姓名<input value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} maxLength={64} required/></label><label>登录账号<input value={form.username} onChange={event => setForm({ ...form, username: event.target.value })} autoComplete="username" required/></label><label>联系电话<input type="tel" value={form.phone} onChange={event => setForm({ ...form, phone: event.target.value })} maxLength={32}/></label><label>初始密码<input type="password" value={form.password} onChange={event => setForm({ ...form, password: event.target.value })} autoComplete="new-password" minLength={8} required/></label><label>岗位<select value={form.jobType} onChange={event => setForm({ ...form, jobType: event.target.value })}>{Object.entries(STAFF_JOB_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><div className="org-form-submit"><button type="submit" className="primary-btn" disabled={saving} aria-busy={saving}>{saving ? '创建中…' : '创建员工账号　→'}</button></div></form></section><section className="surface table-surface"><SectionHead title="工作人员"/><div className="org-table-wrap" role="region" aria-label="工作人员列表" tabIndex="0"><table className="org-table"><thead><tr><th>姓名与账号</th><th>岗位</th><th>身份</th><th>状态</th><th>操作</th></tr></thead><tbody>{loading ? <tr><td colSpan="5">正在加载员工…</td></tr> : error ? <tr><td colSpan="5" role="alert">{error}</td></tr> : staff.map(member => <tr key={member.id}><td><strong>{member.name}</strong><small>{member.username} · {member.phone || '未留电话'}</small></td><td><select className="org-job-select" aria-label={`${member.name}岗位`} value={member.jobType} disabled={updatingJobId === member.id || member.id === me.id} onChange={event => setStaffJobType(member, event.target.value)}>{Object.entries(STAFF_JOB_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{member.id === me.id && <small>当前管理员岗位已锁定</small>}</td><td><span className="org-role-pill">{member.role}</span></td><td><span className={`org-state ${member.status}`}>{member.status === 'active' ? '正常' : '已停用'}</span></td><td><button type="button" className={member.status === 'active' ? 'danger-btn' : 'outline-btn'} disabled={member.id === me.id && member.status === 'active'} onClick={() => setStaffStatus(member)}>{member.status === 'active' ? '停用' : '重新启用'}</button></td></tr>)}</tbody></table>{!loading && !error && !staff.length && <Empty text="还没有工作人员账号"/>}</div></section></>;
 }
 
 export function CapabilitiesMatrix({ notify }) {
@@ -89,6 +100,7 @@ export function CapabilitiesMatrix({ notify }) {
 }
 
 export function StayManagement({ notify }) {
+  const { confirm, confirmation } = useConfirmation();
   const [selectedId, setSelectedId] = useState('');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -126,16 +138,22 @@ export function StayManagement({ notify }) {
     finally { setSaving(false); }
   }
 
-  async function checkout(row) {
-    if (!window.confirm(`确认办理 ${row.name} 离店？`)) return;
-    try {
-      await request(`/dean/guests/${row.id}/stay`, { method: 'PATCH', body: JSON.stringify({ roomNo: row.roomNo, checkIn: row.checkIn, checkOut: localDateValue(), stayPlan: row.stayPlan || 'three_night' }) });
-      notify(`${row.name} 已办理离店`);
-      await load();
-    } catch (requestError) { notify(requestError.message || '办理离店失败'); }
+  function checkout(row) {
+    confirm({ title: '办理离店', description: `确认办理 ${row.name} 离店？`, confirmLabel: '确认离店', action: async signal => {
+      try {
+        await request(`/dean/guests/${row.id}/stay`, { method: 'PATCH', body: JSON.stringify({ roomNo: row.roomNo, checkIn: row.checkIn, checkOut: localDateValue(), stayPlan: row.stayPlan || 'three_night' }), signal });
+        if (signal.aborted) return;
+        notify(`${row.name} 已办理离店`);
+        await load();
+      } catch (requestError) {
+        if (signal.aborted) return;
+        const message = requestError.message || '办理离店失败';
+        notify(message); throw new Error(message);
+      }
+    } });
   }
 
-  return <><PageTitle eyebrow="GUEST ADMISSIONS" title="入住登记与筛选" desc="登记房间、入住日期和类别，按待入住、在住或已离店状态查找客人。" action={<button type="button" className="outline-btn" onClick={() => load()} disabled={loading}>刷新　↻</button>}/><section className="surface org-form-card"><SectionHead title="入住登记"/><form className="org-form-grid" onSubmit={saveStay}><label>选择客人<select value={selectedId} onChange={event => { const row = guests.find(item => item.id === event.target.value); if (row) chooseGuest(row); else setSelectedId(''); }} required><option value="">请选择客人</option>{guests.map(row => <option key={row.id} value={row.id}>{row.name} · {row.phone || '无电话'}</option>)}</select></label><label>房间号<input value={form.roomNo} onChange={event => setForm({ ...form, roomNo: event.target.value })} maxLength={32} required/></label><label>入住日期<input type="date" value={form.checkIn} onChange={event => setForm({ ...form, checkIn: event.target.value })} required/></label><label>离店日期<input type="date" value={form.checkOut} onChange={event => setForm({ ...form, checkOut: event.target.value })} required/></label><label>入住类别<select value={form.stayPlan} onChange={event => setForm({ ...form, stayPlan: event.target.value })}><option value="three_night">3晚类别（最多登记3晚）</option><option value="ten_night">10晚类别（最多登记10晚）</option></select></label><div className="org-form-submit"><button type="submit" className="primary-btn" disabled={saving || !selectedId} aria-busy={saving}>{saving ? '保存中…' : '保存入住登记　→'}</button></div></form></section><section className="surface table-surface"><div className="admission-list-tools"><SectionHead title="客人入住状态"/><div className="admission-filters"><label>状态<select value={filter} onChange={event => { setFilter(event.target.value); }}><option value="all">全部状态</option><option value="pending">待入住</option><option value="in_house">在住</option><option value="checked_out">已离店</option></select></label><form onSubmit={event => { event.preventDefault(); load(filter, search); }}><label htmlFor="admission-search">姓名、电话或房间</label><input id="admission-search" value={search} onChange={event => setSearch(event.target.value)}/><button type="submit" className="outline-btn">搜索</button></form></div></div>{loading ? <QueryState text="正在加载客人…"/> : error ? <QueryState error text={error} retryText="请稍后重试"/> : <div className="org-table-wrap"><table className="org-table"><thead><tr><th>客人</th><th>房间</th><th>入住区间</th><th>状态</th><th>操作</th></tr></thead><tbody>{guests.map(row => <tr key={row.id} className={selectedId === row.id ? 'selected-row' : ''}><td><button type="button" className="org-row-link" onClick={() => chooseGuest(row)}>{row.name}</button><small>{row.phone || row.username}</small></td><td>{row.roomNo || '未登记'}</td><td>{row.checkIn || '—'} 至 {row.checkOut || '—'}</td><td><span className={`org-state ${row.stayStatus}`}>{admissionLabel(row.stayStatus)}</span></td><td>{row.stayStatus === 'in_house' && <button type="button" className="danger-btn" onClick={() => checkout(row)}>办理离店</button>}</td></tr>)}</tbody></table>{!guests.length && <Empty text="当前筛选下没有客人"/>}</div>}</section>{selected && <section className="surface stay-selected-summary"><strong>当前选择：{selected.name}</strong><span>档案状态：{admissionLabel(selected.stayStatus)} · 保存后客人个人资料同步显示。</span></section>}</>;
+  return <>{confirmation}<PageTitle eyebrow="GUEST ADMISSIONS" title="入住登记与筛选" desc="登记房间、入住日期和类别，按待入住、在住或已离店状态查找客人。" action={<button type="button" className="outline-btn" onClick={() => load()} disabled={loading}>刷新　↻</button>}/><section className="surface org-form-card"><SectionHead title="入住登记"/><form className="org-form-grid" onSubmit={saveStay}><label>选择客人<select value={selectedId} onChange={event => { const row = guests.find(item => item.id === event.target.value); if (row) chooseGuest(row); else setSelectedId(''); }} required><option value="">请选择客人</option>{guests.map(row => <option key={row.id} value={row.id}>{row.name} · {row.phone || '无电话'}</option>)}</select></label><label>房间号<input value={form.roomNo} onChange={event => setForm({ ...form, roomNo: event.target.value })} maxLength={32} required/></label><label>入住日期<input type="date" value={form.checkIn} onChange={event => setForm({ ...form, checkIn: event.target.value })} required/></label><label>离店日期<input type="date" value={form.checkOut} onChange={event => setForm({ ...form, checkOut: event.target.value })} required/></label><label>入住类别<select value={form.stayPlan} onChange={event => setForm({ ...form, stayPlan: event.target.value })}><option value="three_night">3晚类别（最多登记3晚）</option><option value="ten_night">10晚类别（最多登记10晚）</option></select></label><div className="org-form-submit"><button type="submit" className="primary-btn" disabled={saving || !selectedId} aria-busy={saving}>{saving ? '保存中…' : '保存入住登记　→'}</button></div></form></section><section className="surface table-surface"><div className="admission-list-tools"><SectionHead title="客人入住状态"/><div className="admission-filters"><label>状态<select value={filter} onChange={event => { setFilter(event.target.value); }}><option value="all">全部状态</option><option value="pending">待入住</option><option value="in_house">在住</option><option value="checked_out">已离店</option></select></label><form onSubmit={event => { event.preventDefault(); load(filter, search); }}><label htmlFor="admission-search">姓名、电话或房间</label><input id="admission-search" value={search} onChange={event => setSearch(event.target.value)}/><button type="submit" className="outline-btn">搜索</button></form></div></div>{loading ? <QueryState text="正在加载客人…"/> : error ? <QueryState error text={error} retryText="请稍后重试"/> : <div className="org-table-wrap" role="region" aria-label="客人入住列表" tabIndex="0"><table className="org-table"><thead><tr><th>客人</th><th>房间</th><th>入住区间</th><th>状态</th><th>操作</th></tr></thead><tbody>{guests.map(row => <tr key={row.id} className={selectedId === row.id ? 'selected-row' : ''}><td><button type="button" className="org-row-link" onClick={() => chooseGuest(row)}>{row.name}</button><small>{row.phone || row.username}</small></td><td>{row.roomNo || '未登记'}</td><td>{row.checkIn || '—'} 至 {row.checkOut || '—'}</td><td><span className={`org-state ${row.stayStatus}`}>{admissionLabel(row.stayStatus)}</span></td><td>{row.stayStatus === 'in_house' && <button type="button" className="danger-btn" onClick={() => checkout(row)}>办理离店</button>}</td></tr>)}</tbody></table>{!guests.length && <Empty text="当前筛选下没有客人"/>}</div>}</section>{selected && <section className="surface stay-selected-summary"><strong>当前选择：{selected.name}</strong><span>档案状态：{admissionLabel(selected.stayStatus)} · 保存后客人个人资料同步显示。</span></section>}</>;
 }
 
 export function AssignmentManagement({ notify }) {
