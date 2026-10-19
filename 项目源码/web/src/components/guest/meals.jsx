@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useConfirmation } from '../../shared/Confirmation.jsx';
 import { request } from '../../lib/request.js';
 import { businessToday, mealLocalTime } from '../../lib/date.js';
 import { useQuery } from '../../lib/useQuery.js';
@@ -73,6 +74,7 @@ export function MealRestrictionReview({ guestId, canResolve = false, notify, onC
 }
 
 export function GuestMeals({ me, notify }) {
+  const { confirm, confirmation } = useConfirmation();
   const [date, setDate] = useState(businessToday);
   const [data, setData] = useState(null);
   const [dishes, setDishes] = useState([]);
@@ -110,15 +112,21 @@ export function GuestMeals({ me, notify }) {
 
   async function replace(item) {
     if (!swap.dishId || !swap.reason.trim()) { notify('请选择菜品并填写替换原因'); return; }
-    if (!window.confirm(`确认将「${item.dish?.name || SLOT_LABELS[item.slot]}」替换为所选菜品？${data.orders?.some(order => order.mealType === item.mealType) ? '\n已提交订单会同步更新。' : ''}`)) return;
-    setBusy(item.id);
-    try {
-      await request(`/meals/menus/${encodeURIComponent(data.menu.id)}/items/${encodeURIComponent(item.id)}`, {
-        method: 'PATCH', body: JSON.stringify({ version: data.menu.version, dishId: swap.dishId, reason: swap.reason })
-      });
-      setEditingId(''); setSwap({ dishId: '', reason: '' }); notify('餐位已替换'); await load();
-    } catch (requestError) { notify(requestError.message || '替换失败'); if (requestError.status === 409) await load(); }
-    finally { setBusy(''); }
+    confirm({ title: '替换菜品', description: `确认将「${item.dish?.name || SLOT_LABELS[item.slot]}」替换为所选菜品？${data.orders?.some(order => order.mealType === item.mealType) ? '\n已提交订单会同步更新。' : ''}`, confirmLabel: '确认替换', action: async signal => {
+      setBusy(item.id);
+      try {
+        await request(`/meals/menus/${encodeURIComponent(data.menu.id)}/items/${encodeURIComponent(item.id)}`, {
+          method: 'PATCH', body: JSON.stringify({ version: data.menu.version, dishId: swap.dishId, reason: swap.reason }), signal
+        });
+        if (signal.aborted) return;
+        setEditingId(''); setSwap({ dishId: '', reason: '' }); notify('餐位已替换'); await load();
+      } catch (requestError) {
+        if (signal.aborted) return;
+        const message = requestError.message || '替换失败';
+        notify(message); if (requestError.status === 409) await load();
+        throw new Error(message);
+      } finally { if (!signal.aborted) setBusy(''); }
+    } });
   }
 
   async function order(mealType) {
@@ -142,7 +150,7 @@ export function GuestMeals({ me, notify }) {
   const canOrder = (mealType) => data?.status === 'ready' && !data.currentReviewRequired
     && basis.effectiveHealthConstraints?.conflictState === 'clear'
     && items.filter(item => item.mealType === mealType && item.dish && !item.currentlyRestricted).length === 3;
-  return <><PageTitle eyebrow="MY MEALS" title="每日膳食" desc="按上海业务日期查看已保存餐单；菜品、配方与供货标记均为演示资料，不代表真实库存或营养检测。" action={<button type="button" className="outline-btn" onClick={load} disabled={loading}>刷新　↻</button>}/>
+  return <>{confirmation}<PageTitle eyebrow="MY MEALS" title="每日膳食" desc="按上海业务日期查看已保存餐单；菜品、配方与供货标记均为演示资料，不代表真实库存或营养检测。" action={<button type="button" className="outline-btn" onClick={load} disabled={loading}>刷新　↻</button>}/>
     <section className="surface meal-toolbar"><label>服务日期<input type="date" value={date} onChange={event => setDate(event.target.value)}/></label><span>时区：Asia/Shanghai</span></section>
     <MealRestrictionReview notify={notify} onChanged={load}/>
     {loading ? <section className="surface"><QueryState text="正在读取服务端餐单…"/></section> : error ? <section className="surface"><QueryState error text={error} retryText="餐单加载失败"/><button className="outline-btn" type="button" onClick={load}>重试</button></section> : data?.status === 'needs_generation' ? <section className="surface meal-empty"><div className="meal-empty-icon">◒</div><h2>此日期暂无已保存餐单</h2><p>系统不会复制其他日期的餐单。生成前会按当前已记录的过敏与饮食限制筛选；限制信息未确认时会明确提示。</p><button type="button" className="primary-btn" disabled={busy === 'generate'} onClick={generate}>{busy === 'generate' ? '生成中…' : '生成此日期餐单'}</button></section> : <>

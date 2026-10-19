@@ -1,15 +1,15 @@
 /* One fluid desktop web surface; long evidence is readable only on demand. */
 .app-main{min-width:0;flex:1}.workspace{max-width:none;width:100%;padding-bottom:8rem}
 .workspace .eyebrow,.app-sidebar .eyebrow{display:none}
-.release-boundary{margin:0 0 1.2rem;padding:.7rem 1rem;border:1px solid #d8e9e2;border-radius:.8rem;background:#f4faf7;color:#355e58;font-size:.875rem;line-height:1.7}
-.release-details{min-width:0;max-width:100%;margin:.5rem 0;color:#52746d;font-size:.85rem}
+.release-boundary{margin:0 0 1.2rem;padding:.7rem 1rem;border:1px solid #d8e9e2;border-radius:.8rem;background:#f4faf7;color:#355e58;font-size:var(--font-body);line-height:1.7}
+.release-details{min-width:0;max-width:100%;margin:.5rem 0;color:var(--text-accent);font-size:var(--font-body)}
 .release-details summary{cursor:pointer;font-weight:600;padding:.35rem 0;color:#23685f}
-.release-details pre{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-size:.8rem;line-height:1.7;max-width:100%;margin:.5rem 0;padding:.8rem;background:#f3f8f6;border-radius:.5rem}
+.release-details pre{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-size:var(--font-body);line-height:1.7;max-width:100%;margin:.5rem 0;padding:.8rem;background:#f3f8f6;border-radius:.5rem}
 .release-details p,.release-details small,.release-details li{overflow-wrap:anywhere;word-break:break-word}
 .workspace :is(.surface,.stage21-draft-card,.q24-execution-card,.q24-replan-card,.wellness-review-detail){min-width:0}
 .workspace :is(.meal-day-grid,.stage25-daily-grid,.guest-my-grid,.health-workspace-grid){grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr))}
 .workspace :is(.wellness-review-layout,.guest-layout){grid-template-columns:minmax(15rem,.32fr) minmax(0,1fr)}
-.workspace button,.workspace label,.workspace input,.workspace select,.workspace textarea{font-size:clamp(.875rem,.8rem + .15vw,1rem)}
+.workspace button,.workspace label,.workspace input,.workspace select,.workspace textarea{font-size:var(--font-body)}
 .workspace .surface{padding:clamp(1rem,1.4vw,1.7rem)}
 .workspace .page-title{gap:1rem;flex-wrap:wrap}
 .release-notice-group ul{list-style:none;padding:0}.release-notice-group li{padding:.6rem 0;border-bottom:1px solid #e8efeb}
@@ -21,9 +21,9 @@
 @media(min-width:1600px){.workspace .stage21-draft-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,34rem),1fr));gap:1.2rem}}
 
 .wellness-guest-notifications li{display:grid;grid-template-columns:minmax(0,1fr) auto}.wellness-guest-notifications li>.release-details{grid-column:1/-1}
-.stage21-reason-era{display:block;margin:.15rem 0;color:#52746d;font-size:.8rem;line-height:1.6}
+.stage21-reason-era{display:block;margin:.15rem 0;color:var(--text-accent);font-size:var(--font-body);line-height:1.6}
 .error-boundary{max-width:34rem;margin:4rem auto;padding:1.5rem;border:1px solid #d8e9e2;border-radius:.8rem;background:#f4faf7;color:#355e58;display:flex;flex-direction:column;gap:.8rem}
 .error-boundary h1{font-size:1.25rem;color:#23685f}
 .error-boundary .release-details pre{max-height:12rem;overflow:auto}
-.workspace :is(.wellness-review-row-copy,.wellness-evidence-sources,.wellness-history-list) :is(span,small,p){font-size:.8rem;line-height:1.7}
-.workspace .wellness-evidence-item>p{font-size:.875rem}.workspace .wellness-reservation-list>div{grid-template-columns:minmax(0,1fr)}
+.workspace :is(.wellness-review-row-copy,.wellness-evidence-sources,.wellness-history-list) :is(span,small,p){font-size:var(--font-body);line-height:1.7}
+.workspace .wellness-evidence-item>p{font-size:var(--font-body)}.workspace .wellness-reservation-list>div{grid-template-columns:minmax(0,1fr)}

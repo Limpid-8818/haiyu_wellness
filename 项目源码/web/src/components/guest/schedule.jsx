@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useConfirmation } from '../../shared/Confirmation.jsx';
 import { request } from '../../lib/request.js';
 import { businessToday, mealLocalTime, slotDateLabel } from '../../lib/date.js';
 import { useQuery } from '../../lib/useQuery.js';
@@ -249,6 +250,7 @@ export function GuestSchedule({ me, onSelectResource }) {
 }
 
 export function GuestReservations({ go }) {
+  const { confirm, confirmation } = useConfirmation();
   const [workingId, setWorkingId] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const { data: reservations, loading, error, setError, load } = useQuery(async (signal) => {
@@ -258,16 +260,23 @@ export function GuestReservations({ go }) {
   const items = reservations || [];
   async function cancel(item) {
     const time = `${slotDateLabel(item.businessDate)} ${item.localStart}–${item.localEnd}`;
-    if (!window.confirm(`将取消「${item.projectName}」${time} 的预约，并释放一个名额。确认取消吗？`)) return;
-    setWorkingId(item.id);
-    setError('');
-    try { await request(`/reservations/${encodeURIComponent(item.id)}`, { method: 'DELETE' }); await load(); }
-    catch (requestError) { setError(requestError.message || '取消没有完成，请刷新后重试'); }
-    finally { setWorkingId(''); }
+    confirm({ title: '取消预约', description: `将取消「${item.projectName}」${time} 的预约，并释放一个名额。确认取消吗？`, confirmLabel: '确认取消预约', action: async signal => {
+      setWorkingId(item.id);
+      setError('');
+      try {
+        await request(`/reservations/${encodeURIComponent(item.id)}`, { method: 'DELETE', signal });
+        if (!signal.aborted) await load();
+      } catch (requestError) {
+        if (signal.aborted) return;
+        const message = requestError.message || '取消没有完成，请刷新后重试';
+        setError(message); throw new Error(message);
+      } finally { if (!signal.aborted) setWorkingId(''); }
+    } });
   }
+
   const visibleItems = dateFilter ? items.filter(item => item.businessDate === dateFilter) : items;
   const current = visibleItems.filter(item => item.status === 'confirmed' && Date.parse(item.startsAt) > Date.now());
   const history = visibleItems.filter(item => !current.includes(item));
   const renderRow = item => <article className="reservation-row" key={item.id}><div><strong>{item.projectName}</strong><span>{slotDateLabel(item.businessDate)} · {item.localStart}–{item.localEnd}</span><small>{item.location}</small><SourceDetails><small>预约编号 {item.id}</small></SourceDetails>{item.status === 'cancelled' && <small>取消原因：{cancellationReasonLabel(item.cancellationReason)}</small>}</div><div className="reservation-row-actions"><span className={`reservation-status ${item.status}`}>{reservationStatusLabel(item.status)}</span>{item.status === 'confirmed' && Date.parse(item.startsAt) > Date.now() && <button type="button" className="outline-btn small-btn danger-outline" onClick={() => cancel(item)} disabled={workingId === item.id}>{workingId === item.id ? '取消中…' : '取消预约'}</button>}</div></article>;
-  return <><PageTitle eyebrow="MY RESERVATIONS" title="我的预约" desc="按服务日期查看当前预约和历史记录。取消确认后会释放时段名额。"/><div className="reservation-filter-bar"><label htmlFor="reservation-date-filter">服务日期<input id="reservation-date-filter" type="date" value={dateFilter} onChange={event => setDateFilter(event.target.value)}/></label><span>{dateFilter ? <>当前查看 <time>{dateFilter}</time></> : '全部日期'}</span><button type="button" className="outline-btn" onClick={load} disabled={loading}>刷新预约　↻</button></div>{error && <div className="project-form-error" role="alert">{error}</div>}{loading ? <section className="surface reservation-list-panel">正在读取预约…</section> : <div className="reservation-history-layout"><section className="surface reservation-list-panel"><div className="reservation-section-head"><h2>待执行预约</h2><span>{current.length} 条</span></div>{current.length ? current.map(renderRow) : <div className="project-state project-empty"><strong>没有待执行预约</strong><p>{dateFilter ? '所选日期没有待执行预约。' : '项目详情中的时段网格会显示当前可预约名额。'}</p>{!dateFilter && <button type="button" className="outline-btn small-btn" onClick={() => go('projects')}>浏览项目</button>}</div>}</section><section className="surface reservation-list-panel"><div className="reservation-section-head"><h2>历史记录</h2><span>{history.length} 条</span></div>{history.length ? history.map(renderRow) : <div className="project-state project-empty">{dateFilter ? '所选日期暂无历史记录。' : '暂无历史记录。'}</div>}</section></div>}</>;
+  return <>{confirmation}<PageTitle eyebrow="MY RESERVATIONS" title="我的预约" desc="按服务日期查看当前预约和历史记录。取消确认后会释放时段名额。"/><div className="reservation-filter-bar"><label htmlFor="reservation-date-filter">服务日期<input id="reservation-date-filter" type="date" value={dateFilter} onChange={event => setDateFilter(event.target.value)}/></label><span>{dateFilter ? <>当前查看 <time>{dateFilter}</time></> : '全部日期'}</span><button type="button" className="outline-btn" onClick={load} disabled={loading}>刷新预约　↻</button></div>{error && <div className="project-form-error" role="alert">{error}</div>}{loading ? <section className="surface reservation-list-panel">正在读取预约…</section> : <div className="reservation-history-layout"><section className="surface reservation-list-panel"><div className="reservation-section-head"><h2>待执行预约</h2><span>{current.length} 条</span></div>{current.length ? current.map(renderRow) : <div className="project-state project-empty"><strong>没有待执行预约</strong><p>{dateFilter ? '所选日期没有待执行预约。' : '项目详情中的时段网格会显示当前可预约名额。'}</p>{!dateFilter && <button type="button" className="outline-btn small-btn" onClick={() => go('projects')}>浏览项目</button>}</div>}</section><section className="surface reservation-list-panel"><div className="reservation-section-head"><h2>历史记录</h2><span>{history.length} 条</span></div>{history.length ? history.map(renderRow) : <div className="project-state project-empty">{dateFilter ? '所选日期暂无历史记录。' : '暂无历史记录。'}</div>}</section></div>}</>;
 }

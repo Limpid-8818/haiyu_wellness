@@ -1,0 +1,75 @@
+/* G28: shared values used by eager and lazy declarations, without page scaling. */
+:root {
+  --font-body: 1rem;
+  --font-note: .875rem;
+  --control-height: 44px;
+  --text-body: #17323b;
+  --text-muted: #425f63;
+  --text-accent: #0b6670;
+  --text-success: #245c48;
+  --text-warning: #79501c;
+  --text-danger: #893e39;
+  --focus-ring: #075d68;
+  color: var(--text-body);
+  font-size: 100%;
+  line-height: 1.6;
+}
+body { font-size: var(--font-body); }
+body small { font-size: var(--font-note); }
+html body :is(button, input:not([type="checkbox"]):not([type="radio"]), select, textarea, summary) {
+  min-height: var(--control-height);
+  line-height: 1.5;
+}
+html body :is(button, summary) { min-width: 44px; }
+html body :is(input, select, textarea) { font-size: var(--font-body); }
+html body :is(button, a, input, select, textarea, summary, [tabindex="0"]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #fff;
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 1; }
+.primary-btn { background: var(--text-accent); color: #fff; }
+.primary-btn:hover { background: #07545d; }
+.login-form-wrap :is(input, button) { width: 100%; }
+.login-aside .brand small, .login-quote p, .login-aside-foot { color: #d1e9e4; }
+.login-aside .brand-mark { background: #0b6670; }
+.login-quote > span { color: #8dd5c9; }
+.featured-image > span { padding: 6px 10px; border-radius: 6px; background: var(--text-accent); color: #fff; }
+.app-header { min-height: 78px; height: auto; padding-block: 16px; gap: 16px; flex-wrap: wrap; }
+.user-menu { flex-wrap: wrap; }
+.page-title, .surface-head, .welcome-banner, .staff-banner { gap: 16px; flex-wrap: wrap; }
+.workspace { overflow-wrap: anywhere; }
+.org-table-wrap { overflow-x: auto; }
+.assistant-input button { min-width: 44px; flex-shrink: 0; background: var(--text-accent); }
+.assistant-window { max-height: calc(100dvh - 140px); }
+.assistant-window > header { gap: 12px; flex-wrap: wrap; }
+.assistant-window > footer { font-size: var(--font-note); }
+.assistant-title { min-width: 0; }
+.assistant-fab { background: var(--text-accent); }
+.confirmation-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: clamp(20px, 3vw, 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #b8d2ca;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--text-body);
+  box-shadow: 0 18px 54px #102f3a38;
+}
+.confirmation-dialog::backdrop { background: #123a3aa6; }
+.confirmation-dialog h2 { margin: 0 0 16px; font-size: 24px; line-height: 1.4; }
+.confirmation-dialog p { margin: 12px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.confirmation-dialog .confirmation-error { color: var(--text-danger); padding: 12px; background: #fff3f1; border-radius: 8px; }
+.confirmation-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.confirmation-actions button { padding: 10px 18px; font-size: var(--font-body); }
+.confirmation-actions [aria-disabled="true"] { cursor: wait; }
+@media (max-width: 850px) {
+  .breadcrumb { width: 100%; }
+  .welcome-banner, .staff-banner { padding: 24px; }
+  .banner-orb, .staff-symbol { display: none; }
+  .public-header { position: static; }
+  .trust-strip, .entry-cards button, .reservation-row, .reservation-filter-bar { flex-wrap: wrap; }
+}

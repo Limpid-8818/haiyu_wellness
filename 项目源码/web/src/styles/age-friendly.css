@@ -61,8 +61,8 @@
 
 .guest-my-entry-copy > span,
 .guest-my-entry-detail {
-  color: #526e70;
-  font-size: 15px;
+  color:var(--text-muted);
+  font-size:var(--font-body);
   line-height: 1.55;
 }
 
@@ -98,7 +98,7 @@
 .guest-placeholder-state p {
   margin: 7px 0 0;
   color: #425f63;
-  font-size: 16px;
+  font-size:var(--font-body);
   line-height: 1.65;
 }
 
@@ -144,8 +144,8 @@
 }
 
 .guest-placeholder-row small {
-  color: #526e70;
-  font-size: 14px;
+  color:var(--text-muted);
+  font-size:var(--font-body);
 }
 
 .guest-placeholder-row > span:last-child {
@@ -175,7 +175,7 @@
 
 .guest-placeholder-back {
   min-height: 48px;
-  font-size: 16px;
+  font-size:var(--font-body);
 }
 
 .guest-agent-placeholder {
@@ -208,8 +208,8 @@
 
 .guest-agent-placeholder p {
   margin: 4px 0;
-  color: #617c7b;
-  font-size: 12px;
+  color:var(--text-muted);
+  font-size:var(--font-body);
   line-height: 1.6;
 }
 
@@ -315,7 +315,7 @@
 }
 
 .accessibility-field input::placeholder {
-  color: #526b70;
+  color:var(--text-muted);
   opacity: 1;
 }
 
