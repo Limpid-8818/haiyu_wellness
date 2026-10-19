@@ -1,3 +1,15 @@
+# 当前工程进度：G28已合推并Source152复核，准备最后G33/G34/G35（2026-10-19）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同9a767061196f709f6b9fa3849c4d4a86597c3bba且干净，39已验main产品/6docs/worker76与Source36证据/38整合回执与截图保持，原App idle/completed。971053e正常merge8aa4073、docs9a76706普通push0，149/150/148及旧FAIL保持。G28仅核心网页/代表样本/确认交互，原生UIzoom未测/720等效/45warn/原staff等发布文案未改，不全站或业务最终验收。
+
+0新Session/服务，有限双方27实例905事件263准确身份75组136自身路径仍全退，句柄guardian缺口0、auditor原已退，不重测55/browser/build/262/全历史审计。详152与docs/工程第10阶段G33_G34_G35执行计划_20261019.md。只新独立App GPT-6.1 Sol/High最后第10阶段：精确.video_agent目录忽略、Windows脚本call npm ci --ignore-scripts与最小错误处理、text=auto/cmd检出CRLF/已有wav-ogg binary与Markdown空白例外保持。Git canonical LF可保，禁批量renormalize/用户资源删除/安装重装依赖；只真实Git正负样本/属性字节/锁保持、一次现有受管生产build和最小离线smoke，无Windows原生实测不冒称通过。
+
+worker153/Source154，实际身份/基线按App回执与ignored output/dispatch/g33-g35-dispatch-20261019.json；当前local最新main可建codex分支，不新worktree/内部agent/复制依赖。新g33-g35真实ID独占根，OS60/runner45/lease15min/log8MiB/temp512MiB/顺序两Session。无用户库/.env/模型天气/MySQL/Windows/browser/scheduler/CI/安装/常驻dev，不改server/web/G28或旧脚本。准确退出→句柄→自身temp/socket/build→auditor另退，旧依赖/账本/截图/FAIL保，不旧cleanup/用户缓存清理。
+
+候选不暂存commitmergepush/不提前关三项，独验后另原任务提交/正常main合入/原条目标范围完成与Windows未测/docs/普通push，Source交付复核后总结队列，不自行新业务阶段。完成/阻塞唯一主动回本Source后停，源至多一次就绪即结束不轮询；152及140—151保持，U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12/G23/G42/G46/G28限制不变。以下历史全文保留。
+
+---
+
 # 当前工程整合：G28已验产品合main，第151轮文稿与普通push收尾（2026-10-19）
 
 Source150独验43候选/76worker原证据，web55/55、lint0错误/45warning（原44）、生产8产物/口令剔除、lazy/简写0与274冻结通过；两新合成浏览器客人59/员工31检查和实际Cookie-CSRF确认写入通过，五图787881B肉眼核。39冻结产品/CSS/测试/受管工具提交971053ee46528c5569dd92d16cb5f5a0e4de9bed，main正常merge8aa40730d9a5f81e9be4f307c6c6b0356cb37a4b（父d626082与971053e），39main blob逐件等于Source冻结，继承e7c97df/G46及全部前序成果。149/150/148及旧FAIL原样保持，原G28位置仅本核心范围完成并保候选历史。
