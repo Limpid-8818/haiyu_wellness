@@ -1,3 +1,37 @@
+# 当前工程整合：G28已验产品合main，第151轮文稿与普通push收尾（2026-10-19）
+
+Source150独验43候选/76worker原证据，web55/55、lint0错误/45warning（原44）、生产8产物/口令剔除、lazy/简写0与274冻结通过；两新合成浏览器客人59/员工31检查和实际Cookie-CSRF确认写入通过，五图787881B肉眼核。39冻结产品/CSS/测试/受管工具提交971053ee46528c5569dd92d16cb5f5a0e4de9bed，main正常merge8aa40730d9a5f81e9be4f307c6c6b0356cb37a4b（父d626082与971053e），39main blob逐件等于Source冻结，继承e7c97df/G46及全部前序成果。149/150/148及旧FAIL原样保持，原G28位置仅本核心范围完成并保候选历史。
+
+范围是核心网页/代表样本的实际可读token、触达焦点状态与四共享确认；正文16/辅助14/控件44，1024/1440/1920自然扩展、720CSS等效重排可用。原生UI200%zoom未实测，不冒称全站WCAG/全五岗业务/所有状态或发布文案认证，staff原身份枚举等未改，不关闭历史业务/发布文案缺口。45warning保留（原44+一React导入形式）；本次已验生产无500kB提示不改G46历史。
+
+本轮仅必要六文稿/普通push，0新Session/服务，不重测55/browser/build/262或全历史审计。双方各唯一名直接有限退出后核仍27实例905事件263准确身份75组136自身路径全退，句柄/guardian/标准退出缺口0，auditor原已另退。最终docs/final SHA、普通push真实回执、HEAD/main/origin/实际远端一致与main干净，以本worker ignored integration-final-packet.json和唯一回源实收为准，不循环写151自身SHA。详第151轮与现行G28说明。
+
+仅原App01a14fd7-84a9-7aa3-8aa6-31e7d5ce6fdb/local完成/阻塞唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后立即停，Source核交付后才决定第10阶段，当前未派。无用户库/私密.env/模型天气/MySQL/Windows/browser/scheduler/CI/安装/worktree/内部agent，不旧cleanup/用户缓存清理；旧依赖链接、U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12复制凭据HTTPS/G23支持/G42默认关preview显式apply停写单维护与有界预算/G46MySQL静态限制保持。以下旧头与历史全文保留。
+
+---
+
+# 当前工程阶段：G28 Source150核心网页独验PASS，仅原任务第151轮整合（2026-10-19）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核43候选/76原证据及旧AGENTS完整后缀，自己的web55/55、lint0错误/45warning（原44）、生产8产物493ms/演示口令剔除、lazy层叠简写0、274冻结与全部空白/index通过，完整172349B质量日志实际核SHA。两个新合成浏览器fixture客人59/员工31检查PASS，实际取消预约DELETE200和停用PATCH200只确认后各一次Cookie-CSRF写入，取消0/焦点TabEscape正常。三桌面workspace792/1195.203125/1650自然扩展，720CSS重排可用；正文16/辅助14/控件44，样本对比最低登录4.62/其他5.36/弹窗6.67。实际查看双方当前图，Source五图787881B。
+
+仅G28核心页面/代表样本，不全站WCAG/所有业务/所有发布文案（员工原staff枚举仍在）；原生UI200%zoom未实测，720等效布局不冒充缩放。Source核worker生成餐单/长确认补充原件但不重复第三fixture。双方有限27实例905事件263准确身份75组136自身路径全退，auditor另退/句柄guardian缺口0；Source两Session/目录18628608B/log593370B，clone清单保持，自身profile/cache/env/build/库全清，无server改动不重跑262。
+
+详150与Source ignored source150-final-review.json冻结acceptedSourceTreeFiles39。只原App01a14fd7-84a9-7aa3-8aa6-31e7d5ce6fdb/local GPT-6.1 Sol/High第151轮Git：39已验字节保持，英文fix(web)带G28、正常main merge、原G28本核心范围完成及限制、必要docs/普通push三方一致/main干净。HEAD/main仍d626082未整合；Source只新增150与此头不污染，149/150/148及旧FAIL原件冻结。不重测55/browser/build/全历史审计，0新运行资源只有限准确退出后核。
+
+完成/阻塞唯一主动回本Source后停，Source核交付与资源后才派10，当前第10阶段未派。无用户库/私密.env/模型天气/MySQL/Windows/scheduler/CI/安装/worktree/内部agent，不跑旧cleanup/用户缓存清理；旧依赖链接、U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12/G23/G42/G46限制保持。以下历史全文保留。
+
+---
+
+# 当前工程候选：G28网页可读性与共享确认自验通过，待Source150（2026-10-19）
+
+唯一worker App01a14fd7-84a9-7aa3-8aa6-31e7d5ce6fdb/local，分支codex/fix-g28-web-accessibility-20261019，HEAD/main仍d62608266aa7ee118ab43c30ced5847c204fb100，继承e7c97df/G46全部成果。实际eager/lazy字号/前景token、44px触达/焦点、四确认共享dialog候选；web lint0错误/45警告（原44）、55/55、生产8产物通过，层叠/简写风险0。三桌面宽自然扩展与720 CSS px等效200%重排/长确认可用，原生UI zoom未实测；仅核心页面/可见代表样本，不全站WCAG或业务最终验收。
+
+客人取消预约与管理员停用的合成库真实正反流程、四调用点请求/取消/错误/卸载回归通过；6张1059838B截图（5现行+1原FAIL）已保留，现行图实际查看。详docs/G28网页可读性与确认交互_20261019.md、第149轮与ignored本真实ID candidate-final-packet.json；首次测试替身/工具生产模式/浏览器动画及small失败原件保持。仅自身G28有限资源核销与auditor另退，不旧账本/用户缓存或全历史cleanup；实际计数以最终包为准。
+
+**仅候选PASS，G28未关闭，暂存commitmergepush0，第10阶段未派**。完成唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后停止，Source150独验后另授权原任务整合。OS60/runner45/lease15min/log8MiB/temp512MiB/顺序两Session及所有资源边界保持；148/140—147/旧FAIL、U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/G12/G23/G42/G46限制不变。以下旧头与历史全文保持。
+
+---
+
 # 当前工程进度：G46已合推并Source148复核，准备仅G28（2026-10-19）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同e7c97df62d3e9ff41e3287d5a6eac75dd77e5912且干净，39已验main产品/6docs/65worker与36Source原证据及10整合回执保持，原App idle/completed。2f30d07正常merge6cf4520、docs e7c97df普通push0；G46领域入口/SCC零与两方言SQL保持范围完成，MySQL仅静态/旧500kB提示保持。145/146/144及旧FAIL原件完整。
