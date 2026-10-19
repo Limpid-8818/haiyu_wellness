@@ -1,3 +1,6 @@
+* text=auto
+*.cmd text eol=crlf
+
 # Historical Markdown reports use two trailing spaces for intentional line breaks.
 wangshanchong/*.md whitespace=-blank-at-eol
 
