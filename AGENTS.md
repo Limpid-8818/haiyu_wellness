@@ -1,3 +1,27 @@
+# 当前工程整合：G33/G34/G35已验产品合main，第155轮文稿与普通push收尾（2026-10-19）
+
+Source154独验6候选/16worker与14Source原证据，真实Git正负/模板纳入/属性/UTF8-CRLF/锁/index/全部空白及独立生产71模块8产物499ms/口令剔除与DISABLED无DB smoke通过。3产品提交3b796665bb291a6a0e300d6df7ca2de34877b7af，main正常merge5db04569c57e30ab6ee83249b56eff462b0de592（父02c4f38及3b79666），逐件index/main等于Source154 canonical冻结map，工作字节等于工作冻结map；继承9a76706/G28及全部前序成果。
+
+三项原位置只标本阶段范围完成并留候选历史：精确.video_agent目录规则、ci/call与错误即退的Windows脚本静态整改、text=auto/cmd检出CRLF。CMD工作349B/11CRLF，main338B/LF规范化为预期；已有wav/ogg binary及Markdown空白例外保持，不冒称新增音频规则，不批量renormalize/删除用户资源。原生Windows cmd/安装/dev/UNC未实测，不声称平台完整可用或产品最终验收，实际install/ci/dry-run/dev0。
+
+本轮仅必要六文稿/普通push，0新Session/服务，不重测build/smoke/55/262/browser或旧全历史audit。双方本G33-G35递归全部根有限准确退出后核仍6实例86事件21准确身份14组28自身路径全退，句柄/guardian/标准退出缺口0，auditor原已另退；Source三个多层registry全含。旧locale FAIL、153/154/152及全部旧报告/账本/截图/依赖链接保持，不旧cleanup/用户缓存清理。最终docs/final SHA、普通push真实回执、HEAD/main/origin/实际远端一致与main干净，以本worker ignored integration155/integration-final-packet.json和一次回源实收为准，不循环写155自身SHA。详第155轮。
+
+仅原App01a152f4-c2fa-7410-9c6e-cd9b920ce4f5/local完成/阻塞唯一主动回Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local后立即停。Source156交付复核后总结本10阶段工程队列，不自行新业务阶段或任务。无用户库/.env/模型天气/MySQL/Windows/browser/scheduler/CI/安装/新worktree/内部agent；U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/历史FAIL/G12复制凭据HTTPS/G23支持/G42默认关停写手动与预算/G46MySQL静态/G28核心样本与原生UIzoom未测等限制不变。以下历史全文保留。
+
+---
+
+# 当前工程阶段：G33/G34/G35 Source154独验PASS，仅原任务第155轮整合（2026-10-19）
+
+Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核6候选/16证据，936tracked仅五预期变更/931原件保持，Git忽略正负/模板纳入/属性/锁/index/全部空白独验通过。CMD无BOM-UTF8/11CRLF，ci/call/错误即退仅静态，Windows原生安装启动/UNC未测；npm install/ci/dry-run/dev实际0。**CMD工作349B CRLF SHA2c63ac9…与index/main规范338B LF SHA3377bc7…按属性故意不同**，Source review acceptedProductFiles3核工作、acceptedGitCanonicalBlobs3核暂存/main；canonical对象36d48877108ab7c624f2634cc4918837d8695735，禁以工作SHA误判冻结冲突/改回LF。
+
+自己新受管生产build71模块/8产物499ms/密码剔除与DISABLED无DB smoke通过，完整小日志实际核SHA；新scope审计及auditor另退出后核PASS，双方6实例86事件21准确身份14组28自身路径全退，句柄guardian缺口0，Source峰值两Session。无55/262/browser/安装或旧全历史audit/cleanup，worker locale原FAIL保持。详154与Source ignored independent01/source154-final-review.json（6972B/f0b530dc…）冻结3产品两种字节口径、启动手册/153及14Source证据。
+
+只原App01a152f4-c2fa-7410-9c6e-cd9b920ce4f5/local GPT-6.1 Sol/High第155轮Git：3已验工作字节保持，精确提交/暂存main按canonical map核，英文chore/build带G33/G34/G35、正常main merge、三条目本范围完成与Windows未测、必要docs/普通push三方一致/main干净。HEAD/main仍02c4f38未整合；Source仅新增154与此头不污染，153/154/152及旧FAIL冻结。不重测build/smoke，0新资源仅有限退出后核；不批量renormalize/装依赖/清用户资源/改旧工具。
+
+完成/阻塞唯一主动回本Source停，Source156核交付与资源后汇总本10阶段队列，不自派新业务。无用户库/.env/模型天气/MySQL/Windows/browser/scheduler/CI/安装/新worktree/内部agent；旧依赖链接/账本保持，U01/V03/V04/109未验/NOT_FINAL_ACCEPTED/旧FAIL/G12/G23/G42/G46/G28限制不变。以下历史全文保留。
+
+---
+
 # 当前工程进度：G28已合推并Source152复核，准备最后G33/G34/G35（2026-10-19）
 
 Source01a0cbfe-a161-72d0-992d-12fad655d4ef/local核main/origin/实际远端同9a767061196f709f6b9fa3849c4d4a86597c3bba且干净，39已验main产品/6docs/worker76与Source36证据/38整合回执与截图保持，原App idle/completed。971053e正常merge8aa4073、docs9a76706普通push0，149/150/148及旧FAIL保持。G28仅核心网页/代表样本/确认交互，原生UIzoom未测/720等效/45warn/原staff等发布文案未改，不全站或业务最终验收。
